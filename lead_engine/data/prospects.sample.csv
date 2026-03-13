@@ -1,0 +1,4 @@
+business_name,city,state,website,phone,contact_method,likely_opportunity,priority_score
+Northside HVAC,Denver,CO,https://example.com,(303) 555-0101,email,after-hours lead capture,4
+Comfort Air Services,Aurora,CO,,(303) 555-0112,phone,quote follow-up automation,5
+QuickCool Heating & Air,Littleton,CO,unknown,(303) 555-0133,form,booking automation,3
