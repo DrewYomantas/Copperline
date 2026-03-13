@@ -1,0 +1,11 @@
+industry,active,priority,notes
+HVAC,true,1,
+Plumbing,true,2,
+Electrician,true,3,
+Roofing,true,4,
+Landscaping,true,5,
+Cleaning Service,true,6,
+Pest Control,true,7,
+Garage Door,true,8,
+Tree Service,true,9,
+Appliance Repair,true,10,
