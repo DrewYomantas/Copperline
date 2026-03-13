@@ -1,0 +1,68 @@
+version: 1
+timezone: "UTC"
+description: "Scheduler cadence for automation-agency-office agents and audits"
+
+schedules:
+  - name: pipeline_manager_agent
+    type: interval
+    every: "10m"
+    enabled: true
+
+  - name: social_engagement_agent
+    type: interval
+    every: "30m"
+    enabled: true
+
+  - name: revenue_operations_supervisor_agent
+    type: interval
+    every: "30m"
+    enabled: true
+
+  - name: automation_health_monitor_agent
+    type: interval
+    every: "2h"
+    enabled: true
+
+  - name: prospect_discovery_agent
+    type: cron
+    cron: "0 9 * * *"
+    enabled: true
+
+  - name: business_research_agent
+    type: cron
+    cron: "30 9 * * *"
+    enabled: true
+
+  - name: outreach_draft_agent
+    type: cron
+    cron: "0 10 * * *"
+    enabled: true
+
+  - name: content_creation_agent
+    type: cron
+    cron: "0 11 * * *"
+    enabled: true
+
+  - name: customer_insight_agent
+    type: cron
+    cron: "0 9 * * MON"
+    enabled: true
+
+  - name: market_intelligence_agent
+    type: cron
+    cron: "0 10 * * MON"
+    enabled: true
+
+  - name: chief_of_staff_agent
+    type: cron
+    cron: "0 11 * * MON"
+    enabled: true
+
+  - name: maintenance_full_audit
+    type: cron
+    cron: "0 8 1 * *"
+    enabled: true
+
+notes:
+  - "Event-triggered urgent runs can execute outside cadence per run_policy.md"
+  - "All run outcomes must be logged to office_health_log.md or relevant operational logs"

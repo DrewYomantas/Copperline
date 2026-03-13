@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Summit HVAC Booking Automation Demo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">SH</div>
+        <div>
+          <p class="brand-name">Summit HVAC</p>
+          <p class="brand-tag">Booking Automation Demo</p>
+        </div>
+      </div>
+      <span class="demo-pill">Demo #1 · Local Service Workflow</span>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <h1>See how service requests turn into confirmed appointments automatically.</h1>
+        <p>
+          This walkthrough shows a practical, no-hype workflow for capturing a customer request,
+          scheduling a visit, sending confirmation, and queuing reminders.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Service Request Form</h2>
+          <form id="bookingForm" novalidate>
+            <label>
+              Full name
+              <input type="text" id="fullName" required placeholder="e.g., Jamie Carter" />
+            </label>
+
+            <label>
+              Phone number
+              <input type="tel" id="phone" required placeholder="e.g., (555) 210-8821" />
+            </label>
+
+            <label>
+              Service type
+              <select id="serviceType" required>
+                <option value="">Select service</option>
+                <option>AC Repair</option>
+                <option>Heating Repair</option>
+                <option>Seasonal Tune-Up</option>
+                <option>New System Estimate</option>
+              </select>
+            </label>
+
+            <label>
+              Preferred date
+              <input type="date" id="preferredDate" required />
+            </label>
+
+            <label>
+              Short issue description
+              <textarea id="issue" rows="3" required placeholder="What issue are you experiencing?"></textarea>
+            </label>
+
+            <button type="submit" id="submitBtn">Run Booking Automation</button>
+            <p class="hint">Demo only — this does not submit to a real backend.</p>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h2>Automation Workflow</h2>
+          <ol class="workflow" id="workflowList">
+            <li data-step="captured">
+              <span class="dot"></span>
+              <div><strong>Lead Captured</strong><p>Request details are stored and tagged.</p></div>
+            </li>
+            <li data-step="scheduled">
+              <span class="dot"></span>
+              <div><strong>Appointment Scheduled</strong><p>Earliest matching slot is selected.</p></div>
+            </li>
+            <li data-step="confirmed">
+              <span class="dot"></span>
+              <div><strong>Confirmation Generated</strong><p>Customer gets visit summary instantly.</p></div>
+            </li>
+            <li data-step="reminder">
+              <span class="dot"></span>
+              <div><strong>Reminder Queued</strong><p>Auto-reminder is queued before appointment time.</p></div>
+            </li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="panel result-panel" id="resultPanel" aria-live="polite">
+        <h2>Result Panel</h2>
+        <p class="result-empty">Submit a sample request to run the workflow.</p>
+        <div class="confirmation-card hidden" id="confirmationCard"></div>
+      </section>
+
+      <section class="value-strip panel">
+        <h2>Why local service teams use this workflow</h2>
+        <ul>
+          <li><strong>Fewer missed bookings:</strong> every request is captured in one flow.</li>
+          <li><strong>Faster response time:</strong> confirmations are generated right away.</li>
+          <li><strong>Less manual scheduling work:</strong> reminders and status updates are automated.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
