@@ -51,6 +51,8 @@ Main window: **Outreach Operator Panel**
 - Live Send
 - Refresh Status
 - Read-only status/output area
+- Top status banner that calls out what the panel is doing, outcomes, and actionable warnings
+- Header-level **Start Dashboard** button to launch another panel window quickly
 
 Top summary counters show:
 - Prospects rows
