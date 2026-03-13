@@ -120,6 +120,7 @@ def run(
             limit=limit if limit > 0 else 30,
             seed_city=city or None,
             existing_prospects_csv=input_path,
+            pending_queue_csv=DEFAULT_PENDING_CSV,
             contact_history_csv=DEFAULT_CONTACT_HISTORY_CSV,
         )
         discovered = len(prospects)

@@ -229,7 +229,7 @@ def discover_prospects_by_industry(
     contact_history_csv: str | Path = "lead_engine/data/contact_history.csv",
     timeout_seconds: int = 6,
 ) -> List[Dict[str, str]]:
-    """Deterministic, bounded discovery with Playwright-first fallback to HTTP."""
+    """Deterministic, bounded discovery with Playwright-first fallback to HTTP (safe failure)."""
     if not industry.strip() or limit <= 0:
         return []
 

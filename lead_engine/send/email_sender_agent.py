@@ -88,11 +88,15 @@ def _append_contact_history(path: str | Path, entries: List[Dict[str, str]]) -> 
         writer.writerows(existing)
 
 
+def has_required_gmail_env() -> bool:
+    return bool(os.getenv("GMAIL_ADDRESS", "").strip()) and bool(os.getenv("GMAIL_APP_PASSWORD", "").strip())
+
+
 def _send_email_via_gmail(to_email: str, subject: str, body: str) -> None:
     sender = os.getenv("GMAIL_ADDRESS", "").strip()
     app_password = os.getenv("GMAIL_APP_PASSWORD", "").strip()
 
-    if not sender or not app_password:
+    if not has_required_gmail_env():
         raise RuntimeError("GMAIL_ADDRESS and GMAIL_APP_PASSWORD must be set for live sends.")
 
     message = EmailMessage()

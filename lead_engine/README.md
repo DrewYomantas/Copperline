@@ -2,6 +2,8 @@
 
 This is a **local operator workflow**, not a SaaS product.
 
+This README is the current merged operator-panel source of truth (legacy V1 sections should not be duplicated below).
+
 Core flow:
 1. pick industry
 2. pick quantity
