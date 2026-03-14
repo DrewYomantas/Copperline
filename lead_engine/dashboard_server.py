@@ -1,5 +1,5 @@
 """
-Operations Dashboard Server — Lead Engine
+Copperline — Lead Operations Dashboard
 Run: python lead_engine/dashboard_server.py
 Then open: http://localhost:5000
 """
@@ -267,7 +267,7 @@ def api_discover():
 if __name__ == "__main__":
     print()
     print("  ┌──────────────────────────────────────────────┐")
-    print("  │     Lead Engine — Operations Dashboard       │")
+    print("  │     Copperline — Lead Operations             │")
     print("  │     Opening at  http://localhost:5000        │")
     print("  └──────────────────────────────────────────────┘")
     print()

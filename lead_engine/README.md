@@ -1,7 +1,7 @@
-# Automation Lead Engine (V1)
+# Copperline — Lead Engine (V1)
 
 A lightweight Python pipeline to:
-1. Load local HVAC prospects from CSV
+1. Load local service business prospects from CSV
 2. Scan each website with bounded deterministic multi-page heuristics
 3. Score opportunity priority (1-5)
 4. Draft deterministic outreach emails
@@ -25,32 +25,12 @@ A lightweight Python pipeline to:
 
 ## Setup
 
-From the project root (`OfficeAutomation/lead_engine`):
-
-### Windows PowerShell
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-> `source .venv/bin/activate` is for macOS/Linux shells and will fail in PowerShell.
-
-### macOS/Linux (bash/zsh)
+From the project root:
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
 ```
-
-## One-click Windows scripts
-
-If you prefer a double-click flow in File Explorer:
-
-- `run_lead_engine_windows.bat` creates/activates `.venv` and runs draft generation.
-- `send_approved_emails_windows.bat` creates/activates `.venv` and runs live sending for approved rows.
-
-Both scripts are in the `lead_engine/` folder.
 
 ## Input data
 
@@ -105,8 +85,9 @@ The sender only processes rows where:
 Set environment variables before live sends:
 
 ```bash
-export GMAIL_ADDRESS="you@gmail.com"
-export GMAIL_APP_PASSWORD="your-16-char-app-password"
+export GMAIL_ADDRESS=drewyomantas@gmail.com
+export GMAIL_APP_PASSWORD=shxl ubrr smht nflv
+
 ```
 
 Use a Gmail App Password (Google account security settings), not your normal Gmail password.

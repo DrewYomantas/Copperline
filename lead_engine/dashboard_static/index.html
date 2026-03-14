@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Lead Engine — Operations Dashboard</title>
+<title>Copperline — Lead Operations</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root{
@@ -11,6 +11,7 @@
   --border:#2a2d35;--border-hi:#3d4151;
   --text:#e4e6ed;--muted:#7a7f90;--dim:#4a4f60;
   --blue:#4f8ef7;--blue-glow:rgba(79,142,247,.15);
+  --copper:#b87333;--copper-glow:rgba(184,115,51,.18);--copper-bg:rgba(184,115,51,.11);
   --green:#3ecf72;--green-bg:rgba(62,207,114,.11);
   --amber:#f5a623;--amber-bg:rgba(245,166,35,.11);
   --red:#f56565;--red-bg:rgba(245,101,101,.11);
@@ -170,9 +171,9 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 
 <header class="hdr">
   <div class="hdr-l">
-    <div class="dot"></div>
-    <h1>Lead Engine</h1>
-    <span class="tag">Operations Dashboard</span>
+    <div class="dot" style="background:var(--copper);box-shadow:0 0 10px var(--copper-glow)"></div>
+    <h1 style="letter-spacing:-.02em">Copperline</h1>
+    <span class="tag">Lead Operations</span>
   </div>
   <div class="hdr-r">
     <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
