@@ -8,10 +8,11 @@ A lightweight Python pipeline to:
 5. Queue emails for human approval
 6. Send only approved emails when live-send is explicitly enabled
 
-## Important limitations
+## How it works
 
-- **Autonomous lead discovery is not implemented in V1.** Input must come from `data/prospects.csv`.
-- The system does not scrape directories or discover new companies on its own.
+The pipeline discovers local businesses via Google Places API, scrapes contact info,
+scores each lead, drafts outreach emails, and queues them for human approval.
+No email sends without explicit approval.
 
 ## Folder layout
 
@@ -82,15 +83,16 @@ The sender only processes rows where:
 
 ## Gmail app password usage
 
-Set environment variables before live sends:
-
-```bash
-export GMAIL_ADDRESS=drewyomantas@gmail.com
-export GMAIL_APP_PASSWORD=shxl ubrr smht nflv
+Credentials are loaded from a `.env` file in the project root. Copy `.env.example` to `.env` and fill in your values:
 
 ```
+GMAIL_ADDRESS=you@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+GOOGLE_PLACES_API_KEY=your_key_here
+SENDER_DISPLAY_NAME=Your Name @ Copperline
+```
 
-Use a Gmail App Password (Google account security settings), not your normal Gmail password.
+Use a Gmail App Password (Google account security settings), not your regular Gmail password.
 
 ## Send script usage
 

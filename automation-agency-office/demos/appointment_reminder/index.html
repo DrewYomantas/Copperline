@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Copperline — Appointment Reminder Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#6366f1;--brand-light:#eef2ff;--brand-dark:#4f46e5;
+  --green:#10b981;--green-bg:#ecfdf5;
+  --amber:#f59e0b;--amber-bg:#fffbeb;
+  --red:#ef4444;--red-bg:#fef2f2;
+  --bg:#f8faff;--white:#fff;
+  --text:#111827;--muted:#6b7280;--border:#e5e7eb;--r:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.demo-banner{background:#1a1a2e;color:#fff;text-align:center;padding:10px;font-size:12px;letter-spacing:.05em;position:sticky;top:0;z-index:100}
+.demo-banner strong{color:#a78bfa}
+
+/* Header */
+.biz-header{background:var(--brand);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.biz-info{display:flex;align-items:center;gap:12px}
+.biz-logo{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.biz-name{font-size:17px;font-weight:700}
+.biz-tag{font-size:12px;opacity:.8}
+.header-stat{text-align:right;font-size:12px;opacity:.85}
+.header-stat strong{display:block;font-size:20px;font-weight:700}
+
+/* Layout */
+.page{max-width:1100px;margin:0 auto;padding:28px 20px}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:24px}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+/* Cards */
+.card{background:var(--white);border-radius:var(--r);padding:24px;box-shadow:0 1px 12px rgba(0,0,0,.06);margin-bottom:20px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--white);border-radius:10px;padding:18px;box-shadow:0 1px 10px rgba(0,0,0,.05);text-align:center}
+.stat-box .n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat-box .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.green-n{color:var(--green)}.amber-n{color:var(--amber)}.red-n{color:var(--red)}.blue-n{color:var(--brand)}
+
+/* Appointment list */
+.appt-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.appt-row:last-child{border-bottom:none}
+.appt-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;color:#fff}
+.appt-main{flex:1}
+.appt-name{font-weight:600;font-size:14px}
+.appt-detail{font-size:12px;color:var(--muted);margin-top:2px}
+.appt-time{font-size:13px;font-weight:600;text-align:right;white-space:nowrap}
+.appt-status{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.chip-confirmed{background:var(--green-bg);color:var(--green)}
+.chip-reminded{background:var(--brand-light);color:var(--brand)}
+.chip-pending{background:var(--amber-bg);color:var(--amber)}
+.chip-noshow{background:var(--red-bg);color:var(--red)}
+.chip-rebook{background:#fdf4ff;color:#9333ea}
+
+/* Message preview */
+.msg-preview{background:#1e1e2e;border-radius:10px;padding:16px;font-size:12px;font-family:'Courier New',monospace}
+.msg-line{color:#c9d1d9;line-height:1.8}
+.msg-line .l{color:#8b949e}
+.msg-line .v{color:#79c0ff}
+.msg-line .g{color:#56d364}
+.msg-body{background:#2d333b;border-radius:6px;padding:12px;margin-top:10px;color:#e6edf3;line-height:1.7;font-size:12.5px}
+
+/* Timeline */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.t-item{position:relative;margin-bottom:20px}
+.t-dot{position:absolute;left:-24px;top:3px;width:14px;height:14px;border-radius:50%;border:2px solid var(--white);box-shadow:0 0 0 2px var(--border)}
+.t-dot.sent{background:var(--green);box-shadow:0 0 0 2px var(--green)}
+.t-dot.scheduled{background:var(--brand);box-shadow:0 0 0 2px var(--brand)}
+.t-dot.pending{background:var(--amber);box-shadow:0 0 0 2px var(--amber)}
+.t-time{font-size:11px;color:var(--muted);margin-bottom:2px}
+.t-title{font-size:13px;font-weight:600}
+.t-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ROI callout */
+.roi-box{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:var(--r);padding:22px;margin-top:16px}
+.roi-box h3{font-size:15px;font-weight:700;margin-bottom:12px}
+.roi-line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.15)}
+.roi-line:last-child{border-bottom:none;font-weight:700;font-size:15px;padding-top:10px}
+.roi-line .amount{font-weight:700;color:#a5f3fc}
+</style>
+</head>
+<body>
+
+<div class="demo-banner">🔬 LIVE DEMO — <strong>Copperline</strong> — Appointment Reminder & No-Show Reduction</div>
+
+<div class="biz-header">
+  <div class="biz-info">
+    <div class="biz-logo">🦷</div>
+    <div>
+      <div class="biz-name">Rockford Family Dental</div>
+      <div class="biz-tag">Appointment Automation — Admin Dashboard</div>
+    </div>
+  </div>
+  <div class="header-stat">
+    <strong id="no-show-rate">8%</strong>
+    no-show rate this month
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="n green-n" id="s-confirmed">18</div><div class="l">Confirmed Today</div></div>
+    <div class="stat-box"><div class="n amber-n" id="s-pending">4</div><div class="l">Awaiting Reply</div></div>
+    <div class="stat-box"><div class="n red-n" id="s-noshow">1</div><div class="l">No-Shows</div></div>
+    <div class="stat-box"><div class="n blue-n" id="s-rebooked">3</div><div class="l">Auto-Rebooked</div></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+
+      <!-- TODAY'S APPOINTMENTS -->
+      <div class="card">
+        <h2>📅 Today's Schedule — Live Reminder Status</h2>
+        <div id="appt-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- REMINDER SEQUENCE EXAMPLE -->
+      <div class="card">
+        <h2>📲 Automated Reminder Sequence (per patient)</h2>
+        <div class="timeline">
+          <div class="t-item">
+            <div class="t-dot sent"></div>
+            <div class="t-time">48 hours before — SENT ✓</div>
+            <div class="t-title">First reminder: Email</div>
+            <div class="t-sub">"Hi Sarah — confirming your cleaning Tuesday at 2pm. Reply YES to confirm or call to reschedule."</div>
+          </div>
+          <div class="t-item">
+            <div class="t-dot sent"></div>
+            <div class="t-time">24 hours before — SENT ✓</div>
+            <div class="t-title">Second reminder: Text message</div>
+            <div class="t-sub">"Rockford Family Dental: See you tomorrow at 2pm! Reply C to confirm, R to reschedule."</div>
+          </div>
+          <div class="t-item">
+            <div class="t-dot scheduled"></div>
+            <div class="t-time">2 hours before — SCHEDULED</div>
+            <div class="t-title">Day-of reminder: Text</div>
+            <div class="t-sub">"Your appointment is in 2 hours at 2pm. Reply HELP if you need to reach us: (815) 555-0200"</div>
+          </div>
+          <div class="t-item">
+            <div class="t-dot pending"></div>
+            <div class="t-time">If no-show — AUTO-TRIGGERED</div>
+            <div class="t-title">Reactivation: Text + Email</div>
+            <div class="t-sub">"We missed you today! We have openings Thursday and Friday — reply to rebook in 30 seconds."</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <!-- LIVE MESSAGE PREVIEW -->
+      <div class="card">
+        <h2>📬 Sample Outgoing Text</h2>
+        <div class="msg-preview">
+          <div class="msg-line"><span class="l">To: </span><span class="v">(815) 555-0142</span></div>
+          <div class="msg-line"><span class="l">From: </span><span class="v">Rockford Family Dental</span></div>
+          <div class="msg-line"><span class="l">Sent: </span><span class="g">✓ Delivered</span></div>
+          <div class="msg-body">
+            Hi Marcus 👋<br><br>
+            Just a reminder: you have an appointment with Dr. Chen <strong>tomorrow, Tuesday at 10:30am</strong>.<br><br>
+            Reply <strong>C</strong> to confirm or <strong>R</strong> to reschedule.<br><br>
+            📍 1420 N. Main St, Rockford IL<br>
+            📞 (815) 555-0200
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI CALCULATOR -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:20px 24px 12px"><h2 style="margin-bottom:0">💰 Your ROI Calculator</h2></div>
+        <div style="padding:0 24px 20px">
+          <div style="margin-bottom:12px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Monthly appointments</label>
+            <input type="range" id="r-appts" min="50" max="500" value="200" style="width:100%" oninput="calcROI()">
+            <div style="font-size:13px;font-weight:700;text-align:center" id="r-appts-val">200 appointments/month</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Avg revenue per appointment</label>
+            <input type="range" id="r-rev" min="50" max="400" step="10" value="150" style="width:100%" oninput="calcROI()">
+            <div style="font-size:13px;font-weight:700;text-align:center" id="r-rev-val">$150 / appointment</div>
+          </div>
+        </div>
+        <div class="roi-box">
+          <h3>Monthly No-Show Cost Recovered</h3>
+          <div class="roi-line"><span>No-shows before (15%)</span><span class="amount" id="roi-before">$4,500/mo lost</span></div>
+          <div class="roi-line"><span>No-shows after automation (4%)</span><span class="amount" id="roi-after">$1,200/mo lost</span></div>
+          <div class="roi-line"><span>💰 Monthly recovered revenue</span><span class="amount" id="roi-saved">$3,300/mo</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const APPOINTMENTS = [
+  { name:"Sarah M.",    time:"9:00am",  type:"Cleaning",       color:"#6366f1", status:"confirmed",  initials:"SM" },
+  { name:"James T.",    time:"9:30am",  type:"X-Ray + Exam",   color:"#10b981", status:"confirmed",  initials:"JT" },
+  { name:"Marcus R.",   time:"10:30am", type:"Filling",        color:"#f59e0b", status:"reminded",   initials:"MR" },
+  { name:"Lisa K.",     time:"11:00am", type:"Cleaning",       color:"#ec4899", status:"pending",    initials:"LK" },
+  { name:"Tony V.",     time:"1:00pm",  type:"Crown Consult",  color:"#8b5cf6", status:"confirmed",  initials:"TV" },
+  { name:"Brenda O.",   time:"2:00pm",  type:"Cleaning",       color:"#14b8a6", status:"noshow",     initials:"BO" },
+  { name:"Chris W.",    time:"2:30pm",  type:"Whitening",      color:"#f97316", status:"rebook",     initials:"CW" },
+  { name:"Jennifer H.", time:"3:30pm",  type:"Root Canal Prep",color:"#6366f1", status:"confirmed",  initials:"JH" },
+];
+
+const STATUS_LABELS = {
+  confirmed: ["chip-confirmed","✓ Confirmed"],
+  reminded:  ["chip-reminded", "📲 Reminded"],
+  pending:   ["chip-pending",  "⏳ No reply yet"],
+  noshow:    ["chip-noshow",   "❌ No-show"],
+  rebook:    ["chip-rebook",   "🔄 Reactivation sent"],
+};
+
+function renderAppointments() {
+  const list = document.getElementById('appt-list');
+  list.innerHTML = APPOINTMENTS.map(a => {
+    const [cls, label] = STATUS_LABELS[a.status];
+    return `<div class="appt-row">
+      <div class="appt-avatar" style="background:${a.color}">${a.initials}</div>
+      <div class="appt-main">
+        <div class="appt-name">${a.name}</div>
+        <div class="appt-detail">${a.type}</div>
+      </div>
+      <div class="appt-status">
+        <div class="appt-time">${a.time}</div>
+        <span class="chip ${cls}">${label}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function calcROI() {
+  const appts = parseInt(document.getElementById('r-appts').value);
+  const rev   = parseInt(document.getElementById('r-rev').value);
+  document.getElementById('r-appts-val').textContent = `${appts} appointments/month`;
+  document.getElementById('r-rev-val').textContent   = `$${rev} / appointment`;
+  const before = Math.round(appts * 0.15 * rev);
+  const after  = Math.round(appts * 0.04 * rev);
+  const saved  = before - after;
+  document.getElementById('roi-before').textContent = `$${before.toLocaleString()}/mo lost`;
+  document.getElementById('roi-after').textContent  = `$${after.toLocaleString()}/mo lost`;
+  document.getElementById('roi-saved').textContent  = `$${saved.toLocaleString()}/mo`;
+}
+
+renderAppointments();
+calcROI();
+
+// Simulate a no-show auto-action after 3 seconds (demo effect)
+setTimeout(() => {
+  const row = document.querySelectorAll('.appt-row')[5];
+  if (row) {
+    const chip = row.querySelector('.chip');
+    chip.className = 'chip chip-rebook';
+    chip.textContent = '🔄 Reactivation sent';
+    document.getElementById('s-noshow').textContent = '0';
+    document.getElementById('s-rebooked').textContent = '4';
+  }
+}, 5000);
+</script>
+</body>
+</html>
