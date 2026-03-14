@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lead Engine — Operations Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#0e0f12;--surface:#16181d;--surface2:#1d2028;--surface3:#22252e;
+  --border:#2a2d35;--border-hi:#3d4151;
+  --text:#e4e6ed;--muted:#7a7f90;--dim:#4a4f60;
+  --blue:#4f8ef7;--blue-glow:rgba(79,142,247,.15);
+  --green:#3ecf72;--green-bg:rgba(62,207,114,.11);
+  --amber:#f5a623;--amber-bg:rgba(245,166,35,.11);
+  --red:#f56565;--red-bg:rgba(245,101,101,.11);
+  --grey:#64748b;
+  --r:8px;--rs:4px;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono','Cascadia Code',monospace;
+  --panel-w:480px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+.hdr{border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:200}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue);flex-shrink:0}
+.hdr h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.tag{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:2px 8px;letter-spacing:.05em;text-transform:uppercase}
+.hdr-r{display:flex;gap:8px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--rs);font-family:var(--sans);font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#3d7de8}
+.btn-success{background:var(--green);color:#0e1a12}.btn-success:hover{background:#2fb85c}
+.btn-ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--border-hi)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(245,101,101,.2)}.btn-danger:hover{background:rgba(245,101,101,.22)}
+.btn:disabled{opacity:.4;cursor:not-allowed}.btn.loading{opacity:.7;cursor:wait}
+.spin{display:none;width:11px;height:11px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.btn.loading .spin{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.stats{display:flex;border-bottom:1px solid var(--border);background:var(--surface)}
+.stat{padding:14px 22px;flex:1;border-right:1px solid var(--border)}.stat:last-child{border-right:none}
+.stat-n{font-family:var(--mono);font-size:22px;font-weight:500;line-height:1}
+.stat-n.blue{color:var(--blue)}.stat-n.amber{color:var(--amber)}.stat-n.green{color:var(--green)}.stat-n.grey{color:var(--muted)}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+.discover-bar{border-bottom:1px solid var(--border);padding:10px 24px;background:var(--surface)}
+.discover-inner{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.discover-label{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;margin-right:2px}
+.d-input{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:.12s}
+.d-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.d-input option{background:var(--surface2)}
+.d-state{width:50px}.d-num{width:66px}
+.api-notice{margin-top:7px;font-size:12px;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,166,35,.3);border-radius:var(--rs);padding:6px 11px}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:9px 24px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;background:var(--surface)}
+.toolbar-l,.toolbar-r{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.filter-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:2px}
+.ftab{padding:4px 11px;border-radius:3px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);transition:.12s;user-select:none;white-space:nowrap}
+.ftab.active{background:var(--surface3);color:var(--text)}.ftab:hover:not(.active){color:var(--text)}
+.search-box{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;width:160px;transition:.12s}
+.search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.search-box::placeholder{color:var(--dim)}
+.sort-select{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--muted);font-family:var(--sans);font-size:11px;outline:none;cursor:pointer}
+.sort-select option{background:var(--surface2)}
+
+.bulk-bar{display:none;align-items:center;gap:8px;padding:7px 24px;background:var(--blue-glow);border-bottom:1px solid rgba(79,142,247,.2);font-size:12px;color:var(--blue)}
+.bulk-bar.visible{display:flex}
+
+.main{display:flex;min-height:calc(100vh - 200px)}
+.table-wrap{flex:1;overflow-x:auto;min-width:0;padding-top:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--surface);color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:9px 14px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:10}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr.row-sent{opacity:.45}
+tbody td{padding:10px 14px;vertical-align:middle}
+.td-chk{width:32px;text-align:center}
+.td-biz{min-width:180px;max-width:240px}
+.td-email{min-width:140px;max-width:180px}
+.td-subject{min-width:160px;max-width:200px}
+.td-score{width:80px;text-align:center}
+.td-status{width:100px}
+.td-actions{width:140px}
+
+.biz-name{font-weight:500;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.biz-meta{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.biz-meta a{color:var(--blue);text-decoration:none}.biz-meta a:hover{text-decoration:underline}
+.subj-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;color:var(--muted);font-size:12px}
+.email-cell{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.email-missing{color:var(--amber);font-size:11px;font-style:italic}
+.scan-note{font-size:10px;color:var(--dim);margin-top:1px}
+
+.score-chip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-family:var(--mono);font-weight:600;font-size:13px;position:relative;cursor:default;transition:transform .1s}
+.score-chip:hover{transform:scale(1.15)}
+.sc-5{background:rgba(62,207,114,.18);color:#3ecf72;box-shadow:0 0 0 1px rgba(62,207,114,.35)}
+.sc-4{background:rgba(110,207,100,.14);color:#7ec850;box-shadow:0 0 0 1px rgba(110,207,100,.3)}
+.sc-3{background:rgba(245,166,35,.14);color:#f5a623;box-shadow:0 0 0 1px rgba(245,166,35,.3)}
+.sc-2{background:rgba(245,130,50,.14);color:#f07830;box-shadow:0 0 0 1px rgba(245,130,50,.3)}
+.sc-1{background:rgba(245,101,101,.18);color:#f56565;box-shadow:0 0 0 1px rgba(245,101,101,.35)}
+.score-chip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#1d2028;border:1px solid var(--border-hi);color:var(--text);font-family:var(--sans);font-size:11px;font-weight:500;white-space:nowrap;padding:5px 9px;border-radius:5px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500;letter-spacing:0}
+.score-chip::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#3d4151;pointer-events:none;opacity:0;transition:opacity .15s;z-index:500}
+.score-chip:hover::after,.score-chip:hover::before{opacity:1}
+
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-pending{background:var(--amber-bg);color:var(--amber)}
+.badge-approved{background:var(--green-bg);color:var(--green)}
+.badge-sent{background:rgba(100,116,139,.1);color:var(--grey)}
+
+.row-acts{display:flex;gap:3px}
+.act{padding:4px 9px;border-radius:3px;font-size:11px;font-weight:500;border:none;cursor:pointer;transition:.12s;font-family:var(--sans)}
+.act-approve{background:var(--green-bg);color:var(--green)}.act-approve:hover{background:rgba(62,207,114,.22)}
+.act-unapprove{background:var(--amber-bg);color:var(--amber)}.act-unapprove:hover{background:rgba(245,166,35,.22)}
+.act-edit{background:var(--surface3);color:var(--muted);border:1px solid var(--border)}.act-edit:hover{color:var(--text)}
+.act-del{background:var(--red-bg);color:var(--red)}.act-del:hover{background:rgba(245,101,101,.22)}
+
+.empty{padding:70px 28px;text-align:center;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+.empty h3{font-size:15px;color:var(--text);margin-bottom:5px}
+.empty p{font-size:12px;max-width:360px;margin:0 auto}
+
+/* Review Panel */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
+.panel-overlay.open{opacity:1;pointer-events:all}
+.panel{position:fixed;top:0;right:0;width:var(--panel-w);height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:301;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.panel-overlay.open .panel{transform:translateX(0)}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:14px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel-nav{display:flex;align-items:center;gap:8px}
+.panel-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:var(--rs);font-size:12px;cursor:pointer;transition:.12s}
+.panel-nav-btn:hover{color:var(--text);border-color:var(--border-hi)}
+.panel-nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.panel-pos{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.panel-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;border-radius:var(--rs);transition:.12s}
+.panel-close:hover{color:var(--text);background:var(--surface2)}
+.panel-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.panel-section{display:flex;flex-direction:column;gap:5px}
+.panel-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.panel-meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.panel-meta span{display:flex;align-items:center;gap:6px}
+.panel-meta a{color:var(--blue);text-decoration:none;font-size:12px}
+.panel-input{width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:.12s}
+.panel-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.panel-input:disabled{opacity:.5;cursor:not-allowed}
+.panel-textarea{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--mono);font-size:12px;outline:none;resize:vertical;min-height:220px;line-height:1.6;transition:.12s}
+.panel-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.panel-footer{border-top:1px solid var(--border);padding:14px 20px;display:flex;gap:8px;flex-shrink:0;background:var(--surface)}
+.panel-score-row{display:flex;align-items:center;gap:10px}
+.panel-reason{font-size:11px;color:var(--muted);font-style:italic;flex:1}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;max-width:420px;width:90%;transform:translateY(6px);transition:transform .15s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:8px}
+.modal p{color:var(--muted);margin-bottom:20px;line-height:1.6;font-size:13px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end}
+code{font-family:var(--mono);background:var(--surface3);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--text)}
+
+#toast{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast-msg{background:var(--surface3);border:1px solid var(--border-hi);color:var(--text);padding:9px 15px;border-radius:var(--r);font-size:12px;pointer-events:all;animation:slideUp .2s ease;max-width:320px}
+.toast-msg.ok{border-left:3px solid var(--green)}.toast-msg.err{border-left:3px solid var(--red)}.toast-msg.info{border-left:3px solid var(--blue)}
+@keyframes slideUp{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="dot"></div>
+    <h1>Lead Engine</h1>
+    <span class="tag">Operations Dashboard</span>
+  </div>
+  <div class="hdr-r">
+    <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n blue" id="s-prospects">—</div><div class="stat-lbl">Prospects</div></div>
+  <div class="stat"><div class="stat-n blue" id="s-drafted">—</div><div class="stat-lbl">Drafted</div></div>
+  <div class="stat"><div class="stat-n amber" id="s-pending">—</div><div class="stat-lbl">Pending</div></div>
+  <div class="stat"><div class="stat-n green" id="s-approved">—</div><div class="stat-lbl">Approved</div></div>
+  <div class="stat"><div class="stat-n grey" id="s-sent">—</div><div class="stat-lbl">Sent</div></div>
+</div>
+
+<div class="discover-bar">
+  <div class="discover-inner">
+    <span class="discover-label">🔍 New Leads</span>
+    <select id="d-industry" class="d-input"><option value="">Loading…</option></select>
+    <input id="d-city" class="d-input" type="text" placeholder="City" value="Rockford">
+    <input id="d-state" class="d-input d-state" type="text" placeholder="ST" value="IL" maxlength="2">
+    <input id="d-limit" class="d-input d-num" type="number" value="20" min="1" max="60">
+    <button id="btnDiscover" class="btn btn-primary" onclick="discoverLeads()"><span class="spin"></span>⚡ Discover + Draft</button>
+    <button id="btnTestKey" class="btn btn-ghost" onclick="testApiKey()">🔑 Test Key</button>
+    <button id="btnFollowup" class="btn btn-ghost" onclick="runFollowups()"><span class="spin"></span>🔁 Follow-Ups</button>
+    <button id="btnExtract" class="btn btn-ghost" onclick="extractEmails()"><span class="spin"></span>📧 Find Emails</button>
+  </div>
+  <div id="api-key-notice" class="api-notice" style="display:none">
+    ⚠️ <strong>GOOGLE_PLACES_API_KEY not set.</strong> Add it to Launch Dashboard.bat
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-l">
+    <div class="filter-tabs">
+      <div class="ftab active" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Pending</div>
+      <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved</div>
+      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">Sent</div>
+      <div class="ftab" data-filter="has_email" onclick="setFilter('has_email',this)">Has Email</div>
+      <div class="ftab" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
+      <div class="ftab" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
+    </div>
+    <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
+    <span id="row-count" class="tag" style="font-size:10px"></span>
+  </div>
+  <div class="toolbar-r">
+    <select class="sort-select" id="sortSelect" onchange="renderTable()">
+      <option value="default">Sort: Default</option>
+      <option value="score_desc">Score ↓</option>
+      <option value="score_asc">Score ↑</option>
+      <option value="name_asc">Name A–Z</option>
+      <option value="name_desc">Name Z–A</option>
+    </select>
+    <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
+    <button id="btnSendDry" class="btn btn-ghost" onclick="sendDryRun()"><span class="spin"></span>Preview Send</button>
+    <button id="btnSendLive" class="btn btn-success" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
+  </div>
+</div>
+
+<div class="bulk-bar" id="bulk-bar">
+  <strong id="bulk-count">0</strong> selected —
+  <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkApprove()">Approve</button>
+  <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkUnapprove()">Unapprove</button>
+  <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="bulkDelete()">Delete</button>
+  <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;margin-left:4px" onclick="clearSelection()">✕ Clear</button>
+</div>
+
+<div class="main">
+  <div class="table-wrap">
+    <table id="queue-table">
+      <thead>
+        <tr>
+          <th class="td-chk"><input type="checkbox" id="chk-all" onchange="toggleCheckAll(this)"></th>
+          <th class="td-biz">Business</th>
+          <th class="td-email">Email</th>
+          <th class="td-subject">Subject</th>
+          <th class="td-score">Score</th>
+          <th class="td-status">Status</th>
+          <th class="td-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty-state" class="empty" style="display:none">
+      <div class="empty-icon">📭</div>
+      <h3>No leads yet</h3>
+      <p>Click <strong>Discover + Draft</strong> to generate outreach from your prospects</p>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW PANEL -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanelOnOverlay(event)">
+  <div class="panel" id="review-panel">
+    <div class="panel-hdr">
+      <span class="panel-title" id="panel-biz-title">Review Email</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="panel-nav">
+          <button class="panel-nav-btn" id="btn-prev" onclick="navigatePanel(-1)">← Prev</button>
+          <span class="panel-pos" id="panel-pos"></span>
+          <button class="panel-nav-btn" id="btn-next" onclick="navigatePanel(1)">Next →</button>
+        </div>
+        <button class="panel-close" onclick="closePanel()">✕</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="panel-section">
+        <div class="panel-label">Business Info</div>
+        <div class="panel-meta" id="panel-meta"></div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">To Email</div>
+        <input class="panel-input" id="panel-email" type="email" placeholder="contact@business.com"
+               oninput="panelFieldChanged('to_email', this.value)">
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Subject</div>
+        <input class="panel-input" id="panel-subject" type="text"
+               oninput="panelFieldChanged('subject', this.value)">
+      </div>
+      <div class="panel-section" style="flex:1">
+        <div class="panel-label">Email Body</div>
+        <textarea class="panel-textarea" id="panel-body"
+                  oninput="panelFieldChanged('body', this.value)"></textarea>
+      </div>
+      <div class="panel-section">
+        <div class="panel-score-row">
+          <div class="score-chip sc-3" id="panel-score-chip">—</div>
+          <div class="panel-reason" id="panel-reason"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-success" id="panel-approve-btn" onclick="panelApprove()" style="flex:1">✓ Approve</button>
+      <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
+      <button class="btn btn-ghost" onclick="closePanel()">Close</button>
+      <button class="btn btn-danger" onclick="panelDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND MODAL -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <h3>Send Approved Emails?</h3>
+    <p id="send-modal-msg"></p>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button id="btn-confirm-send" class="btn btn-success" onclick="sendLive()">Send Now</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+let allRows = [];
+let filteredRows = [];
+let currentFilter = 'all';
+let panelIdx = -1;
+let panelSaveTimer = null;
+
+async function api(path, body) {
+  const opts = body !== undefined
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    : {};
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+async function loadAll() {
+  const [status, queue] = await Promise.all([api('/api/status'), api('/api/queue')]);
+  document.getElementById('s-prospects').textContent = status.prospects_loaded ?? '—';
+  document.getElementById('s-drafted').textContent   = status.total_drafted ?? '—';
+  document.getElementById('s-pending').textContent   = status.pending_approval ?? '—';
+  document.getElementById('s-approved').textContent  = status.approved_unsent ?? '—';
+  document.getElementById('s-sent').textContent      = status.sent ?? '—';
+  allRows = queue;
+  renderTable();
+  if (panelIdx >= 0 && document.getElementById('panel-overlay').classList.contains('open')) {
+    const row = filteredRows[panelIdx];
+    if (row) fillPanel(row, panelIdx);
+  }
+}
+
+async function loadStats() {
+  const s = await api('/api/status');
+  document.getElementById('s-prospects').textContent = s.prospects_loaded ?? '—';
+  document.getElementById('s-drafted').textContent   = s.total_drafted ?? '—';
+  document.getElementById('s-pending').textContent   = s.pending_approval ?? '—';
+  document.getElementById('s-approved').textContent  = s.approved_unsent ?? '—';
+  document.getElementById('s-sent').textContent      = s.sent ?? '—';
+}
+
+function applyFiltersAndSort() {
+  let rows = [...allRows];
+  const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+
+  if (currentFilter === 'pending')    rows = rows.filter(r => r.approved !== 'true' && !r.sent_at);
+  else if (currentFilter === 'approved') rows = rows.filter(r => r.approved === 'true' && !r.sent_at);
+  else if (currentFilter === 'sent')  rows = rows.filter(r => !!r.sent_at);
+  else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
+  else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
+  else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+
+  if (q) rows = rows.filter(r =>
+    (r.business_name||'').toLowerCase().includes(q) ||
+    (r.city||'').toLowerCase().includes(q) ||
+    (r.subject||'').toLowerCase().includes(q));
+
+  if (sort === 'score_desc') rows.sort((a,b) => (parseInt(b.final_priority_score)||0)-(parseInt(a.final_priority_score)||0));
+  else if (sort === 'score_asc') rows.sort((a,b) => (parseInt(a.final_priority_score)||0)-(parseInt(b.final_priority_score)||0));
+  else if (sort === 'name_asc') rows.sort((a,b) => (a.business_name||'').localeCompare(b.business_name||''));
+  else if (sort === 'name_desc') rows.sort((a,b) => (b.business_name||'').localeCompare(a.business_name||''));
+
+  filteredRows = rows;
+}
+
+const SCORE_LABELS = {5:'High Opportunity',4:'Good Fit',3:'Possible',2:'Weak',1:'Skip'};
+function scoreClass(s) { return 'sc-' + Math.max(1, Math.min(5, parseInt(s)||3)); }
+function scoreTip(s) { const n=Math.max(1,Math.min(5,parseInt(s)||3)); return `${n} — ${SCORE_LABELS[n]||''}`; }
+
+function statusBadge(row) {
+  if (row.sent_at) return '<span class="badge badge-sent">✓ Sent</span>';
+  if (row.approved === 'true') return '<span class="badge badge-approved">● Approved</span>';
+  return '<span class="badge badge-pending">○ Pending</span>';
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTable() {
+  applyFiltersAndSort();
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('row-count').textContent = filteredRows.length + ' rows';
+
+  if (!filteredRows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filteredRows.map((row, fi) => {
+    const gi = allRows.indexOf(row);
+    const sc = parseInt(row.final_priority_score) || 3;
+    const sentClass = row.sent_at ? 'row-sent' : '';
+    const emailHtml = row.to_email
+      ? `<div class="email-cell">${escHtml(row.to_email)}</div>`
+      : `<div class="email-missing">no email</div>`;
+    const scanNote = row.scan_note ? `<div class="scan-note">${escHtml(row.scan_note)}</div>` : '';
+    const siteLink = row.website ? `<span><a href="${escHtml(row.website)}" target="_blank">🌐 site</a></span>` : '';
+    const phoneHtml = row.phone ? `<span>📞 ${escHtml(row.phone)}</span>` : '';
+
+    const approveBtn = row.sent_at
+      ? `<span style="color:var(--dim);font-size:10px">sent</span>`
+      : row.approved === 'true'
+        ? `<button class="act act-unapprove" onclick="event.stopPropagation();unapproveRow(${gi})">Undo</button>`
+        : `<button class="act act-approve" onclick="event.stopPropagation();approveRow(${gi})">Approve</button>`;
+
+    return `<tr class="${sentClass}" onclick="openPanel(${fi})">
+      <td class="td-chk" onclick="event.stopPropagation()">
+        <input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">
+      </td>
+      <td class="td-biz">
+        <span class="biz-name">${escHtml(row.business_name)}</span>
+        <div class="biz-meta">${escHtml(row.city)}, ${escHtml(row.state)}</div>
+        <div class="biz-meta" style="display:flex;gap:8px">${phoneHtml}${siteLink}</div>
+      </td>
+      <td class="td-email">${emailHtml}${scanNote}</td>
+      <td class="td-subject"><div class="subj-text">${escHtml(row.subject)}</div></td>
+      <td class="td-score"><div class="score-chip ${scoreClass(row.final_priority_score)}" data-tip="${scoreTip(row.final_priority_score)}">${sc}</div></td>
+      <td class="td-status">${statusBadge(row)}</td>
+      <td class="td-actions" onclick="event.stopPropagation()">
+        <div class="row-acts">
+          ${approveBtn}
+          <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
+          <button class="act act-del" onclick="deleteRow(${gi})">Del</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function setFilter(name, el) {
+  currentFilter = name;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+
+// ── Review Panel ──────────────────────────────────────────────────────────────
+function openPanel(fi) {
+  panelIdx = fi;
+  const row = filteredRows[fi];
+  if (!row) return;
+  fillPanel(row, fi);
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+function fillPanel(row, fi) {
+  document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
+  document.getElementById('panel-pos').textContent = `${fi+1} / ${filteredRows.length}`;
+  document.getElementById('btn-prev').disabled = fi === 0;
+  document.getElementById('btn-next').disabled = fi === filteredRows.length - 1;
+
+  const parts = [];
+  if (row.city) parts.push(`<span>📍 ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
+  if (row.phone) parts.push(`<span>📞 ${escHtml(row.phone)}</span>`);
+  if (row.website) parts.push(`<span>🌐 <a href="${escHtml(row.website)}" target="_blank">${escHtml(row.website)}</a></span>`);
+  if (row.scan_note) parts.push(`<span style="color:var(--dim);font-style:italic;font-size:11px">🔍 ${escHtml(row.scan_note)}</span>`);
+  document.getElementById('panel-meta').innerHTML = parts.join('');
+
+  document.getElementById('panel-email').value = row.to_email || '';
+  document.getElementById('panel-email').disabled = !!row.sent_at;
+  document.getElementById('panel-subject').value = row.subject || '';
+  document.getElementById('panel-subject').disabled = !!row.sent_at;
+  document.getElementById('panel-body').value = row.body || '';
+  document.getElementById('panel-body').disabled = !!row.sent_at;
+
+  const sc = parseInt(row.final_priority_score) || 3;
+  const chip = document.getElementById('panel-score-chip');
+  chip.textContent = sc;
+  chip.className = `score-chip ${scoreClass(row.final_priority_score)}`;
+  chip.dataset.tip = scoreTip(row.final_priority_score);
+  document.getElementById('panel-reason').textContent = row.scoring_reason || '';
+
+  const ab = document.getElementById('panel-approve-btn');
+  const ub = document.getElementById('panel-unapprove-btn');
+  if (row.sent_at) { ab.style.display='none'; ub.style.display='none'; }
+  else if (row.approved === 'true') { ab.style.display='none'; ub.style.display=''; }
+  else { ab.style.display=''; ub.style.display='none'; }
+}
+
+function closePanel() { document.getElementById('panel-overlay').classList.remove('open'); panelIdx = -1; }
+function closePanelOnOverlay(e) { if (e.target===document.getElementById('panel-overlay')) closePanel(); }
+function navigatePanel(dir) { const n=panelIdx+dir; if(n>=0&&n<filteredRows.length) openPanel(n); }
+
+function panelFieldChanged(field, value) {
+  const row = filteredRows[panelIdx];
+  if (!row) return;
+  const gi = allRows.indexOf(row);
+  row[field] = value;
+  clearTimeout(panelSaveTimer);
+  panelSaveTimer = setTimeout(() => { api('/api/update_row',{index:gi,updates:{[field]:value}}); renderTable(); }, 500);
+}
+
+async function panelApprove() {
+  const row = filteredRows[panelIdx]; if (!row) return;
+  if (!row.to_email) { toast('Add a To Email first','err'); return; }
+  const gi = allRows.indexOf(row);
+  await api('/api/approve_row',{index:gi});
+  row.approved='true'; fillPanel(row,panelIdx); renderTable(); loadStats();
+  toast('Approved ✓','ok');
+}
+
+async function panelUnapprove() {
+  const row = filteredRows[panelIdx]; if (!row) return;
+  const gi = allRows.indexOf(row);
+  await api('/api/unapprove_row',{index:gi});
+  row.approved='false'; fillPanel(row,panelIdx); renderTable(); loadStats();
+}
+
+async function panelDelete() {
+  const row = filteredRows[panelIdx];
+  if (!row||!confirm('Remove this lead?')) return;
+  const gi = allRows.indexOf(row);
+  const res = await api('/api/delete_row',{index:gi});
+  if (res.ok) { closePanel(); await loadAll(); toast('Deleted','info'); }
+}
+
+// ── Row actions ───────────────────────────────────────────────────────────────
+async function approveRow(gi) {
+  const row = allRows[gi]; if (!row) return;
+  if (!row.to_email) { toast('Add a To Email first','err'); return; }
+  await api('/api/approve_row',{index:gi});
+  row.approved='true'; renderTable(); loadStats(); toast('Approved ✓','ok');
+}
+
+async function unapproveRow(gi) {
+  await api('/api/unapprove_row',{index:gi});
+  if (allRows[gi]) allRows[gi].approved='false';
+  renderTable(); loadStats();
+}
+
+async function deleteRow(gi) {
+  if (!confirm('Remove this lead?')) return;
+  const res = await api('/api/delete_row',{index:gi});
+  if (res.ok) { await loadAll(); toast('Deleted','info'); }
+}
+
+async function approveAll() {
+  const res = await api('/api/approve_all',{});
+  await loadAll(); toast(`Approved ${res.approved} rows`,'ok');
+}
+
+// ── Bulk ──────────────────────────────────────────────────────────────────────
+function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
+function updateBulkBar() {
+  const n = document.querySelectorAll('.row-chk:checked').length;
+  document.getElementById('bulk-count').textContent = n;
+  document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
+}
+function clearSelection() {
+  document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+  document.getElementById('chk-all').checked=false;
+  updateBulkBar();
+}
+function toggleCheckAll(master) { document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
+
+async function bulkApprove() {
+  const idxs = getSelectedGIs();
+  const missing = idxs.filter(i=>!allRows[i]?.to_email);
+  if (missing.length) { toast(`${missing.length} row(s) need an email first`,'err'); return; }
+  await Promise.all(idxs.map(i=>api('/api/approve_row',{index:i})));
+  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='true'; });
+  clearSelection(); renderTable(); loadStats(); toast(`Approved ${idxs.length}`,'ok');
+}
+
+async function bulkUnapprove() {
+  const idxs = getSelectedGIs();
+  await Promise.all(idxs.map(i=>api('/api/unapprove_row',{index:i})));
+  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='false'; });
+  clearSelection(); renderTable(); loadStats(); toast(`Unapproved ${idxs.length}`,'info');
+}
+
+async function bulkDelete() {
+  const idxs = getSelectedGIs();
+  if (!confirm(`Delete ${idxs.length} lead(s)?`)) return;
+  for (const i of [...idxs].sort((a,b)=>b-a)) await api('/api/delete_row',{index:i});
+  clearSelection(); await loadAll(); toast(`Deleted ${idxs.length}`,'info');
+}
+
+// ── Send ──────────────────────────────────────────────────────────────────────
+async function sendDryRun() {
+  const btn=document.getElementById('btnSendDry');
+  btn.classList.add('loading'); btn.disabled=true;
+  try {
+    const res = await api('/api/send_approved',{send_live:false});
+    if (res.ok) { const s=res.stats; toast(`Dry run: ${s.approved_ready} ready, ${s.skipped} no email`,'info'); }
+    else toast('Error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+function confirmSend() {
+  const ready = allRows.filter(r=>r.approved==='true'&&!r.sent_at&&r.to_email).length;
+  document.getElementById('send-modal-msg').innerHTML =
+    `<strong>${ready} email${ready!==1?'s':''}</strong> will be sent live from your Gmail. Only approved rows with a <code>to_email</code> are included.`;
+  document.getElementById('send-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('send-modal').classList.remove('open'); }
+
+async function sendLive() {
+  const btn=document.getElementById('btn-confirm-send');
+  btn.classList.add('loading'); btn.disabled=true; closeModal();
+  const sb=document.getElementById('btnSendLive');
+  sb.classList.add('loading'); sb.disabled=true;
+  try {
+    const res = await api('/api/send_approved',{send_live:true});
+    if (res.ok) { const s=res.stats; await loadAll(); toast(`Sent ${s.sent}`+(s.failed?` (${s.failed} failed)`:''),(s.failed?'err':'ok')); }
+    else toast('Send error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+  sb.classList.remove('loading'); sb.disabled=false;
+}
+
+// ── Discover ──────────────────────────────────────────────────────────────────
+async function discoverLeads() {
+  const industry=document.getElementById('d-industry').value;
+  const city=document.getElementById('d-city').value.trim();
+  const state=document.getElementById('d-state').value.trim();
+  const limit=parseInt(document.getElementById('d-limit').value)||20;
+  if (!industry||!city||!state) { toast('Fill in industry, city, and state','err'); return; }
+  const btn=document.getElementById('btnDiscover');
+  btn.classList.add('loading'); btn.disabled=true;
+  toast(`Searching ${industry} in ${city}, ${state}…`,'info');
+  try {
+    const res = await api('/api/discover',{industry,city,state,limit});
+    if (res.ok) { await loadAll(); toast(`Found ${res.found} new — ${res.total_queue} total in queue`,'ok'); document.getElementById('api-key-notice').style.display='none'; }
+    else { if (res.error?.includes('GOOGLE_PLACES_API_KEY')) document.getElementById('api-key-notice').style.display='block'; toast('Discover error: '+res.error,'err'); }
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+async function loadIndustries() {
+  try {
+    const list = await api('/api/industries');
+    const sel = document.getElementById('d-industry');
+    sel.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+    sel.value='plumbing';
+  } catch(e) {}
+}
+
+async function extractEmails() {
+  const btn=document.getElementById('btnExtract');
+  btn.classList.add('loading'); btn.disabled=true;
+  toast('Scanning websites for emails…','info');
+  try {
+    const res = await api('/api/extract_emails',{});
+    if (res.ok) { const s=res.stats; await loadAll(); toast(`Found ${s.found} of ${s.scanned} scanned`,s.found>0?'ok':'info'); }
+    else toast('Extract error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+async function testApiKey() {
+  const btn=document.getElementById('btnTestKey');
+  btn.disabled=true; btn.textContent='🔑 Testing…';
+  try {
+    const res = await api('/api/check_api_key');
+    toast(res.ok?'✓ '+res.message:'✗ '+res.error,res.ok?'ok':'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.disabled=false; btn.textContent='🔑 Test Key';
+}
+
+async function runFollowups() {
+  const btn=document.getElementById('btnFollowup');
+  btn.classList.add('loading'); btn.disabled=true;
+  toast('Checking for follow-ups due…','info');
+  try {
+    const res = await api('/api/run_followups',{});
+    if (res.ok) { await loadAll(); toast(res.stats.queued>0?`Queued ${res.stats.queued} follow-up(s)`:'No follow-ups due yet',res.stats.queued>0?'ok':'info'); }
+    else toast('Error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+function toast(msg, type='info') {
+  const el=document.createElement('div');
+  el.className=`toast-msg ${type}`; el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },4500);
+}
+
+// Keyboard shortcuts when panel open
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('panel-overlay').classList.contains('open')) return;
+  if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp')   { e.preventDefault(); navigatePanel(-1); }
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') { e.preventDefault(); navigatePanel(1); }
+  if (e.key==='Escape') closePanel();
+  if (e.key==='a'||e.key==='A') panelApprove();
+});
+
+document.addEventListener('DOMContentLoaded', () => { loadAll(); loadIndustries(); });
+document.getElementById('send-modal').addEventListener('click', e => {
+  if (e.target===document.getElementById('send-modal')) closeModal();
+});
+</script>
+</body>
+</html>
