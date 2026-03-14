@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import os
 import sys
 import webbrowser
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from threading import Timer
 
@@ -39,6 +41,19 @@ from outreach.followup_scheduler import run_followup_scheduler
 BASE_DIR = Path(__file__).resolve().parent
 PENDING_CSV = DEFAULT_PENDING_CSV
 PROSPECTS_CSV = DEFAULT_PROSPECTS_CSV
+
+# ── File logging ──────────────────────────────────────────────────────────────
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+_handler = RotatingFileHandler(
+    LOG_DIR / "copperline.log",
+    maxBytes=2 * 1024 * 1024,  # 2 MB per file
+    backupCount=5,
+    encoding="utf-8",
+)
+_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+logging.basicConfig(level=logging.INFO, handlers=[_handler, logging.StreamHandler()])
+log = logging.getLogger("copperline")
 
 PENDING_COLUMNS = [
     "business_name", "city", "state", "website", "phone", "contact_method",
@@ -181,8 +196,12 @@ def api_send_approved():
     send_live = request.json.get("send_live", False)
     try:
         stats = process_pending_emails(PENDING_CSV, dry_run=not send_live)
+        if send_live:
+            log.info("Send run: sent=%d failed=%d approved_ready=%d",
+                     stats.get("sent", 0), stats.get("failed", 0), stats.get("approved_ready", 0))
         return jsonify({"ok": True, "stats": stats})
     except Exception as exc:
+        log.error("Send error: %s", exc, exc_info=True)
         return jsonify({"ok": False, "error": str(exc)}), 500
 
 
@@ -265,21 +284,25 @@ def api_discover():
         rows = discover_prospects(industry=industry, city=city, state=state,
                                   api_key=api_key, limit=limit, scrape_emails=True)
         if len(rows) == 0:
+            log.warning("Discover returned 0 results: industry=%s city=%s state=%s", industry, city, state)
             return jsonify({
                 "ok": False,
                 "error": "Google Places returned 0 results. Check your API key is valid and Places API (New) is enabled in Google Cloud Console."
             }), 400
+        log.info("Discovered %d prospects: industry=%s city=%s state=%s", len(rows), industry, city, state)
         # Draft emails only for the newly discovered rows
         run_pipeline(input_csv=PROSPECTS_CSV, skip_scan=True)
         pending = _read_pending()
         return jsonify({"ok": True, "found": len(rows), "total_queue": len(pending)})
     except Exception as exc:
+        log.error("Discover error: %s", exc, exc_info=True)
         return jsonify({"ok": False, "error": str(exc)}), 500
 
 
 @app.route("/api/opt_out_row", methods=["POST"])
 def api_opt_out_row():
     """Mark a lead as do_not_contact=true. Blocks it from future sends."""
+    log.info("Opt-out requested for index=%s", request.json.get("index"))
     idx = request.json.get("index")
     rows = _read_pending()
     if idx is None or not (0 <= idx < len(rows)):

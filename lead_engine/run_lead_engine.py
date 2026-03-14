@@ -128,9 +128,14 @@ def run(input_csv: str | Path = DEFAULT_PROSPECTS_CSV, limit: int = 0, skip_scan
             "has_email_visible": False,
         }
 
-        if not skip_scan and _is_scannable_website(website):
+        # Skip re-scanning if this prospect was already scanned (has automation_opportunity set)
+        already_scanned = bool((prospect.get("automation_opportunity") or "").strip())
+        if not skip_scan and not already_scanned and _is_scannable_website(website):
             websites_scanned += 1
             scan_result = scan_website(website)
+        elif already_scanned:
+            # Reuse stored signals so scoring stays consistent
+            scan_result["automation_opportunity"] = prospect.get("automation_opportunity", "unknown")
 
         final_priority_score, scoring_reason = score_opportunity(prospect, scan_result)
 
@@ -160,6 +165,7 @@ def run(input_csv: str | Path = DEFAULT_PROSPECTS_CSV, limit: int = 0, skip_scan
                 "scoring_reason": scoring_reason,
                 "final_priority_score": str(final_priority_score),
                 "automation_opportunity": scan_result.get("automation_opportunity", "unknown"),
+                "do_not_contact": prospect.get("do_not_contact", ""),
             }
         )
         existing_keys.add(key)
