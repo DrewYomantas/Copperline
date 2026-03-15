@@ -7,6 +7,47 @@ Update this file at the end of every pass.
 
 ## 2026-03-15
 
+### Pass A — Operator Safety Fixes
+
+**Goal:** Prevent broken outreach messages and fix confusing UI without
+touching any protected systems.
+
+**Changes:**
+
+1. **`COPPERLINE_LINKS` config block** added at top of JS (above `let allRows`).
+   Contains `demo`, `booking`, `caseStudy` URL slots. Operator updates these
+   once before sending live templates. `_clinkOr(url, fallback)` helper
+   returns the URL if configured, or a `⚠` warning string if still default.
+
+2. **`cvSendQuick` templates** now reference `COPPERLINE_LINKS` via `_clinkOr`.
+   If any link is unconfigured, the `⚠` string appears in the copied text AND
+   an error toast fires: `⚠ Template contains unconfigured link`. Operator
+   cannot accidentally send `[INSERT DEMO LINK]` to a live lead.
+   Call template now includes a booking link instead of open-ended question.
+
+3. **`mcRenderClients` table headers** corrected: Twilio Number / Owner Phone /
+   Sheet / Notify → Phone / SMS Reply / Status (matches actual backend schema).
+
+4. **`mcRenderClients` tbody cells** corrected: `c.twilio_number` / `c.owner_phone`
+   / `c.sheet_name` / `c.notification_channel` (all non-existent) →
+   `c.phone`, `c.sms_reply`, `c.active` status badge.
+
+5. **Leads and Delete buttons** in client rows: `disabled` + `opacity:.4` +
+   `title="Feature not available yet"`. No longer fire broken 404 routes.
+
+6. **Service badge** initial text: `● Missed-Call: Not Configured` with tooltip
+   `"The missed-call automation service has not been configured yet.
+   This does not affect discovery or outreach."` `mcCheckHealth` still
+   overrides to Online/Offline if the service actually starts running.
+
+**Protected systems modified:** None.
+**Backend files modified:** None.
+**File changed:** `lead_engine/dashboard_static/index.html`
+
+**Commit:** `4a169dd`
+
+---
+
 ### Clients Route Fix
 
 **Root cause:** Frontend was calling `/api/mc/clients`, `/api/mc/clients/new`,

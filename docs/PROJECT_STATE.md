@@ -12,19 +12,18 @@ Lead Acquisition Engine
 Discovery Map System
 
 ## Last Completed Pass
-Clients Route Fix
+Pass A — Operator Safety Fixes
 
-- Aligned frontend `/api/mc/*` paths with actual backend routes
-- `mcLoadClients()`: `/api/mc/clients` → `/api/clients`
-- `mcSaveNewClient()`: `/api/mc/clients/new` → `/api/clients/add`
-- `mcRunDemo()`: `/api/mc/run_demo` → `/api/demo_run`
-- `mcApi()`: added `r.ok` guard (same pattern as `api()` fix)
-- 2 unimplemented routes remain: DELETE client, GET client leads
+- `COPPERLINE_LINKS` config block added to top of JS for demo/booking/case study URLs
+- `cvSendQuick` templates reference config; emit `⚠` error toast if links not yet configured
+- `mcRenderClients` columns fixed to match actual backend schema (phone/sms_reply/active)
+- Leads and Delete buttons disabled (`title="Feature not available yet"`)
+- Service badge default changed to `● Missed-Call: Not Configured` with accurate tooltip
 
-Commit: `4c390fe`
+Commit: `4a169dd`
 
 ## Previous Completed Pass
-Runtime Verification Hotfixes — `2b202cd`
+Clients Route Fix — `4c390fe`
 
 - Added `_mapAreaLabel(markers)`: frequency-counts `biz.city` from result set, returns most common city name, null if no city data
 - History entry now stores `label` field alongside existing fields
