@@ -442,7 +442,8 @@ def api_discover_area():
     """
     Map-area discovery: find businesses within a lat/lng/radius circle.
     Body: { industry, lat, lng, radius_m, limit }
-    Returns same shape as /api/discover.
+    Returns: { ok, places_found, prospects_added, prospects_skipped,
+               drafts_created, queue_total, markers, error? }
     """
     api_key = os.getenv("GOOGLE_PLACES_API_KEY","").strip()
     if not api_key:
@@ -460,24 +461,65 @@ def api_discover_area():
         return jsonify({"ok":False,"error":"radius_m must be between 1000 and 50000"}), 400
     from datetime import datetime as _dt
     try:
-        rows = discover_prospects_area(
+        # Count queue before pipeline run so we can compute drafts_created
+        queue_before = len(_read_pending())
+
+        new_prospect_rows = discover_prospects_area(
             industry=industry, lat=lat, lng=lng,
             radius_m=radius_m, api_key=api_key,
             limit=limit, scrape_emails=True,
         )
+        prospects_added   = len(new_prospect_rows)
         ts = _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-        if not rows:
-            log.warning("discover_area returned 0 rows: industry=%s lat=%.4f lng=%.4f r=%.0f",
+
+        _append_search_history({
+            "ts": ts, "city": f"{lat:.4f},{lng:.4f}", "state": "area",
+            "industry": industry, "limit": limit,
+            "found": prospects_added,
+            "status": "ok" if prospects_added else "all_duplicates",
+        })
+
+        if not prospects_added:
+            log.warning("discover_area 0 new: industry=%s lat=%.4f lng=%.4f r=%.0f",
                         industry, lat, lng, radius_m)
-            _append_search_history({"ts":ts,"city":f"{lat:.4f},{lng:.4f}","state":"area",
-                                    "industry":industry,"limit":limit,"found":0,"status":"all_duplicates"})
-            return jsonify({"ok":False,"error":"No new businesses found in this area. Try a different location or industry."}), 400
-        log.info("discover_area: found=%d industry=%s lat=%.4f lng=%.4f r=%.0f",
-                 len(rows), industry, lat, lng, radius_m)
-        _append_search_history({"ts":ts,"city":f"{lat:.4f},{lng:.4f}","state":"area",
-                                "industry":industry,"limit":limit,"found":len(rows),"status":"ok"})
+            return jsonify({
+                "ok": False,
+                "places_found": 0, "prospects_added": 0, "prospects_skipped": limit,
+                "drafts_created": 0, "queue_total": queue_before,
+                "markers": [],
+                "error": "No new businesses found in this area — all duplicates or no results.",
+            }), 400
+
+        log.info("discover_area: added=%d industry=%s lat=%.4f lng=%.4f r=%.0f",
+                 prospects_added, industry, lat, lng, radius_m)
+
         run_pipeline(input_csv=PROSPECTS_CSV, skip_scan=True)
-        return jsonify({"ok":True,"found":len(rows),"total_queue":len(_read_pending())})
+
+        queue_after    = len(_read_pending())
+        drafts_created = max(0, queue_after - queue_before)
+
+        # Build lightweight marker list for the map (lat/lng from Places not stored,
+        # so use the prospect's city as label; real coordinates need geocoding later)
+        markers = [
+            {
+                "name":    r.get("business_name", ""),
+                "city":    r.get("city", ""),
+                "email":   r.get("to_email", ""),
+                "channel": r.get("contact_method", ""),
+            }
+            for r in new_prospect_rows
+        ]
+
+        return jsonify({
+            "ok":               True,
+            "places_found":     prospects_added,  # Places returned & not duplicate
+            "prospects_added":  prospects_added,
+            "prospects_skipped": max(0, limit - prospects_added),
+            "drafts_created":   drafts_created,
+            "queue_total":      queue_after,
+            "markers":          markers,
+        })
+
     except Exception as exc:
         log.error("discover_area error: %s", exc, exc_info=True)
         return jsonify({"ok":False,"error":str(exc)}), 500

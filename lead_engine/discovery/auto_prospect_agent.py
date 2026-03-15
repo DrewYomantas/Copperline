@@ -449,28 +449,68 @@ def _sanitise_row(row: Dict, fieldnames: List[str]) -> Dict:
 
 
 def _append_to_prospects(csv_path: Path, rows: List[Dict]) -> None:
+    """
+    Append new prospect rows to the CSV.
+
+    If the new rows require additional columns (unified > existing_header),
+    the file is rewritten in full so the header always matches the data width.
+    Appending wider rows under a narrow header causes DictReader to push the
+    overflow into restkey=None, which crashes _update_prospect_status.
+
+    If the schema is unchanged, rows are appended without a full rewrite.
+    """
     if not rows:
         return
-    is_new = not csv_path.exists() or csv_path.stat().st_size == 0
     csv_path.parent.mkdir(parents=True, exist_ok=True)
+    is_new = not csv_path.exists() or csv_path.stat().st_size == 0
 
-    if not is_new:
-        with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
-            existing_header = next(csv.reader(f), [])
-        unified = list(existing_header)
-        for col in PROSPECTS_COLUMNS:
-            if col not in unified:
-                unified.append(col)
-        fieldnames = unified
-    else:
+    if is_new:
         fieldnames = PROSPECTS_COLUMNS
-
-    with csv_path.open("a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
-        if is_new:
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
-        for row in rows:
-            writer.writerow(_sanitise_row(row, fieldnames))
+            for row in rows:
+                writer.writerow(_sanitise_row(row, fieldnames))
+        return
+
+    # Read existing header and all rows
+    with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
+        raw_header = next(csv.reader(f), [])
+    with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
+        existing_rows = list(csv.DictReader(f))
+
+    # Normalise legacy column names before building unified schema.
+    # 'scan_note' (old) → 'scan_notes' (current) so they never both appear.
+    existing_header = ["scan_notes" if c == "scan_note" else c for c in raw_header]
+
+    # Rename key in existing rows to match
+    if "scan_note" in raw_header:
+        for row in existing_rows:
+            if "scan_note" in row:
+                row["scan_notes"] = row.pop("scan_note")
+
+    # Build unified fieldnames: existing cols first, then any new ones
+    unified = list(existing_header)
+    for col in PROSPECTS_COLUMNS:
+        if col not in unified:
+            unified.append(col)
+
+    schema_expanded = (len(unified) > len(existing_header))
+
+    if schema_expanded:
+        # Full rewrite so header matches all row widths
+        all_rows = existing_rows + rows
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=unified, extrasaction="ignore")
+            writer.writeheader()
+            for row in all_rows:
+                writer.writerow(_sanitise_row(row, unified))
+    else:
+        # Schema unchanged — safe to append
+        with csv_path.open("a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=unified, extrasaction="ignore")
+            for row in rows:
+                writer.writerow(_sanitise_row(row, unified))
 
 
 def discover_prospects(industry: str, city: str, state: str,

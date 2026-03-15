@@ -3463,7 +3463,41 @@ async function exDeleteRow(queueIndex, tableRowIndex) {
 // ══════════════════════════════════════════════════════════════════
 // PAGE: MAP SEARCH  (Leaflet + /api/discover_area)
 // ══════════════════════════════════════════════════════════════════
-let _mapInstance    = null;   // Leaflet map object
+let _mapResultMarkers = [];
+
+function _mapClearResultMarkers() {
+  _mapResultMarkers.forEach(m => m.remove());
+  _mapResultMarkers = [];
+}
+
+function _mapPlaceResultMarkers(markers) {
+  if (!_mapInstance || !_mapCenter) return;
+  _mapClearResultMarkers();
+  // Distribute markers in a spiral around the circle center.
+  // Exact coordinates are not available from the prospect rows (Places API
+  // lat/lng is not stored in prospects.csv). This gives visual confirmation
+  // that results were found; real geocoded pins come in the next phase.
+  const count = markers.length;
+  const baseR = Math.min(_mapRadiusM * 0.6, 3000);
+  markers.forEach((biz, idx) => {
+    const angle  = (2 * Math.PI * idx) / count;
+    const spread = baseR * (0.4 + 0.6 * (idx % 3) / 2);
+    const dlat   = (spread * Math.cos(angle)) / 111320;
+    const dlng   = (spread * Math.sin(angle)) / (111320 * Math.cos(_mapCenter.lat * Math.PI / 180));
+    const pos    = L.latLng(_mapCenter.lat + dlat, _mapCenter.lng + dlng);
+    const hasEmail = biz.email && biz.email.length > 0;
+    const color  = hasEmail ? '#3ecf72' : '#b87333';
+    const icon   = L.divIcon({
+      className: '',
+      html: `<div style="width:10px;height:10px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.5)" title="${biz.name}"></div>`,
+      iconAnchor: [5, 5],
+    });
+    const marker = L.marker(pos, { icon })
+      .addTo(_mapInstance)
+      .bindPopup(`<strong>${biz.name}</strong><br>${biz.city}<br><em>${biz.channel}${hasEmail ? ' — ' + biz.email : ''}</em>`);
+    _mapResultMarkers.push(marker);
+  });
+}
 let _mapCircle      = null;   // current L.circle
 let _mapDragMarker  = null;   // edge drag handle marker
 let _mapCenter      = null;   // {lat, lng}
@@ -3504,6 +3538,7 @@ function _mapPlaceDragHandle() {
 function _mapDrawCircle(lat, lng) {
   if (!_mapInstance) return;
   _mapCenter = { lat, lng };
+  _mapClearResultMarkers();  // clear previous search pins on new placement
   if (_mapCircle) { _mapCircle.setLatLng([lat, lng]); _mapCircle.setRadius(_mapRadiusM); }
   else {
     _mapCircle = L.circle([lat, lng], {
@@ -3520,6 +3555,7 @@ function _mapDrawCircle(lat, lng) {
 function mapClearCircle() {
   if (_mapCircle)     { _mapCircle.remove();     _mapCircle = null; }
   if (_mapDragMarker) { _mapDragMarker.remove();  _mapDragMarker = null; }
+  _mapClearResultMarkers();
   _mapCenter = null;
   document.getElementById('btnMapSearch').disabled = true;
   document.getElementById('map-status').textContent = 'Circle cleared.';
@@ -3556,21 +3592,32 @@ async function mapSearch() {
   const limit = parseInt(document.getElementById('map-limit').value) || 20;
   const btn = document.getElementById('btnMapSearch');
   btn.classList.add('loading'); btn.disabled = true;
-  document.getElementById('map-status').textContent = `Searching for ${industry} within ${_mapMetresToMiles(_mapRadiusM)} miles…`;
+  const statusEl = document.getElementById('map-status');
+  statusEl.textContent = `Searching for ${industry} within ${_mapMetresToMiles(_mapRadiusM)} miles\u2026`;
   try {
     const res = await api('/api/discover_area', {
       industry, lat: _mapCenter.lat, lng: _mapCenter.lng,
       radius_m: _mapRadiusM, limit
     });
     if (res.ok) {
+      // Auto-refresh Outreach queue so results are immediately visible
       await loadAll();
-      toast(`Found ${res.found} new — ${res.total_queue} total in queue`, 'ok');
-      document.getElementById('map-status').textContent = `Done: ${res.found} new businesses added.`;
+      const summary = `\u2713 Added ${res.prospects_added} new \u2014 ${res.drafts_created} drafted \u2014 ${res.queue_total} total in queue`;
+      toast(summary, 'ok');
+      statusEl.innerHTML =
+        `<strong style="color:var(--green)">\u2713 Done</strong> &nbsp;` +
+        `Places found: <strong>${res.places_found}</strong> &nbsp;|&nbsp; ` +
+        `Prospects added: <strong>${res.prospects_added}</strong> &nbsp;|&nbsp; ` +
+        `Skipped (dupes): <strong>${res.prospects_skipped}</strong> &nbsp;|&nbsp; ` +
+        `Drafts created: <strong>${res.drafts_created}</strong> &nbsp;|&nbsp; ` +
+        `Queue total: <strong>${res.queue_total}</strong>`;
+      // Place name-only markers for discovered businesses
+      if (res.markers && res.markers.length) _mapPlaceResultMarkers(res.markers);
     } else {
       toast('Search error: ' + res.error, 'err');
-      document.getElementById('map-status').textContent = 'Search returned no new results.';
+      statusEl.textContent = res.error || 'Search returned no new results.';
     }
-  } catch(e) { toast('Connection error','err'); }
+  } catch(e) { toast('Connection error','err'); statusEl.textContent = 'Connection error.'; }
   btn.classList.remove('loading'); btn.disabled = !_mapCenter;
 }
 

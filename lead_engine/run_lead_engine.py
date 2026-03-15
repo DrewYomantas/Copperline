@@ -176,14 +176,19 @@ def _update_prospect_status(input_path: Path, drafted_names: Set[str]) -> None:
         reader     = csv.DictReader(f)
         fieldnames = list(reader.fieldnames or [])
         rows       = list(reader)
+    # Strip None keys from fieldnames (can appear when a row has more columns
+    # than the header — overflow columns are keyed as None by csv.DictReader).
+    fieldnames = [c for c in fieldnames if c is not None]
     if "status" not in fieldnames:
         fieldnames.append("status")
     for row in rows:
+        # Drop None key from any row dict before writing
+        row.pop(None, None)
         name = row.get("business_name", "").strip().lower()
         if name in drafted_names and row.get("status", "") == "new":
             row["status"] = "drafted"
     with input_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
 
