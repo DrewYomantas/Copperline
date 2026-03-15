@@ -1,0 +1,20 @@
+Seed run: 2026-03-15T04:27:08.714530+00:00
+BUSINESS                                                ACTION
+--------------------------------------------------------------------------------
+All Temp Heating & Cooling                              NOT_FOUND in prospects.csv
+U.S. Allied Plumbing & HVAC                             NOT_FOUND in prospects.csv
+Oliphant Lock & Safe                                    NOT_FOUND in prospects.csv
+M Spinello & Son Locksmiths Safe & Security Experts     NOT_FOUND in prospects.csv
+I. Spinello Locksmiths & Security Integrators           NOT_FOUND in prospects.csv
+24 HR Emergency Plumber Chicago INC                     SKIP (already 'sent' >= sent)
+Power Plumbing & Sewer Contractor, Inc.                 SKIP (already 'sent' >= sent)
+Lopez Plumbing Systems, Inc.                            SKIP (already 'sent' >= sent)
+First Chicago Plumbing                                  SKIP (already 'sent' >= sent)
+J Sewer & Drain Plumbing                                SKIP (already 'sent' >= sent)
+Apex Plumbing & Sewer Inc.                              SKIP (already 'sent' >= sent)
+Vanguard Plumbing and Sewer, Inc.                       SKIP (already 'sent' >= sent)
+Goode Plumbing                                          SKIP (already 'sent' >= sent)
+Rescue Plumbing                                         SKIP (already 'sent' >= sent)
+Total Sewer & Drain                                     SKIP (already 'sent' >= sent)
+Handyman Connection of Rockford                         SKIP (already 'sent' >= sent)
+Lars Plumbing                                           SKIP (already 'sent' >= sent)
