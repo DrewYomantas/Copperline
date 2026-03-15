@@ -7,6 +7,36 @@ Update this file at the end of every pass.
 
 ## 2026-03-15
 
+### Runtime Verification Hotfixes
+
+**Diagnosed from live browser session (5 screenshots + console log).**
+
+**Root causes found:**
+- `api()` called `r.json()` unconditionally. `/api/mc/clients` (missing backend
+  route) returns 404 HTML. Parsing `<!DOCTYPE html>` as JSON throws
+  `SyntaxError: Unexpected end of input at (index):1:10`. Fired on every
+  health check cycle (30s interval) and every Clients tab open.
+- Map `click` event repositioned the active circle on any tile click, wiping
+  result markers without warning.
+- `Clear Coverage` button was near-invisible (text color `var(--dim)`).
+
+**Fixes:**
+- `api()`: added `if (!r.ok)` guard — throws `Error("API /path returned N: ...")`
+  on non-OK responses. All callers have `try/catch` so errors surface cleanly.
+- `_mapInit` click handler: wraps `_mapDrawCircle` in
+  `if (_mapResultItems.length === 0)` guard. Circle repositions freely when
+  no results loaded; locked once results are present until `X Clear` used.
+- `.btn-coverage`: raised text to `var(--muted)`, border to `var(--border-hi)`,
+  hover to `var(--text)` + blue border.
+
+**File changed:** `lead_engine/dashboard_static/index.html`
+
+**Commit:** `2b202cd`
+
+**Parse check:** `vm.Script` PARSE OK on served JS post-fix.
+
+---
+
 ### Emergency Fix — Duplicate `let _currentPage` SyntaxError
 
 **Root cause:** Stale duplicate `let _currentPage = 'outreach'` declaration

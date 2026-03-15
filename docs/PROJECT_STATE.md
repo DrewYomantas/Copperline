@@ -12,17 +12,17 @@ Lead Acquisition Engine
 Discovery Map System
 
 ## Last Completed Pass
-Emergency Fix — Duplicate `let _currentPage` SyntaxError
+Runtime Verification Hotfixes
 
-- Removed stale duplicate `let _currentPage = 'outreach'` at line 2011
-- Leftover from Step 1 nav restructure; killed entire script block at parse time
-- Browser error: `Uncaught SyntaxError: Identifier '_currentPage' has already been declared`
-- Fix verified: `vm.Script` parse check passes on served JS block
+- `api()`: throws descriptive `Error` on non-OK HTTP — fixes `SyntaxError: Unexpected end of input` from 404 pages
+- Map click guard: `_mapDrawCircle` only fires when `_mapResultItems` is empty — prevents accidental result wipe
+- `.btn-coverage` contrast raised — button now readable in toolbar
+- Parse check: `vm.Script` PARSE OK on served JS post-fix
 
-Commit: `761faaf`
+Commit: `2b202cd`
 
 ## Previous Completed Pass
-Step 7 — Human-Readable Discovery Labels
+Stabilization Pass — Defensive Fixes (Steps 3–7) — `03faaf8`
 
 - Added `_mapAreaLabel(markers)`: frequency-counts `biz.city` from result set, returns most common city name, null if no city data
 - History entry now stores `label` field alongside existing fields

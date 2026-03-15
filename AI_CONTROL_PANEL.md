@@ -15,9 +15,9 @@ Discovery Map System
 Step 8 — Search Visible Area (not yet scoped)
 
 ## Last Completed Pass
-Emergency Fix — Duplicate `let _currentPage` SyntaxError
+Runtime Verification Hotfixes
 
-Commit: `761faaf`
+Commit: `2b202cd`
 
 ## Next Pass
 Step 8 — Search Visible Area (scope questions in CURRENT_BUILD.md)
