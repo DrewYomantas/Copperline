@@ -526,6 +526,8 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 .mrp-ctrl-chk input{cursor:pointer;accent-color:var(--green)}
 .map-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 10px}
 .map-status{font-size:12px;color:var(--muted);min-height:18px}
+.btn-coverage{background:transparent;color:var(--dim);border:1px solid var(--border);font-size:11px;padding:4px 9px}
+.btn-coverage:hover{color:var(--muted);border-color:var(--border-hi)}
 .map-instructions{font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
 /* ── Sub-navigation ──────────────────────────────────────────────── */
 .sub-nav{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 24px}
@@ -1118,6 +1120,7 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
       <span class="spin"></span>⚡ Search This Area
     </button>
     <button class="btn btn-ghost" onclick="mapClearCircle()" title="Remove current circle">✕ Clear</button>
+    <button id="btnClearCoverage" class="btn btn-coverage" onclick="_mapClearCoverage()" title="Remove prior search overlays" style="display:none">◌ Clear Coverage</button>
     <span id="map-radius-label" style="font-size:11px;color:var(--muted)"></span>
   </div>
   <div id="map-layout">
@@ -3784,12 +3787,20 @@ function _mapPlaceResultMarkers(markers) {
   });
   _mapRenderPanel();
 }
-let _mapCircle      = null;   // current L.circle
-let _mapDragMarker  = null;   // edge drag handle marker
-let _mapCenter      = null;   // {lat, lng}
-let _mapRadiusM     = 2000;   // current radius in metres
+let _mapCircle        = null;   // current L.circle (active, editable)
+let _mapDragMarker    = null;   // edge drag handle marker
+let _mapCenter        = null;   // {lat, lng}
+let _mapRadiusM       = 2000;   // current radius in metres
+let _mapCoverageCircles = [];   // prior search overlays (session only, not persisted)
 const MAP_DEFAULT_LAT = 42.2711;  // Rockford, IL
 const MAP_DEFAULT_LNG = -89.0940;
+
+function _mapClearCoverage() {
+  _mapCoverageCircles.forEach(c => c.remove());
+  _mapCoverageCircles = [];
+  const btn = document.getElementById('btnClearCoverage');
+  if (btn) btn.style.display = 'none';
+}
 
 function _mapMetresToMiles(m) { return (m / 1609.34).toFixed(2); }
 
@@ -3905,6 +3916,17 @@ async function mapSearch() {
         `Queue total: <strong>${res.queue_total}</strong>`;
       // Place name-only markers for discovered businesses
       if (res.markers && res.markers.length) _mapPlaceResultMarkers(res.markers);
+      // Snapshot this search area as a coverage overlay (session memory only)
+      if (_mapInstance && _mapCenter) {
+        const cov = L.circle([_mapCenter.lat, _mapCenter.lng], {
+          radius: _mapRadiusM,
+          color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.04,
+          weight: 1, dashArray: '4 4', interactive: false
+        }).addTo(_mapInstance);
+        _mapCoverageCircles.push(cov);
+        const btn = document.getElementById('btnClearCoverage');
+        if (btn) btn.style.display = '';
+      }
     } else {
       toast('Search error: ' + res.error, 'err');
       statusEl.textContent = res.error || 'Search returned no new results.';
