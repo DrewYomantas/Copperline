@@ -559,7 +559,7 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
     <span class="tag">Operations Hub</span>
   </div>
   <div class="hdr-r">
-    <span id="mc-svc-status" class="svc-pill svc-unknown" title="Missed Call Service">● Service</span>
+    <span id="mc-svc-status" class="svc-pill svc-unknown" title="The missed-call automation service has not been configured yet. This does not affect discovery or outreach.">● Missed-Call: Not Configured</span>
     <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
   </div>
 </header>
@@ -1229,6 +1229,17 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 
 <script>
 'use strict';
+// ── Operator config — update these before sending live outreach ──────────────
+const COPPERLINE_LINKS = {
+  demo:      'https://REPLACE_WITH_DEMO_LINK',
+  booking:   'https://REPLACE_WITH_BOOKING_LINK',
+  caseStudy: 'https://REPLACE_WITH_CASE_STUDY_LINK',
+};
+function _clinkOr(url, fallback) {
+  return url && !url.includes('REPLACE_WITH') ? url : fallback;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 let allRows = [];
 let filteredRows = [];
 let currentFilter = 'active';
@@ -3085,13 +3096,20 @@ function cvSaveNextStep(idx, i) {
 function cvSendQuick(idx, type) {
   const row = allRows[idx];
   if (!row) return;
+  const demoUrl      = _clinkOr(COPPERLINE_LINKS.demo,      '⚠ Demo link not configured — update COPPERLINE_LINKS.demo in the dashboard before sending');
+  const bookingUrl   = _clinkOr(COPPERLINE_LINKS.booking,   '⚠ Booking link not configured — update COPPERLINE_LINKS.booking in the dashboard before sending');
+  const caseStudyUrl = _clinkOr(COPPERLINE_LINKS.caseStudy, '⚠ Case study link not configured — update COPPERLINE_LINKS.caseStudy in the dashboard before sending');
   const templates = {
-    demo:       `Hi — here's a quick demo of the Missed Call Text-Back system in action: [INSERT DEMO LINK]. Happy to walk you through it on a call if that's easier.`,
-    call:       `Hi — would love to hop on a quick 10-minute call to show you how this would work for ${row.business_name || 'your business'}. What time works best?`,
-    case_study: `Hi — here's a quick case study showing how a similar service company set this up: [INSERT LINK]. Let me know if you have questions.`,
+    demo:       `Hi — here's a quick demo of the Missed Call Text-Back system in action: ${demoUrl}. Happy to walk you through it on a call if that's easier.`,
+    call:       `Hi — would love to hop on a quick 10-minute call to show you how this would work for ${row.business_name || 'your business'}. Book a time here: ${bookingUrl}`,
+    case_study: `Hi — here's a quick case study showing how a similar service company set this up: ${caseStudyUrl}. Let me know if you have questions.`,
   };
   const text = templates[type] || '';
-  navigator.clipboard.writeText(text).then(() => toast('Template copied — paste into reply ✓', 'ok'))
+  // Warn operator if any unconfigured placeholder made it into the text
+  if (text.includes('⚠')) {
+    toast('⚠ Template contains unconfigured link — update COPPERLINE_LINKS before sending', 'err');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('Template copied — review before sending', 'ok'))
     .catch(() => toast('Copy failed', 'err'));
 }
 
@@ -3260,10 +3278,9 @@ function mcRenderClients() {
         <thead>
           <tr>
             <th>Client</th>
-            <th>Twilio Number</th>
-            <th>Owner Phone</th>
-            <th>Sheet</th>
-            <th>Notify</th>
+            <th>Phone</th>
+            <th>SMS Reply</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -3278,18 +3295,14 @@ function mcRenderClients() {
         <div class="mc-mono mc-muted">${escHtml(c.client_id)}</div>
         ${c.owner_email ? `<div class="mc-muted" style="font-size:11px">${escHtml(c.owner_email)}</div>` : ''}
       </td>
-      <td class="mc-mono">${escHtml(c.twilio_number)}</td>
-      <td class="mc-mono">${escHtml(c.owner_phone)}</td>
-      <td>
-        <div style="font-size:12px">${escHtml(c.sheet_name)}</div>
-        ${c.spreadsheet_id ? `<div class="mc-muted" style="font-size:10px;font-family:var(--mono);max-width:140px;overflow:hidden;text-overflow:ellipsis">${escHtml(c.spreadsheet_id.substring(0,20))}…</div>` : '<div class="mc-muted" style="font-size:11px">No sheet ID</div>'}
-      </td>
-      <td><span class="tag-industry">${escHtml(c.notification_channel)}</span></td>
+      <td class="mc-mono">${escHtml(c.phone || '—')}</td>
+      <td style="font-size:12px;max-width:200px">${escHtml((c.sms_reply||'').substring(0,60))}${(c.sms_reply||'').length>60?'…':''}</td>
+      <td><span class="tag-industry" style="${c.active===false?'opacity:.5':''}">${c.active===false?'Inactive':'Active'}</span></td>
       <td>
         <div class="mc-actions">
-          <button class="act act-edit" onclick="mcViewLeads('${escHtml(c.client_id)}','${escHtml(c.business_name)}')">Leads</button>
-          <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.client_id)}','${escHtml(c.business_name)}')">🎬 Run Demo</button>
-          <button class="act act-del" onclick="mcDeleteClient('${escHtml(c.client_id)}','${escHtml(c.business_name)}')">✕</button>
+          <button class="act act-edit" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">Leads</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.id||c.client_id||'')}','${escHtml(c.business_name)}')">🎬 Run Demo</button>
+          <button class="act act-del" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">✕</button>
         </div>
       </td>
     </tr>`).join('');
