@@ -1835,20 +1835,13 @@ async function loadIndustries() {
 }
 
 function _mapPopulateIndustries() {
-  // Populate the map-industry select from the already-loaded d-industry select.
-  // If d-industry hasn't loaded yet, fetch from the API directly.
-  const src = document.getElementById('d-industry');
   const dest = document.getElementById('map-industry');
   if (!dest) return;
-  if (src && src.options.length > 1) {
-    dest.innerHTML = src.innerHTML;
-    if (!dest.value) dest.value = 'plumbing';
-  } else {
-    api('/api/industries').then(list => {
-      dest.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
-      dest.value = 'plumbing';
-    }).catch(() => {});
-  }
+  // Always fetch from API — the d-industry select may not be loaded yet
+  api('/api/industries').then(list => {
+    dest.innerHTML = list.map(i => `<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+    dest.value = 'plumbing';
+  }).catch(() => {});
 }
 
 async function testApiKey() {
@@ -1945,7 +1938,14 @@ function switchPage(name, el) {
   if (name === 'conversations') convLoad();
   if (name === 'health')        healthLoad();
   if (name === 'exceptions')    exceptionsLoad();
-  if (name === 'map')           { _mapInit(); _mapPopulateIndustries(); }
+  if (name === 'map') {
+    // Use rAF so the active class + display paint completes before
+    // Leaflet measures the container — otherwise it gets 0px height.
+    requestAnimationFrame(() => {
+      _mapInit();
+      _mapPopulateIndustries();
+    });
+  }
 }
 
 // ==================================================================
@@ -3565,12 +3565,11 @@ function mapClearCircle() {
 
 function _mapInit() {
   if (_mapInstance) {
-    // Already initialised — tab just became visible, fix tile rendering
+    // Tab re-entered — force tile repaint
     setTimeout(() => _mapInstance.invalidateSize(), 50);
     return;
   }
   if (typeof L === 'undefined') {
-    // Leaflet script still loading (defer) — retry in 100 ms
     setTimeout(_mapInit, 100);
     return;
   }
@@ -3582,8 +3581,9 @@ function _mapInit() {
     maxZoom: 18,
   }).addTo(_mapInstance);
   _mapInstance.on('click', (e) => { _mapDrawCircle(e.latlng.lat, e.latlng.lng); });
-  // invalidateSize after container is fully visible
+  // Two invalidateSize calls: first after CSS settles, second after tiles start loading
   setTimeout(() => _mapInstance.invalidateSize(), 50);
+  setTimeout(() => _mapInstance.invalidateSize(), 300);
 }
 
 async function mapSearch() {
