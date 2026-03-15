@@ -505,6 +505,15 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 .map-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 10px}
 .map-status{font-size:12px;color:var(--muted);min-height:18px}
 .map-instructions{font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
+/* ── Sub-navigation ──────────────────────────────────────────────── */
+.sub-nav{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 24px}
+.sub-tab{padding:8px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.12s;white-space:nowrap;user-select:none}
+.sub-tab:hover{color:var(--text)}
+.sub-tab.active{color:var(--text);border-bottom-color:var(--blue)}
+/* Tools stub page */
+.tools-stub{max-width:600px;margin:60px auto;padding:40px;text-align:center;color:var(--muted)}
+.tools-stub h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+.tools-stub p{font-size:13px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -524,20 +533,31 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 <div style="height:2px;background:var(--copper);opacity:.7"></div>
 
 <!-- App Navigation -->
-<nav class="app-nav">
-  <div class="nav-tab active" data-page="outreach" onclick="switchPage('outreach',this)">📤 Outreach</div>
-  <div class="nav-tab" data-page="followup" onclick="switchPage('followup',this)" id="nav-followup">🔁 Follow-Up</div>
-  <div class="nav-tab" data-page="social" onclick="switchPage('social',this)" id="nav-social">📲 Social</div>
-  <div class="nav-tab" data-page="sprint" onclick="switchPage('sprint',this)" id="nav-sprint">⚡ Sprint</div>
-  <div class="nav-tab" data-page="conversations" onclick="switchPage('conversations',this)" id="nav-conversations">💬 Conversations</div>
-  <div class="nav-tab" data-page="cities" onclick="switchPage('cities',this)">🗺 Territory</div>
-  <div class="nav-tab" data-page="health" onclick="switchPage('health',this)" id="nav-health">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
-  <div class="nav-tab" data-page="exceptions" onclick="switchPage('exceptions',this)" id="nav-exceptions">⚠ Exceptions<span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
-  <div class="nav-tab" data-page="mc-clients" onclick="switchPage('mc-clients',this)">📞 Clients</div>
-  <div class="nav-tab" data-page="mc-new" onclick="switchPage('mc-new',this)">＋ New Client</div>
-  <div class="nav-tab" data-page="mc-reports" onclick="switchPage('mc-reports',this)">📊 Reports</div>
-  <div class="nav-tab" data-page="searches" onclick="switchPage('searches',this)">🔍 Searches</div>
-  <div class="nav-tab" data-page="map" onclick="switchPage('map',this)" id="nav-map">🗺️ Map Search</div>
+<nav class="app-nav" id="top-nav">
+  <div class="nav-tab active" data-parent="pipeline"  onclick="switchParent('pipeline',this)">📤 Pipeline</div>
+  <div class="nav-tab"        data-parent="discovery" onclick="switchParent('discovery',this)">🔍 Discovery</div>
+  <div class="nav-tab"        data-parent="clients"   onclick="switchParent('clients',this)">📞 Clients</div>
+  <div class="nav-tab"        data-parent="health"    onclick="switchParent('health',this)" id="nav-health-top">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
+  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools</div>
+</nav>
+
+<!-- Sub-tab bar — shown below top nav, content changes per parent -->
+<nav class="sub-nav" id="sub-nav">
+  <!-- Pipeline sub-tabs -->
+  <div class="sub-tab active" data-parent="pipeline" data-page="outreach"      onclick="switchSubPage('pipeline','outreach',this)">📤 Outreach</div>
+  <div class="sub-tab"        data-parent="pipeline" data-page="followup"      onclick="switchSubPage('pipeline','followup',this)" id="nav-followup">🔁 Follow-Up</div>
+  <div class="sub-tab"        data-parent="pipeline" data-page="social"        onclick="switchSubPage('pipeline','social',this)"   id="nav-social">📲 Social</div>
+  <div class="sub-tab"        data-parent="pipeline" data-page="sprint"        onclick="switchSubPage('pipeline','sprint',this)"   id="nav-sprint">⚡ Sprint</div>
+  <div class="sub-tab"        data-parent="pipeline" data-page="conversations" onclick="switchSubPage('pipeline','conversations',this)" id="nav-conversations">💬 Conversations</div>
+  <!-- Discovery sub-tabs -->
+  <div class="sub-tab" data-parent="discovery" data-page="map"      onclick="switchSubPage('discovery','map',this)"      id="nav-map" style="display:none">🗺️ Map Search</div>
+  <div class="sub-tab" data-parent="discovery" data-page="cities"   onclick="switchSubPage('discovery','cities',this)"   style="display:none">🗺 Territory</div>
+  <div class="sub-tab" data-parent="discovery" data-page="searches" onclick="switchSubPage('discovery','searches',this)" style="display:none">🔍 History</div>
+  <!-- Clients sub-tabs -->
+  <div class="sub-tab" data-parent="clients" data-page="mc-clients" onclick="switchSubPage('clients','mc-clients',this)" style="display:none">📋 Clients</div>
+  <div class="sub-tab" data-parent="clients" data-page="mc-new"     onclick="switchSubPage('clients','mc-new',this)"     style="display:none">＋ New Client</div>
+  <!-- Health: no sub-tabs — shows both page-health and page-exceptions together -->
+  <!-- Tools: no sub-tabs for now -->
 </nav>
 
 <!-- ══════════════ PAGE: OUTREACH ══════════════ -->
@@ -1080,6 +1100,14 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
   </div>
   <div id="map-container"></div>
   <div id="map-status" class="map-status" style="margin-top:8px"></div>
+</div>
+</div>
+
+<!-- ══════════════ PAGE: TOOLS (stub) ══════════════ -->
+<div class="page" id="page-tools">
+<div class="tools-stub">
+  <h2>⚙ Tools</h2>
+  <p>Utility functions will be added here.<br>For now, use the Pipeline and Discovery tabs for all operations.</p>
 </div>
 </div>
 
@@ -1929,12 +1957,49 @@ let _currentPage = 'outreach';
 // ==================================================================
 // PAGE NAVIGATION
 // ==================================================================
-function switchPage(name, el) {
+// PAGE NAVIGATION — 5-tab top nav + sub-tab system
+// ==================================================================
+let _currentPage   = 'outreach';
+let _currentParent = 'pipeline';
+
+// Which page each parent defaults to on first click
+const _parentDefaults = {
+  pipeline:  'outreach',
+  discovery: 'map',
+  clients:   'mc-clients',
+  health:    'health',
+  tools:     'tools',
+};
+
+// Which pages show together (health shows both page-health AND page-exceptions)
+const _multiPage = {
+  health: ['health', 'exceptions'],
+};
+
+// Remember the last sub-page visited per parent so clicking a top tab
+// returns to where the operator left off.
+const _parentLastPage = {
+  pipeline:  'outreach',
+  discovery: 'map',
+  clients:   'mc-clients',
+  health:    'health',
+  tools:     'tools',
+};
+
+function _activatePage(name) {
+  // Hide all pages
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const page = document.getElementById('page-' + name);
-  if (page) page.classList.add('active');
-  if (el) el.classList.add('active');
+  // Show the target page(s)
+  const extras = _multiPage[name];
+  if (extras) {
+    extras.forEach(n => document.getElementById('page-' + n)?.classList.add('active'));
+  } else {
+    document.getElementById('page-' + name)?.classList.add('active');
+  }
+  _currentPage = name;
+}
+
+function _runPageHooks(name) {
   if (name === 'cities')        tpLoad();
   if (name === 'followup')      fqLoad();
   if (name === 'searches')      loadSearchHistory();
@@ -1942,15 +2007,79 @@ function switchPage(name, el) {
   if (name === 'social')        socialLoad();
   if (name === 'sprint')        sprintLoad();
   if (name === 'conversations') convLoad();
-  if (name === 'health')        healthLoad();
-  if (name === 'exceptions')    exceptionsLoad();
+  if (name === 'health')        { healthLoad(); exceptionsLoad(); }
   if (name === 'map') {
     requestAnimationFrame(() => {
-      console.log('[map] rAF fired. L defined:', typeof L !== 'undefined', '| container:', !!document.getElementById('map-container'));
       _mapInit();
       _mapPopulateIndustries();
     });
   }
+}
+
+function switchParent(parent, el) {
+  // Update top-nav active state
+  document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _currentParent = parent;
+
+  // Show only sub-tabs belonging to this parent
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.style.display = (t.dataset.parent === parent) ? '' : 'none';
+  });
+
+  // Navigate to the last visited sub-page for this parent (or the default)
+  const target = _parentLastPage[parent] || _parentDefaults[parent] || parent;
+  _activatePage(target);
+
+  // Mark the correct sub-tab active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === target);
+  });
+
+  _runPageHooks(target);
+}
+
+function switchSubPage(parent, name, el) {
+  _parentLastPage[parent] = name;
+  _activatePage(name);
+
+  // Update sub-tab active state
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  _runPageHooks(name);
+}
+
+// Legacy shim — existing code calls switchPage(name, el) in many places
+// (e.g. mcViewLeads, cvOpenInOutreach, _shRerun, etc.).  This translates
+// those calls into the new system without touching any caller.
+function switchPage(name, el) {
+  // Find which parent owns this page
+  const subTabEl = document.querySelector(`#sub-nav .sub-tab[data-page="${name}"]`);
+  const parent   = subTabEl?.dataset.parent || _currentParent;
+
+  // Activate the correct top-tab if parent changed
+  if (parent !== _currentParent) {
+    const topTabEl = document.querySelector(`#top-nav .nav-tab[data-parent="${parent}"]`);
+    document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+    if (topTabEl) topTabEl.classList.add('active');
+    _currentParent = parent;
+
+    // Show the right sub-tabs
+    document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+      t.style.display = (t.dataset.parent === parent) ? '' : 'none';
+    });
+  }
+
+  _parentLastPage[parent] = name;
+  _activatePage(name);
+
+  // Mark sub-tab active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === name);
+  });
+
+  _runPageHooks(name);
 }
 
 // ==================================================================
@@ -3333,6 +3462,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendModal = document.getElementById('send-modal');
   if (sendModal) sendModal.addEventListener('click', e => {
     if (e.target === sendModal) closeModal();
+  });
+  // Boot nav: show Pipeline sub-tabs, hide all others, Outreach active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.style.display = (t.dataset.parent === 'pipeline') ? '' : 'none';
+    t.classList.remove('active');
+    if (t.dataset.page === 'outreach') t.classList.add('active');
   });
 });
 
