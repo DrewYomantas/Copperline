@@ -36,7 +36,7 @@ from run_lead_engine import run as run_pipeline, DEFAULT_PENDING_CSV, DEFAULT_PR
 from scoring.opportunity_scoring_agent import score_label as get_score_label, compute_numeric_score, score_priority_label
 from send.email_sender_agent import process_pending_emails, is_real_send
 from intelligence.email_extractor_agent import enrich_prospects_with_emails
-from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES
+from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES, discover_prospects_area
 from outreach.followup_scheduler import run_followup_scheduler
 from outreach.reply_checker import check_for_replies
 from outreach.email_draft_agent import DRAFT_VERSION as _CURRENT_DRAFT_VERSION
@@ -436,6 +436,51 @@ def api_discover():
         log.error("Discover error: %s",exc,exc_info=True)
         _append_search_history({"ts":_dt.utcnow().strftime("%Y-%m-%d %H:%M UTC"),"city":city,"state":state,"industry":industry,"limit":limit,"found":0,"status":"error","error":str(exc)[:120]})
         return jsonify({"ok":False,"error":str(exc)}),500
+
+@app.route("/api/discover_area", methods=["POST"])
+def api_discover_area():
+    """
+    Map-area discovery: find businesses within a lat/lng/radius circle.
+    Body: { industry, lat, lng, radius_m, limit }
+    Returns same shape as /api/discover.
+    """
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY","").strip()
+    if not api_key:
+        return jsonify({"ok":False,"error":"GOOGLE_PLACES_API_KEY not set."}), 400
+    data = request.json or {}
+    industry  = data.get("industry", "plumbing")
+    limit     = int(data.get("limit", 20))
+    try:
+        lat      = float(data["lat"])
+        lng      = float(data["lng"])
+        radius_m = float(data.get("radius_m", 5000))
+    except (KeyError, ValueError, TypeError) as exc:
+        return jsonify({"ok":False,"error":f"lat/lng required and must be numeric: {exc}"}), 400
+    if not (1000 <= radius_m <= 50000):
+        return jsonify({"ok":False,"error":"radius_m must be between 1000 and 50000"}), 400
+    from datetime import datetime as _dt
+    try:
+        rows = discover_prospects_area(
+            industry=industry, lat=lat, lng=lng,
+            radius_m=radius_m, api_key=api_key,
+            limit=limit, scrape_emails=True,
+        )
+        ts = _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        if not rows:
+            log.warning("discover_area returned 0 rows: industry=%s lat=%.4f lng=%.4f r=%.0f",
+                        industry, lat, lng, radius_m)
+            _append_search_history({"ts":ts,"city":f"{lat:.4f},{lng:.4f}","state":"area",
+                                    "industry":industry,"limit":limit,"found":0,"status":"all_duplicates"})
+            return jsonify({"ok":False,"error":"No new businesses found in this area. Try a different location or industry."}), 400
+        log.info("discover_area: found=%d industry=%s lat=%.4f lng=%.4f r=%.0f",
+                 len(rows), industry, lat, lng, radius_m)
+        _append_search_history({"ts":ts,"city":f"{lat:.4f},{lng:.4f}","state":"area",
+                                "industry":industry,"limit":limit,"found":len(rows),"status":"ok"})
+        run_pipeline(input_csv=PROSPECTS_CSV, skip_scan=True)
+        return jsonify({"ok":True,"found":len(rows),"total_queue":len(_read_pending())})
+    except Exception as exc:
+        log.error("discover_area error: %s", exc, exc_info=True)
+        return jsonify({"ok":False,"error":str(exc)}), 500
 
 @app.route("/api/presets")
 def api_presets(): return jsonify(_load_presets())

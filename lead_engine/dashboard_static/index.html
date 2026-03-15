@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Copperline — Operations Hub</title>
 <link rel="icon" type="image/svg+xml" href="/static/copperline-favicon.svg">
+<!-- Leaflet CSS — loaded only once; used by Map Search tab -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTLSeB68ARYJipY1SQ==" crossorigin="anonymous">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root{
@@ -529,6 +531,7 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
   <div class="nav-tab" data-page="mc-new" onclick="switchPage('mc-new',this)">＋ New Client</div>
   <div class="nav-tab" data-page="mc-reports" onclick="switchPage('mc-reports',this)">📊 Reports</div>
   <div class="nav-tab" data-page="searches" onclick="switchPage('searches',this)">🔍 Searches</div>
+  <div class="nav-tab" data-page="map" onclick="switchPage('map',this)" id="nav-map">🗺️ Map Search</div>
 </nav>
 
 <!-- ══════════════ PAGE: OUTREACH ══════════════ -->
@@ -1039,6 +1042,40 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
     For a metro area like Chicago, search individual neighborhoods (Wicker Park, Pilsen, Oak Park, Evanston)
     to surface smaller owner-operated shops that don't appear in a city-wide search.
   </div>
+</div>
+</div>
+
+<!-- ══════════════ PAGE: MAP SEARCH ══════════════ -->
+<div class="page" id="page-map">
+<style>
+#map-container { height: 480px; border-radius: var(--rs); border: 1px solid var(--border); overflow: hidden; }
+.map-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px 0 10px; }
+.map-status { font-size:12px; color:var(--muted); min-height:18px; }
+.map-instructions { font-size:12px; color:var(--muted); line-height:1.6; padding:8px 12px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--rs); margin-bottom:10px; }
+</style>
+<div class="mc-wrap">
+  <div class="mc-section-hdr">
+    <h2>🗺️ Map Area Search</h2>
+    <span class="mc-muted" style="font-size:12px">Click the map to set center, drag to adjust radius, then search</span>
+  </div>
+  <div class="map-instructions">
+    <strong>How to use:</strong> Click anywhere on the map to place a search circle.
+    Drag the edge handle to resize the radius.
+    Pick an industry and click <strong>Search This Area</strong>.
+    Results are added to the queue and visible on the Outreach tab.
+  </div>
+  <div class="map-toolbar">
+    <select id="map-industry" class="d-input" style="min-width:160px"><option value="">Loading…</option></select>
+    <input id="map-limit" class="d-input d-num" type="number" value="20" min="1" max="20" title="Max results (1–20)">
+    <button id="btnMapSearch" class="btn btn-primary" onclick="mapSearch()" disabled>
+      <span class="spin"></span>⚡ Search This Area
+    </button>
+    <button class="btn btn-ghost" onclick="mapClearCircle()" title="Remove current circle">✕ Clear</button>
+    <span id="map-radius-label" style="font-size:11px;color:var(--muted)"></span>
+  </div>
+  <div id="map-container"></div>
+  <div id="map-status" class="map-status" style="margin-top:8px"></div>
 </div>
 </div>
 
@@ -1798,6 +1835,23 @@ async function loadIndustries() {
   } catch(e) {}
 }
 
+function _mapPopulateIndustries() {
+  // Populate the map-industry select from the already-loaded d-industry select.
+  // If d-industry hasn't loaded yet, fetch from the API directly.
+  const src = document.getElementById('d-industry');
+  const dest = document.getElementById('map-industry');
+  if (!dest) return;
+  if (src && src.options.length > 1) {
+    dest.innerHTML = src.innerHTML;
+    if (!dest.value) dest.value = 'plumbing';
+  } else {
+    api('/api/industries').then(list => {
+      dest.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+      dest.value = 'plumbing';
+    }).catch(() => {});
+  }
+}
+
 async function testApiKey() {
   const btn=document.getElementById('btnTestKey');
   btn.disabled=true; btn.textContent='🔑 Testing…';
@@ -1892,6 +1946,7 @@ function switchPage(name, el) {
   if (name === 'conversations') convLoad();
   if (name === 'health')        healthLoad();
   if (name === 'exceptions')    exceptionsLoad();
+  if (name === 'map')           { _mapInit(); _mapPopulateIndustries(); }
 }
 
 // ==================================================================
@@ -3403,6 +3458,113 @@ async function exDeleteRow(queueIndex, tableRowIndex) {
     } else { toast('Error: '+res.error,'err'); }
   } catch(e) { toast('Connection error','err'); }
 }
+
+// ══════════════════════════════════════════════════════════════════
+// PAGE: MAP SEARCH  (Leaflet + /api/discover_area)
+// ══════════════════════════════════════════════════════════════════
+let _mapInstance    = null;   // Leaflet map object
+let _mapCircle      = null;   // current L.circle
+let _mapDragMarker  = null;   // edge drag handle marker
+let _mapCenter      = null;   // {lat, lng}
+let _mapRadiusM     = 2000;   // current radius in metres
+const MAP_DEFAULT_LAT = 42.2711;  // Rockford, IL
+const MAP_DEFAULT_LNG = -89.0940;
+
+function _mapMetresToMiles(m) { return (m / 1609.34).toFixed(2); }
+
+function _mapUpdateRadiusLabel() {
+  const el = document.getElementById('map-radius-label');
+  if (el && _mapRadiusM) el.textContent = `Radius: ${_mapMetresToMiles(_mapRadiusM)} mi (${(_mapRadiusM/1000).toFixed(1)} km)`;
+}
+
+function _mapPlaceDragHandle() {
+  if (!_mapInstance || !_mapCircle || !_mapCenter) return;
+  const edgeLat = _mapCenter.lat;
+  const edgeLng = _mapCenter.lng + (_mapRadiusM / (111320 * Math.cos(_mapCenter.lat * Math.PI / 180)));
+  const pos = L.latLng(edgeLat, edgeLng);
+  if (_mapDragMarker) {
+    _mapDragMarker.setLatLng(pos);
+  } else {
+    _mapDragMarker = L.marker(pos, {
+      draggable: true,
+      icon: L.divIcon({ className:'', html:'<div style="width:14px;height:14px;background:var(--copper);border:2px solid #fff;border-radius:50%;cursor:ew-resize;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>', iconAnchor:[7,7] })
+    }).addTo(_mapInstance);
+    _mapDragMarker.on('drag', (e) => {
+      const newPos = e.target.getLatLng();
+      _mapRadiusM = Math.round(_mapInstance.distance(_mapCenter, newPos));
+      if (_mapRadiusM < 500) _mapRadiusM = 500;
+      if (_mapRadiusM > 50000) _mapRadiusM = 50000;
+      _mapCircle.setRadius(_mapRadiusM);
+      _mapUpdateRadiusLabel();
+    });
+  }
+}
+
+function _mapDrawCircle(lat, lng) {
+  if (!_mapInstance) return;
+  _mapCenter = { lat, lng };
+  if (_mapCircle) { _mapCircle.setLatLng([lat, lng]); _mapCircle.setRadius(_mapRadiusM); }
+  else {
+    _mapCircle = L.circle([lat, lng], {
+      radius: _mapRadiusM,
+      color: '#b87333', fillColor: '#b87333', fillOpacity: 0.12, weight: 2
+    }).addTo(_mapInstance);
+  }
+  _mapPlaceDragHandle();
+  _mapUpdateRadiusLabel();
+  document.getElementById('btnMapSearch').disabled = false;
+  document.getElementById('map-status').textContent = `Center: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+}
+
+function mapClearCircle() {
+  if (_mapCircle)     { _mapCircle.remove();     _mapCircle = null; }
+  if (_mapDragMarker) { _mapDragMarker.remove();  _mapDragMarker = null; }
+  _mapCenter = null;
+  document.getElementById('btnMapSearch').disabled = true;
+  document.getElementById('map-status').textContent = 'Circle cleared.';
+  document.getElementById('map-radius-label').textContent = '';
+}
+
+function _mapInit() {
+  if (_mapInstance) return;  // already initialised
+  if (typeof L === 'undefined') { console.error('Leaflet not loaded'); return; }
+  const container = document.getElementById('map-container');
+  if (!container) return;
+  _mapInstance = L.map('map-container', { zoomControl: true }).setView([MAP_DEFAULT_LAT, MAP_DEFAULT_LNG], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18,
+  }).addTo(_mapInstance);
+  _mapInstance.on('click', (e) => { _mapDrawCircle(e.latlng.lat, e.latlng.lng); });
+}
+
+async function mapSearch() {
+  if (!_mapCenter) { toast('Click the map to set a search area first','err'); return; }
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first','err'); return; }
+  const limit = parseInt(document.getElementById('map-limit').value) || 20;
+  const btn = document.getElementById('btnMapSearch');
+  btn.classList.add('loading'); btn.disabled = true;
+  document.getElementById('map-status').textContent = `Searching for ${industry} within ${_mapMetresToMiles(_mapRadiusM)} miles…`;
+  try {
+    const res = await api('/api/discover_area', {
+      industry, lat: _mapCenter.lat, lng: _mapCenter.lng,
+      radius_m: _mapRadiusM, limit
+    });
+    if (res.ok) {
+      await loadAll();
+      toast(`Found ${res.found} new — ${res.total_queue} total in queue`, 'ok');
+      document.getElementById('map-status').textContent = `Done: ${res.found} new businesses added.`;
+    } else {
+      toast('Search error: ' + res.error, 'err');
+      document.getElementById('map-status').textContent = 'Search returned no new results.';
+    }
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled = !_mapCenter;
+}
+
 </script>
+<!-- Leaflet JS — deferred so it does not block page load -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="anonymous" defer></script>
 </body>
 </html>
