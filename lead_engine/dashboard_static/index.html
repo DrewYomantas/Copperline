@@ -3462,6 +3462,7 @@ async function exDeleteRow(queueIndex, tableRowIndex) {
 // PAGE: MAP SEARCH  (Leaflet + /api/discover_area)
 // ══════════════════════════════════════════════════════════════════
 let _mapResultMarkers = [];
+let _mapInstance    = null;   // Leaflet map object
 
 function _mapClearResultMarkers() {
   _mapResultMarkers.forEach(m => m.remove());
