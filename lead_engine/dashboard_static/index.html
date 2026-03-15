@@ -500,6 +500,11 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 .cv-empty{padding:80px 24px;text-align:center;color:var(--muted)}
 .cv-empty-icon{font-size:40px;margin-bottom:10px;opacity:.35}
 .cv-fire{color:var(--copper);font-size:12px;font-weight:700}
+/* Map Search tab */
+#map-container{height:480px;border-radius:var(--rs);border:1px solid var(--border);overflow:hidden}
+.map-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 10px}
+.map-status{font-size:12px;color:var(--muted);min-height:18px}
+.map-instructions{font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -1048,13 +1053,6 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 
 <!-- ══════════════ PAGE: MAP SEARCH ══════════════ -->
 <div class="page" id="page-map">
-<style>
-#map-container { height: 480px; border-radius: var(--rs); border: 1px solid var(--border); overflow: hidden; }
-.map-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px 0 10px; }
-.map-status { font-size:12px; color:var(--muted); min-height:18px; }
-.map-instructions { font-size:12px; color:var(--muted); line-height:1.6; padding:8px 12px;
-  background:var(--surface); border:1px solid var(--border); border-radius:var(--rs); margin-bottom:10px; }
-</style>
 <div class="mc-wrap">
   <div class="mc-section-hdr">
     <h2>🗺️ Map Area Search</h2>
