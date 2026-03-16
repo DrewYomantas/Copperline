@@ -564,6 +564,45 @@ def api_snooze_row():
     rows[idx]["contact_result"] = rows[idx].get("contact_result") or "no_reply"
     _write_pending(rows); return jsonify({"ok":True})
 
+@app.route("/api/schedule_email", methods=["POST"])
+def api_schedule_email():
+    """
+    Record send intent for a queue row by writing send_after.
+    Intent-only: does NOT trigger a send, does NOT modify any other field.
+    """
+    d = request.json or {}
+    idx           = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+    send_after    = (d.get("send_after") or "").strip()
+
+    # Validate all required fields present and non-empty
+    if idx is None or not isinstance(idx, int):
+        return jsonify({"ok": False, "error": "index is required and must be an integer"}), 400
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name is required"}), 400
+    if not send_after:
+        return jsonify({"ok": False, "error": "send_after is required"}), 400
+
+    rows = _read_pending()
+
+    # Validate index in bounds
+    if not (0 <= idx < len(rows)):
+        return jsonify({"ok": False, "error": "Invalid index"}), 400
+
+    # Validate business_name matches row at index (guards against index drift)
+    row_name = rows[idx].get("business_name", "").strip().lower()
+    if row_name != business_name.lower():
+        return jsonify({
+            "ok": False,
+            "error": "Row index/name mismatch — queue may have changed",
+        }), 409
+
+    # Write send_after only — no other fields touched
+    rows[idx]["send_after"] = send_after
+    _write_pending(rows)
+    log.info("schedule_email idx=%s business=%r send_after=%r", idx, business_name, send_after)
+    return jsonify({"ok": True, "send_after": send_after})
+
 @app.route("/api/social_queue")
 def api_social_queue():
     rows = _read_pending(); result = []
