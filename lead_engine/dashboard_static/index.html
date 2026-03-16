@@ -528,6 +528,9 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 .map-status{font-size:12px;color:var(--muted);min-height:18px}
 .btn-coverage{background:transparent;color:var(--muted);border:1px solid var(--border-hi);font-size:11px;padding:4px 9px}
 .btn-coverage:hover{color:var(--text);border-color:var(--blue)}
+.btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);font-size:12px;padding:6px 13px}
+.btn-secondary:hover{color:var(--text);border-color:var(--border-hi)}
+.btn-secondary:disabled{opacity:.4;cursor:not-allowed}
 #map-history{margin-top:10px;display:none}
 .mh-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
 .mh-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
@@ -1124,11 +1127,15 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
     Results are added to the queue and visible on the Outreach tab.
   </div>
   <div class="map-toolbar">
-    <select id="map-industry" class="d-input" style="min-width:160px"><option value="">Loading…</option></select>
+    <select id="map-industry" class="d-input" style="min-width:160px" onchange="(function(v){var b=document.getElementById('btnSearchVisible');if(b)b.disabled=!v||!window._mapCenter;})(this.value)"><option value="">Loading…</option></select>
     <input id="map-limit" class="d-input d-num" type="number" value="20" min="1" max="20" title="Max results (1–20)">
     <button id="btnMapSearch" class="btn btn-primary" onclick="mapSearch()" disabled>
       <span class="spin"></span>⚡ Search This Area
     </button>
+    <button id="btnSearchVisible" class="btn btn-secondary" onclick="mapSearchVisible()" disabled title="Tile the visible map area and run sequential discovery across each cell">
+      <span class="spin"></span>⊞ Search Visible Area
+    </button>
+    <button id="btnCancelVisible" class="btn btn-ghost" onclick="_mapCancelVisible()" style="display:none" title="Cancel after current tile finishes">✕ Cancel</button>
     <button class="btn btn-ghost" onclick="mapClearCircle()" title="Remove current circle">✕ Clear</button>
     <button id="btnClearCoverage" class="btn btn-coverage" onclick="_mapClearCoverage()" title="Remove prior search overlays" style="display:none">◌ Clear Coverage</button>
     <span id="map-radius-label" style="font-size:11px;color:var(--muted)"></span>
@@ -3836,6 +3843,8 @@ let _mapSearchHistory   = [];   // session search history [{lat, lng, radiusM, f
 const MAP_HISTORY_MAX   = 10;   // max entries kept, newest-first
 const MAP_DEFAULT_LAT = 42.2711;  // Rockford, IL
 const MAP_DEFAULT_LNG = -89.0940;
+let _mapVisibleSearchActive = false;  // true while Search Visible Area is running
+let _mapVisibleSeenKeys     = new Set(); // dedup key set for tiled visible-area search
 
 function _mapClearCoverage() {
   _mapCoverageCircles.forEach(c => c.remove());
@@ -3872,14 +3881,14 @@ function _mapRenderHistory() {
   _mapSearchHistory.forEach((entry) => {
     const row = document.createElement('div');
     row.className = 'mh-item';
-    const miles = (entry.radiusM / 1609.34).toFixed(1);
+    const miles = entry.radiusM != null ? (entry.radiusM / 1609.34).toFixed(1) + ' mi' : 'tiled';
     const primaryText = entry.label || `${entry.lat.toFixed(3)}, ${entry.lng.toFixed(3)}`;
-    const secondaryText = `${miles} mi — ${entry.found} found`;
+    const secondaryText = `${miles} — ${entry.found} found`;
     row.innerHTML =
       `<span class="mh-item-label" title="${entry.lat.toFixed(4)}, ${entry.lng.toFixed(4)}">${primaryText}</span>` +
       `<span class="mh-item-meta">${secondaryText}</span>`;
     row.addEventListener('click', () => {
-      _mapRadiusM = entry.radiusM;
+      if (entry.radiusM != null) _mapRadiusM = entry.radiusM;
       _mapDrawCircle(entry.lat, entry.lng);
       if (_mapInstance) _mapInstance.setView([entry.lat, entry.lng], _mapInstance.getZoom());
     });
@@ -3897,6 +3906,153 @@ function _mapClearHistory() {
 }
 
 function _mapMetresToMiles(m) { return (m / 1609.34).toFixed(2); }
+
+// Step 8 — additive marker helper: appends without clearing existing markers
+function _mapAppendResultMarkers(markers) {
+  if (!_mapInstance) return;
+  markers.forEach((biz, idx) => {
+    const hasCoords = biz.lat && biz.lng && parseFloat(biz.lat) !== 0;
+    let pos;
+    if (hasCoords) {
+      pos = L.latLng(parseFloat(biz.lat), parseFloat(biz.lng));
+    } else {
+      return; // skip fallback spiral for tiled search — no reliable center
+    }
+    const hasEmail = biz.email && biz.email.length > 0;
+    const color    = hasEmail ? '#3ecf72' : '#b87333';
+    const icon     = L.divIcon({
+      className: '',
+      html: `<div style="width:10px;height:10px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.5)" title="${biz.name}"></div>`,
+      iconAnchor: [5, 5],
+    });
+    const marker = L.marker(pos, { icon })
+      .addTo(_mapClusterGroup)
+      .bindPopup(`<strong>${biz.name}</strong><br>${biz.city}<br><em>${biz.channel}${hasEmail ? ' \u2014 ' + biz.email : ''}</em>`);
+    _mapResultMarkers.push(marker);
+    _mapResultItems.push({ biz, marker });
+  });
+  _mapRenderPanel();
+}
+
+// Step 8 — tile the current viewport into ~1000m-radius grid cells
+function _mapVisibleTiles() {
+  if (!_mapInstance) return { tiles: [], tooLarge: false };
+  const bounds  = _mapInstance.getBounds();
+  const R       = 1000; // cell radius in metres
+  const stepDeg = (R * 2) / 111320; // degrees per cell step (lat)
+  const minLat  = bounds.getSouth();
+  const maxLat  = bounds.getNorth();
+  const minLng  = bounds.getWest();
+  const maxLng  = bounds.getEast();
+  const midLat  = (minLat + maxLat) / 2;
+  const stepLng = (R * 2) / (111320 * Math.cos(midLat * Math.PI / 180));
+  const tiles   = [];
+  for (let lat = minLat + stepDeg / 2; lat < maxLat; lat += stepDeg) {
+    for (let lng = minLng + stepLng / 2; lng < maxLng; lng += stepLng) {
+      tiles.push({ lat, lng });
+    }
+  }
+  if (tiles.length > 30) return { tiles: [], tooLarge: true };
+  return { tiles, tooLarge: false };
+}
+
+// Step 8 — sequential tiled visible-area discovery
+async function mapSearchVisible() {
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first', 'err'); return; }
+  if (_mapVisibleSearchActive) { toast('Visible-area search already running', 'err'); return; }
+
+  const { tiles, tooLarge } = _mapVisibleTiles();
+  if (tooLarge) {
+    toast('Zoom in — visible area would require more than 30 tile requests', 'err'); return;
+  }
+  if (!tiles.length) {
+    toast('No tiles in current viewport', 'err'); return;
+  }
+
+  _mapVisibleSearchActive = true;
+  _mapVisibleSeenKeys     = new Set();
+  const limit    = parseInt(document.getElementById('map-limit').value) || 20;
+  const statusEl = document.getElementById('map-status');
+  const btnSV    = document.getElementById('btnSearchVisible');
+  const btnCanc  = document.getElementById('btnCancelVisible');
+  btnSV.classList.add('loading'); btnSV.disabled = true;
+  if (btnCanc) btnCanc.style.display = '';
+
+  let totalFound = 0;
+  let tilesDone  = 0;
+
+  for (const tile of tiles) {
+    if (!_mapVisibleSearchActive) break; // cancelled
+
+    statusEl.textContent = `Tile ${tilesDone + 1} / ${tiles.length} — searching ${industry}…`;
+    try {
+      const res = await api('/api/discover_area', {
+        lat: tile.lat, lng: tile.lng, radius_m: 1000, industry, limit
+      });
+      if (res.ok && res.markers && res.markers.length) {
+        // Filter through seen-keys to avoid duplicate markers
+        const fresh = res.markers.filter(biz => {
+          const key = (biz.place_id || '') || `${biz.name}|${biz.lat}|${biz.lng}`;
+          if (_mapVisibleSeenKeys.has(key)) return false;
+          _mapVisibleSeenKeys.add(key);
+          return true;
+        });
+        if (fresh.length) _mapAppendResultMarkers(fresh);
+        totalFound += res.places_found || 0;
+        // Coverage circle only for tiles that returned results
+        if (_mapInstance && res.places_found > 0) {
+          const cov = L.circle([tile.lat, tile.lng], {
+            radius: 1000,
+            color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.04,
+            weight: 1, dashArray: '4 4', interactive: false
+          }).addTo(_mapInstance);
+          _mapCoverageCircles.push(cov);
+          const btnCov = document.getElementById('btnClearCoverage');
+          if (btnCov) btnCov.style.display = '';
+        }
+      }
+    } catch(e) {
+      // Non-fatal: log tile error, continue to next tile
+      console.warn('[mapSearchVisible] tile error at', tile.lat, tile.lng, e);
+    }
+
+    tilesDone++;
+    if (_mapVisibleSearchActive && tilesDone < tiles.length) {
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  }
+
+  // Append a single history entry summarising the whole visible-area run
+  const _histLabel = _mapAreaLabel(
+    _mapResultItems.map(i => i.biz)
+  );
+  const centerTile = tiles[Math.floor(tiles.length / 2)] || tiles[0];
+  _mapSearchHistory.unshift({
+    lat: centerTile.lat, lng: centerTile.lng,
+    radiusM: null,   // null signals tiled run — _mapRenderHistory handles this
+    found: totalFound,
+    label: _histLabel ? `${_histLabel} (tiled)` : `${tiles.length} tiles`
+  });
+  if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+  _mapRenderHistory();
+
+  const didCancel = !_mapVisibleSearchActive;
+  _mapVisibleSearchActive = false;
+  btnSV.classList.remove('loading'); btnSV.disabled = !industry;
+  if (btnCanc) btnCanc.style.display = 'none';
+  statusEl.textContent = didCancel
+    ? `Cancelled — ${tilesDone} of ${tiles.length} tiles completed — ${totalFound} total found`
+    : `✓ Visible-area search complete — ${tiles.length} tiles — ${totalFound} total found`;
+  if (!didCancel) toast(`Visible-area search done — ${totalFound} results across ${tiles.length} tiles`, 'ok');
+}
+
+// Step 8 — cancel: flag stops loop after current tile finishes
+function _mapCancelVisible() {
+  _mapVisibleSearchActive = false;
+  const statusEl = document.getElementById('map-status');
+  if (statusEl) statusEl.textContent = 'Cancelling after current tile…';
+}
 
 function _mapUpdateRadiusLabel() {
   const el = document.getElementById('map-radius-label');
@@ -3940,6 +4096,8 @@ function _mapDrawCircle(lat, lng) {
   _mapPlaceDragHandle();
   _mapUpdateRadiusLabel();
   document.getElementById('btnMapSearch').disabled = false;
+  const _industryVal = document.getElementById('map-industry').value;
+  document.getElementById('btnSearchVisible').disabled = !_industryVal;
   document.getElementById('map-status').textContent = `Center: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
@@ -3949,6 +4107,7 @@ function mapClearCircle() {
   _mapClearResultMarkers();
   _mapCenter = null;
   document.getElementById('btnMapSearch').disabled = true;
+  document.getElementById('btnSearchVisible').disabled = true;
   document.getElementById('map-status').textContent = 'Circle cleared.';
   document.getElementById('map-radius-label').textContent = '';
 }
