@@ -239,6 +239,10 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .panel-save-state.saving{color:var(--amber)}
 .panel-save-state.saved{color:var(--green)}
 .panel-save-state.save-err{color:var(--red)}
+.panel-sched-info{background:var(--amber-bg);border:1px solid rgba(245,166,35,.25);border-radius:var(--rs);padding:8px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--amber)}
+.panel-sched-info .sched-time{font-weight:600;flex:1}
+.panel-sched-info .btn-sched-act{font-size:11px;padding:3px 8px;background:transparent;border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:var(--rs);cursor:pointer;transition:.12s}
+.panel-sched-info .btn-sched-act:hover{background:rgba(245,166,35,.12)}
 .reply-snippet{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
 .panel-reply-box{background:var(--surface2);border:1px solid var(--copper);border-radius:var(--rs);padding:12px 14px;margin-top:4px}
 .panel-reply-box .reply-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--copper);margin-bottom:6px}
@@ -989,6 +993,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
         <div id="panel-social-drafts"></div>
       </div>
     </div>
+    <div id="panel-schedule-info" class="panel-sched-info" style="display:none;margin:0 20px 10px"></div>
     <div class="panel-footer">
       <button class="btn btn-success" id="panel-approve-btn" onclick="panelApprove()" style="flex:1">✓ Approve</button>
       <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
@@ -1326,8 +1331,8 @@ function applyFiltersAndSort() {
   const sort = document.getElementById('sortSelect').value;
 
   if (currentFilter === 'active') {
-    // Default view: unsent leads that aren't in a terminal state — the actionable inbox
-    rows = rows.filter(r => !r.sent_at && !_TERMINAL.has(r.contact_result || ''));
+    // Default view: unsent, unscheduled leads that aren't terminal — actionable now
+    rows = rows.filter(r => !r.sent_at && !r.send_after && !_TERMINAL.has(r.contact_result || ''));
   } else if (currentFilter === 'pending')  rows = rows.filter(r => r.approved !== 'true' && !r.sent_at);
   else if (currentFilter === 'approved')   rows = rows.filter(r => r.approved === 'true' && !r.sent_at);
   else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
@@ -1336,7 +1341,10 @@ function applyFiltersAndSort() {
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
-  else if (currentFilter === 'scheduled')  rows = rows.filter(r => r.send_after && !r.sent_at);
+  else if (currentFilter === 'scheduled')  {
+    rows = rows.filter(r => r.send_after && !r.sent_at);
+    rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
+  }
 
   if (q) rows = rows.filter(r =>
     (r.business_name||'').toLowerCase().includes(q) ||
@@ -1371,6 +1379,27 @@ function statusBadge(row) {
   if (row.send_after && !row.sent_at) return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">🕐 Scheduled</span>`;
   if (row.approved === 'true') return '<span class="badge badge-approved">● Approved</span>';
   return '<span class="badge badge-pending">○ Pending</span>';
+}
+
+// Pass 10 — human-readable schedule time label
+function _formatSendAfter(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  // Compare calendar dates in local time
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const target   = new Date(d); target.setHours(0,0,0,0);
+  // Format time as 12h (e.g. 7:30am)
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  const timeStr = m === 0 ? `${h}${ampm}` : `${h}:${String(m).padStart(2,'0')}${ampm}`;
+  if (target.getTime() === today.getTime())    return `Today · ${timeStr}`;
+  if (target.getTime() === tomorrow.getTime()) return `Tomorrow · ${timeStr}`;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()} · ${timeStr}`;
 }
 
 function oppScoreBadge(row) {
@@ -1432,7 +1461,7 @@ function renderTable() {
       <td class="td-subject"><div class="subj-text">${escHtml(row.subject)}</div>${replySnip}</td>
       <td class="td-score"><div class="score-chip ${scoreClass(row.final_priority_score)}" data-tip="${scoreTip(row.final_priority_score)}">${sc}</div></td>
       <td>${oppScoreBadge(row)}</td>
-      <td class="td-status">${statusBadge(row)}</td>
+      <td class="td-status">${statusBadge(row)}${row.send_after && !row.sent_at ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${_formatSendAfter(row.send_after)}</div>` : ''}</td>
       <td class="td-actions" onclick="event.stopPropagation()">
         <div class="row-acts">
           ${approveBtn}
@@ -1521,6 +1550,24 @@ async function fillPanel(row, fi) {
       insightSec.style.display = '';
     } else {
       insightSec.style.display = 'none';
+    }
+  }
+
+  // ── Schedule info block ───────────────────────────────────────────────────
+  const schedEl = document.getElementById('panel-schedule-info');
+  if (schedEl) {
+    if (row.send_after && !row.sent_at) {
+      const gi_s = allRows.indexOf(row);
+      schedEl.innerHTML =
+        `<span class="sched-time">🕐 Scheduled: ${_formatSendAfter(row.send_after)}</span>` +
+        `<button class="btn-sched-act" onclick="panelClearSchedule()">Clear</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
+      schedEl.style.display = '';
+    } else {
+      schedEl.innerHTML = '';
+      schedEl.style.display = 'none';
     }
   }
 
@@ -1718,6 +1765,56 @@ async function panelScheduleTomorrow() {
     renderTable();
     fillPanel(row, panelIdx);
     toast('Scheduled for tomorrow ' + window_time, 'ok');
+  } catch(e) {
+    toast('Connection error', 'err');
+  }
+}
+
+// Pass 10 — clear existing schedule
+async function panelClearSchedule() {
+  const row = filteredRows[panelIdx];
+  if (!row) return;
+  const gi = allRows.indexOf(row);
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      send_after: '',
+    });
+    if (!res.ok) { toast('Clear error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = '';
+    renderTable();
+    fillPanel(row, panelIdx);
+    toast('Schedule cleared', 'ok');
+  } catch(e) {
+    toast('Connection error', 'err');
+  }
+}
+
+// Pass 10 — reschedule to today + N days at the industry window time
+async function panelReschedule(days) {
+  const row = filteredRows[panelIdx];
+  if (!row) return;
+  if (row.sent_at) { toast('Already sent — cannot reschedule', 'err'); return; }
+  const gi = allRows.indexOf(row);
+  const window_time = SEND_WINDOWS[row.industry] || SEND_WINDOWS.default;
+  const target = new Date();
+  target.setDate(target.getDate() + days);
+  const yyyy = target.getFullYear();
+  const mm   = String(target.getMonth() + 1).padStart(2, '0');
+  const dd   = String(target.getDate()).padStart(2, '0');
+  const send_after = `${yyyy}-${mm}-${dd}T${window_time}:00`;
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      send_after,
+    });
+    if (!res.ok) { toast('Reschedule error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = send_after;
+    renderTable();
+    fillPanel(row, panelIdx);
+    toast('Rescheduled for ' + _formatSendAfter(send_after), 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }

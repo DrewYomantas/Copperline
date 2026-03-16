@@ -569,19 +569,24 @@ def api_schedule_email():
     """
     Record send intent for a queue row by writing send_after.
     Intent-only: does NOT trigger a send, does NOT modify any other field.
+    send_after may be:
+      - a non-empty datetime string  → schedule
+      - an empty string ""           → clear existing schedule
     """
     d = request.json or {}
     idx           = d.get("index")
     business_name = (d.get("business_name") or "").strip()
-    send_after    = (d.get("send_after") or "").strip()
+    # Allow empty string explicitly — distinguishes "clear" from "missing"
+    send_after_raw = d.get("send_after")
+    if send_after_raw is None:
+        return jsonify({"ok": False, "error": "send_after is required (use empty string to clear)"}), 400
+    send_after = send_after_raw.strip()
 
-    # Validate all required fields present and non-empty
+    # Validate required identity fields
     if idx is None or not isinstance(idx, int):
         return jsonify({"ok": False, "error": "index is required and must be an integer"}), 400
     if not business_name:
         return jsonify({"ok": False, "error": "business_name is required"}), 400
-    if not send_after:
-        return jsonify({"ok": False, "error": "send_after is required"}), 400
 
     rows = _read_pending()
 
@@ -600,7 +605,8 @@ def api_schedule_email():
     # Write send_after only — no other fields touched
     rows[idx]["send_after"] = send_after
     _write_pending(rows)
-    log.info("schedule_email idx=%s business=%r send_after=%r", idx, business_name, send_after)
+    action = "cleared" if not send_after else "scheduled"
+    log.info("schedule_email %s idx=%s business=%r send_after=%r", action, idx, business_name, send_after)
     return jsonify({"ok": True, "send_after": send_after})
 
 @app.route("/api/social_queue")
