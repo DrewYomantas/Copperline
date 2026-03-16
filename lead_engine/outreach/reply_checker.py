@@ -28,6 +28,7 @@ import os
 import time
 from datetime import datetime, timezone
 from email.header import decode_header
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 try:
@@ -45,6 +46,7 @@ REPLIES_LOG   = BASE_DIR / "logs" / "replies.log"
 
 IMAP_HOST = "imap.gmail.com"
 IMAP_PORT = 993
+SENT_MAILBOXES = ['"[Gmail]/Sent Mail"', '"[Gmail]/Sent"', 'Sent', '"Sent Mail"']
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +180,68 @@ def _fetch_recent_inbox_messages(
                 messages.append(msg)
         except Exception as exc:
             log.debug("Failed to fetch message %s: %s", uid, exc)
+
+    return messages
+
+
+def _select_sent_mailbox(conn: imaplib.IMAP4_SSL) -> Optional[str]:
+    """Pick the first available Sent mailbox variant and select it readonly."""
+    for mailbox in SENT_MAILBOXES:
+        try:
+            status, _ = conn.select(mailbox, readonly=True)
+            if status == "OK":
+                return mailbox
+        except Exception:
+            continue
+    return None
+
+
+def _fetch_recent_sent_messages(
+    conn: imaplib.IMAP4_SSL,
+    max_messages: int = 150,
+    lookback_hours: int = 72,
+) -> List[email.message.Message]:
+    """
+    Fetch recent sent messages from Gmail Sent mailbox.
+    Applies a UTC lookback window to keep reconciliation narrow.
+    """
+    mailbox = _select_sent_mailbox(conn)
+    if not mailbox:
+        return []
+
+    _, data = conn.search(None, "ALL")
+    if not data or not data[0]:
+        return []
+
+    all_ids = data[0].split()
+    recent_ids = all_ids[-max_messages:]
+    cutoff = datetime.now(timezone.utc).timestamp() - (lookback_hours * 3600)
+    messages: List[email.message.Message] = []
+
+    for uid in recent_ids:
+        try:
+            _, msg_data = conn.fetch(uid, "(RFC822)")
+            if not msg_data or not msg_data[0]:
+                continue
+            raw = msg_data[0][1]
+            if not isinstance(raw, bytes):
+                continue
+            msg = email.message_from_bytes(raw)
+            msg_date = msg.get("Date", "")
+            if msg_date:
+                try:
+                    dt = parsedate_to_datetime(msg_date)
+                    if dt is not None:
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                        if dt.timestamp() < cutoff:
+                            continue
+                except Exception:
+                    # If date parsing fails, keep candidate and let strict key matching decide.
+                    pass
+            messages.append(msg)
+        except Exception as exc:
+            log.debug("Failed to fetch sent message %s: %s", uid, exc)
 
     return messages
 
@@ -405,6 +469,105 @@ def check_for_replies(max_messages: int = 100) -> Dict:
         _update_prospects_replied(
             {r["business_name"] for r in summary["replies"]}
         )
+
+    return summary
+
+
+def reconcile_sent_mail(max_messages: int = 150, lookback_hours: int = 72) -> Dict:
+    """
+    Reconcile queue rows with Gmail Sent messages after interrupted dashboard sessions.
+
+    Matching key: (recipient email + subject), optionally narrowed by a recent lookback.
+    Safety: only considers rows where sent_at and message_id are both blank;
+    ambiguous keys are skipped.
+    """
+    summary: Dict = {
+        "checked_sent_messages": 0,
+        "updated_rows": 0,
+        "matched": [],
+        "skipped_ambiguous": 0,
+        "errors": [],
+    }
+
+    pending_rows = _read_pending()
+    if not pending_rows:
+        return summary
+
+    # Candidate queue rows: approved + unsent only.
+    key_to_indexes: Dict[Tuple[str, str], List[int]] = {}
+    for idx, row in enumerate(pending_rows):
+        if (row.get("approved", "").strip().lower() != "true"):
+            continue
+        if (row.get("sent_at") or "").strip() or (row.get("message_id") or "").strip():
+            continue
+        to_email = (row.get("to_email") or "").strip().lower()
+        subject = (row.get("subject") or "").strip()
+        if not to_email or not subject:
+            continue
+        key_to_indexes.setdefault((to_email, subject), []).append(idx)
+
+    if not key_to_indexes:
+        return summary
+
+    try:
+        conn = _connect_imap()
+    except Exception as exc:
+        summary["errors"].append(f"IMAP connection failed: {exc}")
+        return summary
+
+    try:
+        sent_messages = _fetch_recent_sent_messages(
+            conn,
+            max_messages=max_messages,
+            lookback_hours=lookback_hours,
+        )
+        summary["checked_sent_messages"] = len(sent_messages)
+    except Exception as exc:
+        summary["errors"].append(f"Sent mailbox fetch failed: {exc}")
+        sent_messages = []
+    finally:
+        try:
+            conn.logout()
+        except Exception:
+            pass
+
+    sent_matches: Dict[Tuple[str, str], List[email.message.Message]] = {}
+    for msg in sent_messages:
+        to_field = _decode_header_value(msg.get("To", "")).strip().lower()
+        subject = _decode_header_value(msg.get("Subject", "")).strip().lower()
+        if not to_field or not subject:
+            continue
+        for key in key_to_indexes.keys():
+            if key[0] in to_field and key[1].strip().lower() == subject:
+                sent_matches.setdefault(key, []).append(msg)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    touched = False
+    for key, indexes in key_to_indexes.items():
+        matched_messages = sent_matches.get(key, [])
+        # Ambiguous if multiple queue rows share same key OR multiple sent messages match key.
+        if len(indexes) != 1 or len(matched_messages) != 1:
+            if matched_messages:
+                summary["skipped_ambiguous"] += len(indexes)
+            continue
+
+        idx = indexes[0]
+        msg = matched_messages[0]
+        pending_rows[idx]["sent_at"] = now_iso
+        msg_mid = (msg.get("Message-ID") or "").strip()
+        if msg_mid and not (pending_rows[idx].get("message_id") or "").strip():
+            pending_rows[idx]["message_id"] = msg_mid
+        summary["updated_rows"] += 1
+        summary["matched"].append({
+            "index": idx,
+            "business_name": pending_rows[idx].get("business_name", ""),
+            "to_email": pending_rows[idx].get("to_email", ""),
+            "subject": pending_rows[idx].get("subject", ""),
+        })
+        touched = True
+
+    if touched:
+        _write_pending(pending_rows)
 
     return summary
 

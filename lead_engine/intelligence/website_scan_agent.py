@@ -306,3 +306,24 @@ def _classify_automation_opportunity(result: Dict[str, object]) -> str:
     if (phone or form) and not has_booking:
         return "no_booking"
     return "unknown"
+
+
+def generate_lead_insight(scan_result: Dict[str, object]) -> tuple[str, List[str]]:
+    """Return a short operator-facing insight sentence plus supporting signals."""
+    positive = [str(x) for x in (scan_result.get("positive_conversion_signals") or []) if str(x).strip()]
+    weak = [str(x) for x in (scan_result.get("weak_website_signals") or []) if str(x).strip()]
+
+    signals: List[str] = []
+    if positive:
+        signals.extend(positive[:2])
+    if weak:
+        signals.extend([f"gap: {w}" for w in weak[:2]])
+
+    if weak:
+        sentence = f"Website shows conversion gaps ({weak[0]}), which makes response-capture automation a strong angle."
+    elif positive:
+        sentence = f"Website already shows {positive[0]}, so positioning should focus on faster after-hours response and lead capture."
+    else:
+        sentence = "Website signal scan was limited; position outreach around missed-call response speed and lead capture reliability."
+
+    return sentence, signals

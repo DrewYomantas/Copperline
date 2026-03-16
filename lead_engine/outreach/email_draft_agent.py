@@ -4,6 +4,8 @@ import hashlib
 import json
 from typing import Dict, List, Optional, Tuple
 
+DRAFT_VERSION = "v2_signal_templates"
+
 # ---------------------------------------------------------------------------
 # Industry detection (unchanged — used by pipeline)
 # ---------------------------------------------------------------------------
@@ -274,3 +276,21 @@ def draft_email_json(prospect: Dict[str, str], final_priority_score: int) -> Dic
 def pick_best_pitch_angle(likely_opportunity: str) -> str:
     """Kept for backward compatibility."""
     return (likely_opportunity or "booking automation").strip() or "booking automation"
+
+
+
+def draft_social_messages(prospect: Dict[str, str], email_body: str) -> Tuple[str, str, str]:
+    """Return basic social/contact-form drafts derived from the email body."""
+    business_name = (prospect.get("business_name") or "there").strip()
+    base = (email_body or "").replace("\n\nBest,\nDrew", "").strip()
+    if not base:
+        base = (
+            f"Hi {business_name} — quick note. "
+            "I can help with missed-call follow-up and lead capture. "
+            "Open to a quick chat?"
+        )
+
+    fb = base
+    ig = base
+    form = base
+    return fb, ig, form

@@ -127,3 +127,24 @@ def score_opportunity(
 def score_label(score: int) -> str:
     """Return the human-readable label for a numeric score."""
     return _LABELS.get(max(1, min(5, score)), "Unknown")
+
+
+
+def compute_numeric_score(prospect: Dict[str, str]) -> int:
+    """Compatibility helper: return deterministic 0-100 opportunity score."""
+    score5, _ = score_opportunity(prospect, {})
+    # map 1..5 to 20..100
+    return int(score5 * 20)
+
+
+def score_priority_label(numeric_score: int) -> str:
+    """Compatibility helper for UI chips based on 0-100 score."""
+    try:
+        s = int(numeric_score)
+    except (TypeError, ValueError):
+        s = 0
+    if s >= 80:
+        return "High"
+    if s >= 50:
+        return "Medium"
+    return "Low"

@@ -585,7 +585,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="nav-tab"        data-parent="discovery" onclick="switchParent('discovery',this)">🔍 Discovery</div>
   <div class="nav-tab"        data-parent="clients"   onclick="switchParent('clients',this)">📞 Clients</div>
   <div class="nav-tab"        data-parent="health"    onclick="switchParent('health',this)" id="nav-health-top">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
-  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools</div>
+  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools <span class="tag" style="font-size:9px;padding:1px 5px;vertical-align:middle">Stub</span></div>
 </nav>
 
 <!-- Sub-tab bar — shown below top nav, content changes per parent -->
@@ -688,6 +688,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     </select>
     <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
     <button id="btnCheckReplies" class="btn btn-ghost" onclick="checkReplies()" title="Poll Gmail inbox for replies to sent emails"><span class="spin"></span>★ Check Replies</button>
+    <button id="btnCheckSent" class="btn btn-ghost" onclick="checkSent()" title="Reconcile queue with recent Gmail Sent mail after interrupted send runs"><span class="spin"></span>↺ Check Sent</button>
     <button id="btnSendDry" class="btn btn-ghost" onclick="sendDryRun()"><span class="spin"></span>Preview Send</button>
     <button id="btnSendLive" class="btn btn-success" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
   </div>
@@ -1132,6 +1133,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="mc-section-hdr">
     <h2>🗺️ Map Area Search</h2>
     <span class="mc-muted" style="font-size:12px">Click the map to set center, drag to adjust radius, then search</span>
+    <span class="mc-muted" style="font-size:11px;display:block;margin-top:4px">Queue and draft creation are authoritative; map markers may be partial when source coordinates are unavailable.</span>
   </div>
   <div class="map-instructions">
     <strong>How to use:</strong> Click anywhere on the map to place a search circle.
@@ -1560,7 +1562,7 @@ async function fillPanel(row, fi) {
       const gi_s = allRows.indexOf(row);
       schedEl.innerHTML =
         `<span class="sched-time">🕐 Scheduled: ${_formatSendAfter(row.send_after)}</span>` +
-        `<button class="btn-sched-act" onclick="panelClearSchedule()">Clear</button>` +
+        `<button class="btn-sched-act" onclick="panelUnschedule()">Unschedule</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
@@ -1771,7 +1773,7 @@ async function panelScheduleTomorrow() {
 }
 
 // Pass 10 — clear existing schedule
-async function panelClearSchedule() {
+async function panelUnschedule() {
   const row = filteredRows[panelIdx];
   if (!row) return;
   const gi = allRows.indexOf(row);
@@ -1785,7 +1787,7 @@ async function panelClearSchedule() {
     row.send_after = '';
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Schedule cleared', 'ok');
+    toast('Unscheduled', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -1879,6 +1881,9 @@ async function deleteRow(gi) {
 }
 
 async function approveAll() {
+  const count = allRows.filter(r => r.approved !== 'true' && !r.sent_at).length;
+  if (!count) { toast('No pending unsent rows to approve', 'info'); return; }
+  if (!confirm(`Approve ${count} pending unsent row(s)? This writes approval state to the queue.`)) return;
   const res = await api('/api/approve_all',{});
   await loadAll(); toast(`Approved ${res.approved} rows`,'ok');
 }
@@ -1899,18 +1904,40 @@ function toggleCheckAll(master) { document.querySelectorAll('.row-chk').forEach(
 
 async function bulkApprove() {
   const idxs = getSelectedGIs();
-  const missing = idxs.filter(i=>!allRows[i]?.to_email);
-  if (missing.length) { toast(`${missing.length} row(s) need an email first`,'err'); return; }
-  await Promise.all(idxs.map(i=>api('/api/approve_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='true'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Approved ${idxs.length}`,'ok');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/approve_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='true';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Approved ${okCount}`,'ok');
 }
 
 async function bulkUnapprove() {
   const idxs = getSelectedGIs();
-  await Promise.all(idxs.map(i=>api('/api/unapprove_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='false'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Unapproved ${idxs.length}`,'info');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/unapprove_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='false';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Unapproved ${okCount}`,'info');
 }
 
 async function bulkDelete() {
@@ -3241,11 +3268,11 @@ function _cvRenderPanel(r, i) {
         <div class="cv-section-label">Quick Actions</div>
         <div class="cv-quick-actions">
           <button class="btn btn-primary" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'demo')">📎 Send Demo Link</button>
+            onclick="cvSendQuick(${idx},'demo')">📎 Copy Demo Reply</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'call')">📞 Schedule Call</button>
+            onclick="cvSendQuick(${idx},'call')">📞 Copy Call Invite</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'case_study')">📄 Send Case Study</button>
+            onclick="cvSendQuick(${idx},'case_study')">📄 Copy Case Study Reply</button>
           <button class="btn btn-danger" style="font-size:12px"
             onclick="cvClose(${idx},${i})">✗ Close Lead</button>
         </div>
@@ -3475,9 +3502,9 @@ function mcRenderClients() {
       <td><span class="tag-industry" style="${c.active===false?'opacity:.5':''}">${c.active===false?'Inactive':'Active'}</span></td>
       <td>
         <div class="mc-actions">
-          <button class="act act-edit" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">Leads</button>
+          <button class="act act-edit" disabled title="Leads view not enabled yet" style="opacity:.4;cursor:not-allowed">Leads</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.id||c.client_id||'')}','${escHtml(c.business_name)}')">🎬 Run Demo</button>
-          <button class="act act-del" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">✕</button>
+          <button class="act act-del" disabled title="Delete client not enabled yet" style="opacity:.4;cursor:not-allowed">✕</button>
         </div>
       </td>
     </tr>`).join('');
@@ -3538,14 +3565,7 @@ function closeDemoModal() {
 // ── Leads page ────────────────────────────────────────────────────────────────
 let _mcLeadsClientId = '';
 function mcViewLeads(cid, name) {
-  _mcLeadsClientId = cid;
-  document.getElementById('mc-leads-title').textContent = `Leads — ${name}`;
-  document.getElementById('mc-leads-date').value = '';
-  document.getElementById('mc-leads-caller').value = '';
-  switchPage('mc-leads', null);
-  // Manually highlight nav tab
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  mcLoadLeads();
+  toast('Leads view not enabled yet', 'info');
 }
 
 function mcClearFilters() {
@@ -3684,6 +3704,35 @@ async function checkReplies(silent = false) {
     }
   } catch (e) {
     if (!silent) toast('Reply check error: ' + e, 'err');
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
+async function checkSent() {
+  const btn = document.getElementById('btnCheckSent');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const res = await api('/api/reconcile_sent', { max_messages: 150, lookback_hours: 72 });
+    if (!res.ok) {
+      toast('Sent reconciliation failed: ' + (res.error || 'unknown error'), 'err');
+      return;
+    }
+    const r = res.result || {};
+    if ((r.updated_rows || 0) > 0) {
+      await loadAll();
+      toast(`↺ Reconciled ${r.updated_rows} sent row${r.updated_rows === 1 ? '' : 's'} from Gmail Sent`, 'ok');
+    } else {
+      toast('No sent rows needed reconciliation', 'info');
+    }
+    if ((r.skipped_ambiguous || 0) > 0) {
+      toast(`Sent check skipped ${r.skipped_ambiguous} ambiguous row${r.skipped_ambiguous === 1 ? '' : 's'} (safe skip)`, 'err');
+    }
+    if (r.errors && r.errors.length) {
+      toast('Sent check warning: ' + r.errors[0], 'err');
+    }
+  } catch (e) {
+    toast('Sent reconciliation error: ' + e, 'err');
   } finally {
     if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
   }

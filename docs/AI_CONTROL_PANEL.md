@@ -9,18 +9,18 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Map System + Operator Safety
+Dashboard UX Safety Cleanup
 
 ## Current Build Pass
-Pass 10 — Scheduled Queue UX (complete)
+Pass 14 — Dashboard UX Safety Cleanup (complete)
 
 ## Last Completed Pass
-Pass 10 — Scheduled Queue UX
+Pass 14 — Dashboard UX Safety Cleanup
 
-Commit: `d31d720`
+Commit: `014e68c`
 
 ## Next Pass
-Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 15 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Upcoming Passes
 - Search Visible Area button

@@ -9,21 +9,19 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue — Scheduled Send UX
+Dashboard UX Safety Cleanup
 
 ## Last Completed Pass
-Pass 10 — Scheduled Queue UX
+Pass 14 — Dashboard UX Safety Cleanup
 
-- Scheduled rows now display readable send times (Today · 7:30am / Tomorrow · 7:30am / Fri Mar 20 · 8:00am) under the badge in the table
-- Active filter now excludes scheduled rows — Active = "actionable now" only
-- Scheduled filter now sorts by send_after ascending (earliest first)
-- Panel schedule info block shows formatted time + Clear / +1 / +2 / +3 day action buttons
-- `panelClearSchedule()` clears send_after via guarded /api/schedule_email route
-- `panelReschedule(days)` reschedules to today+N at industry window time
-- `/api/schedule_email` backend updated to accept empty string (clear) while keeping all identity/bounds validation
-- No send logic changed. No auto-send. No schema changes.
+- Disabled active navigation path into broken client leads detail (`mcViewLeads` now informational only)
+- Added explicit disabled tooltips for non-enabled client actions: Leads and Delete
+- Relabeled conversation quick actions to clarify clipboard-only behavior (Copy Demo Reply / Copy Call Invite / Copy Case Study Reply)
+- Added Approve All confirmation with explicit write-action wording and row count
+- Added map disclosure note clarifying queue/draft authority vs partial marker availability
+- Added visible `Stub` badge to Tools top tab
 
-Commit: `d31d720`
+Commit: `014e68c`
 
 ## Previous Completed Pass
 Pass 9b — Scheduled Send Intent
@@ -31,7 +29,7 @@ Pass 9b — Scheduled Send Intent
 Commits: A `24dc5b2` / B `52dd64a` / C `a5f09c5`
 
 ## Next Pass
-Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 15 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Protected Systems
 - `run_lead_engine.py`
