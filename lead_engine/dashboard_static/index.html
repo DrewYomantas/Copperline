@@ -261,6 +261,8 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .panel-sched-info .sched-time{font-weight:600;flex:1}
 .panel-sched-info .btn-sched-act{font-size:11px;padding:3px 8px;background:transparent;border:1px solid rgba(245,166,35,.4);color:var(--amber);border-radius:var(--rs);cursor:pointer;transition:.12s}
 .panel-sched-info .btn-sched-act:hover{background:rgba(245,166,35,.12)}
+.sched-help{width:100%;font-size:10px;color:var(--muted);line-height:1.4}
+.sched-pill{display:inline-block;padding:1px 6px;border-radius:999px;border:1px solid rgba(245,166,35,.25);background:rgba(245,166,35,.12);font-size:10px;color:var(--amber)}
 .reply-snippet{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
 .panel-reply-box{background:var(--surface2);border:1px solid var(--copper);border-radius:var(--rs);padding:12px 14px;margin-top:4px}
 .panel-reply-box .reply-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--copper);margin-bottom:6px}
@@ -1101,7 +1103,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     <div class="panel-footer">
       <button class="btn btn-success" id="panel-approve-btn" onclick="panelApprove()" style="flex:1">✓ Approve</button>
       <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
-      <button class="btn btn-secondary" id="panel-schedule-btn" onclick="panelScheduleTomorrow()" title="Schedule this email for tomorrow morning">🕐 Schedule for Tomorrow</button>
+      <button class="btn btn-secondary" id="panel-schedule-btn" onclick="panelScheduleTomorrow()" title="Schedule this email for tomorrow at the industry best-time window">🕐 Tomorrow @ Best Time</button>
       <button class="btn btn-ghost" onclick="closePanel()">Close</button>
       <button class="btn btn-ghost" onclick="panelOptOut()" title="Mark as do not contact — blocks future sends">🚫 Opt Out</button>
       <button class="btn btn-danger" onclick="panelDelete()">Delete</button>
@@ -1567,7 +1569,7 @@ function statusBadge(row) {
   if (!row.sent_at && status_draft_version && row.draft_version !== status_draft_version)
     return '<span class="badge badge-stale" title="Old copy — regenerate before sending">⚠ Stale</span>';
   if (row.send_after && !row.sent_at) return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">🕐 Scheduled</span>`;
-  if (row.approved === 'true') return '<span class="badge badge-approved">● Approved</span>';
+  if (row.approved === 'true') return '<span class="badge badge-approved" title="Approved = reviewed but not yet scheduled">● Approved</span>';
   return '<span class="badge badge-pending">○ Pending</span>';
 }
 
@@ -1783,14 +1785,23 @@ async function fillPanel(row, fi) {
   // ── Schedule info block ───────────────────────────────────────────────────
   const schedEl = document.getElementById('panel-schedule-info');
   if (schedEl) {
+    const windowLabel = _industryWindowLabel(row);
     if (row.send_after && !row.sent_at) {
-      const gi_s = allRows.indexOf(row);
       schedEl.innerHTML =
         `<span class="sched-time">🕐 Scheduled: ${_formatSendAfter(row.send_after)}</span>` +
+        `<span class="sched-pill">Scheduled = queued for manual morning send</span>` +
         `<button class="btn-sched-act" onclick="panelUnschedule()">Unschedule</button>` +
+        `<button class="btn-sched-act" onclick="panelRescheduleNextBestWindow()">Next Best Window</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
-        `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
+        `<div class="sched-help">${escHtml(windowLabel)} • Approved means reviewed, scheduled means placed on a send window.</div>`;
+      schedEl.style.display = '';
+    } else if (row.approved === 'true' && !row.sent_at) {
+      schedEl.innerHTML =
+        `<span class="sched-time">✓ Approved (not scheduled)</span>` +
+        `<button class="btn-sched-act" onclick="panelScheduleBestTimeToday()">Schedule for Best Time</button>` +
+        `<button class="btn-sched-act" onclick="panelScheduleTomorrow()">Tomorrow @ Best Time</button>` +
+        `<div class="sched-help">${escHtml(windowLabel)} • Approved = ready, Scheduled = queued with send_after.</div>`;
       schedEl.style.display = '';
     } else {
       schedEl.innerHTML = '';
@@ -1969,18 +1980,36 @@ const SEND_WINDOWS = {
   default:     '08:00',
 };
 
+function _industryWindowTime(row) {
+  return SEND_WINDOWS[(row?.industry || '').toLowerCase()] || SEND_WINDOWS.default;
+}
+
+function _industryWindowLabel(row) {
+  const k = (row?.industry || '').toLowerCase();
+  const t = _industryWindowTime(row);
+  const name = k ? k.replace(/_/g,' ') : 'default';
+  const timeIso = `2000-01-01T${t}:00`;
+  const d = new Date(timeIso);
+  const pretty = isNaN(d.getTime()) ? t : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  return `${name} defaults to ${pretty}`;
+}
+
+function _buildSendAfterFromWindow(daysFromNow, row) {
+  const window_time = _industryWindowTime(row);
+  const target = new Date();
+  target.setDate(target.getDate() + daysFromNow);
+  const yyyy = target.getFullYear();
+  const mm   = String(target.getMonth() + 1).padStart(2, '0');
+  const dd   = String(target.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${window_time}:00`;
+}
+
 async function panelScheduleTomorrow() {
   const row = filteredRows[panelIdx];
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot schedule', 'err'); return; }
   const gi = allRows.indexOf(row);
-  const window_time = SEND_WINDOWS[row.industry] || SEND_WINDOWS.default;
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const yyyy = tomorrow.getFullYear();
-  const mm   = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const dd   = String(tomorrow.getDate()).padStart(2, '0');
-  const send_after = `${yyyy}-${mm}-${dd}T${window_time}:00`;
+  const send_after = _buildSendAfterFromWindow(1, row);
   try {
     const res = await api('/api/schedule_email', {
       index: gi,
@@ -1991,7 +2020,7 @@ async function panelScheduleTomorrow() {
     row.send_after = send_after;
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Scheduled for tomorrow ' + window_time, 'ok');
+    toast('Scheduled for tomorrow at best time', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -2024,13 +2053,7 @@ async function panelReschedule(days) {
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot reschedule', 'err'); return; }
   const gi = allRows.indexOf(row);
-  const window_time = SEND_WINDOWS[row.industry] || SEND_WINDOWS.default;
-  const target = new Date();
-  target.setDate(target.getDate() + days);
-  const yyyy = target.getFullYear();
-  const mm   = String(target.getMonth() + 1).padStart(2, '0');
-  const dd   = String(target.getDate()).padStart(2, '0');
-  const send_after = `${yyyy}-${mm}-${dd}T${window_time}:00`;
+  const send_after = _buildSendAfterFromWindow(days, row);
   try {
     const res = await api('/api/schedule_email', {
       index: gi,
@@ -2045,6 +2068,40 @@ async function panelReschedule(days) {
   } catch(e) {
     toast('Connection error', 'err');
   }
+}
+
+
+async function panelScheduleBestTimeToday() {
+  const row = filteredRows[panelIdx];
+  if (!row) return;
+  if (row.sent_at) { toast('Already sent — cannot schedule', 'err'); return; }
+  const gi = allRows.indexOf(row);
+  const send_after = _buildSendAfterFromWindow(0, row);
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      send_after,
+    });
+    if (!res.ok) { toast('Schedule error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = send_after;
+    renderTable();
+    fillPanel(row, panelIdx);
+    toast('Scheduled for best time window', 'ok');
+  } catch(e) { toast('Connection error', 'err'); }
+}
+
+async function panelRescheduleNextBestWindow() {
+  const row = filteredRows[panelIdx];
+  if (!row) return;
+  const base = row.send_after ? new Date(row.send_after) : new Date();
+  if (isNaN(base.getTime())) return panelReschedule(1);
+  const now = new Date();
+  const start = new Date(Math.max(base.getTime(), now.getTime()));
+  // move at least one day forward to avoid rescheduling into same window
+  start.setDate(start.getDate() + 1);
+  const futureDays = Math.max(1, Math.ceil((start.setHours(0,0,0,0) - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86400000));
+  return panelReschedule(futureDays);
 }
 
 async function panelApprove() {

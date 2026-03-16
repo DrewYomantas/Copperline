@@ -9,17 +9,17 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Pass 11C — Discovery-to-Queue Continuity UX
+Pass 11D — Industry Send Window UX Refinement
 
 ## Last Completed Pass
-Pass 11C — Discovery-to-Queue Continuity UX
+Pass 11D — Industry Send Window UX Refinement
 
-- Added a session handoff bar that appears after discovery runs with truthful summary text and direct next actions.
-- Added one-click continuity actions: Review New Drafts, Continue Discovering, and Return to Last Discovery Area.
-- Captured map context (center/radius/industry/city-state label) and restored it when returning from queue review.
-- Preserved explicit discovery triggers and existing queue/send behavior (no auto-search, no send logic changes).
+- Refined scheduling UX around explicit industry send windows and readable best-time guidance.
+- Added panel actions for Schedule for Best Time, Tomorrow @ Best Time, and Next Best Window while preserving manual-send workflow.
+- Added compact operator help copy clarifying Approved vs Scheduled meaning directly in the schedule block.
+- Preserved existing send_after semantics, scheduled sorting, and no-auto-send behavior.
 
-Commit: `70f1f96`
+Commit: `3413dbb`
 
 ## Previous Completed Pass
 Pass 9b — Scheduled Send Intent

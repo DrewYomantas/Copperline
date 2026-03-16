@@ -1,3 +1,27 @@
+### 2026-03-16 — Pass 11D: Industry Send Window UX Refinement
+
+**Goal:** Make scheduling feel deliberate and industry-tailored while preserving manual Gmail sending and existing `send_after` queue semantics.
+
+**Changes:**
+- Added industry send-window helpers (`_industryWindowTime`, `_industryWindowLabel`, `_buildSendAfterFromWindow`) for coherent, operator-visible scheduling defaults.
+- Updated review panel schedule actions and labels:
+  - `Tomorrow @ Best Time`
+  - `Schedule for Best Time`
+  - `Next Best Window`
+- Enhanced schedule info block with compact guidance:
+  - industry default-time explanation
+  - clear Approved vs Scheduled distinction
+- Kept `panelUnschedule`, scheduled ordering, and all send behavior unchanged.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** `3413dbb`
+
+---
+
 ### 2026-03-16 — Pass 11C: Discovery-to-Queue Continuity UX
 
 **Goal:** Reduce context-switch friction between map discovery and queue processing without introducing fake campaign abstractions.
