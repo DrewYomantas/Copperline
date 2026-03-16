@@ -9,20 +9,19 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue — Sent Reconciliation Safety
+Dashboard UX Safety Cleanup
 
 ## Last Completed Pass
-Pass 11 — Sent Mail Reconciliation Recovery
+Pass 14 — Dashboard UX Safety Cleanup
 
-- Added `/api/reconcile_sent` operator action in dashboard backend
-- Added Gmail Sent mailbox scan + queue reconciliation helper (`reconcile_sent_mail`)
-- Matching logic is strict: recipient email + subject on approved rows where `sent_at` and `message_id` are blank
-- Ambiguous matches are skipped safely (no write)
-- Reconciliation sets `sent_at` and fills `message_id` from Gmail when available
-- New toolbar action `↺ Check Sent` triggers reconciliation from the dashboard
-- No lead deletion, no resends, no queue schema changes
+- Disabled active navigation path into broken client leads detail (`mcViewLeads` now informational only)
+- Added explicit disabled tooltips for non-enabled client actions: Leads and Delete
+- Relabeled conversation quick actions to clarify clipboard-only behavior (Copy Demo Reply / Copy Call Invite / Copy Case Study Reply)
+- Added Approve All confirmation with explicit write-action wording and row count
+- Added map disclosure note clarifying queue/draft authority vs partial marker availability
+- Added visible `Stub` badge to Tools top tab
 
-Commit: `aae0cb5`
+Commit: `014e68c`
 
 ## Previous Completed Pass
 Pass 9b — Scheduled Send Intent
@@ -30,7 +29,7 @@ Pass 9b — Scheduled Send Intent
 Commits: A `24dc5b2` / B `52dd64a` / C `a5f09c5`
 
 ## Next Pass
-Pass 12 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 15 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Protected Systems
 - `run_lead_engine.py`

@@ -69,6 +69,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .filter-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:2px}
 .ftab{padding:4px 11px;border-radius:3px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);transition:.12s;user-select:none;white-space:nowrap}
 .ftab.active{background:var(--surface3);color:var(--text)}.ftab:hover:not(.active){color:var(--text)}
+.ftab-aux{display:none}
+.filter-tabs.show-aux .ftab-aux{display:inline-block}
+.ftab-more{padding:4px 9px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;color:var(--dim);border:1px dashed var(--border-hi);background:transparent;user-select:none}
+.ftab-more:hover{color:var(--text)}
 .search-box{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;width:160px;transition:.12s}
 .search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
 .search-box::placeholder{color:var(--dim)}
@@ -585,7 +589,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="nav-tab"        data-parent="discovery" onclick="switchParent('discovery',this)">🔍 Discovery</div>
   <div class="nav-tab"        data-parent="clients"   onclick="switchParent('clients',this)">📞 Clients</div>
   <div class="nav-tab"        data-parent="health"    onclick="switchParent('health',this)" id="nav-health-top">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
-  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools</div>
+  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools <span class="tag" style="font-size:9px;padding:1px 5px;vertical-align:middle">Stub</span></div>
 </nav>
 
 <!-- Sub-tab bar — shown below top nav, content changes per parent -->
@@ -663,16 +667,17 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="toolbar">
   <div class="toolbar-l">
     <div class="filter-tabs">
-      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Active</div>
-      <div class="ftab" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Actionable</div>
       <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Pending</div>
       <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved</div>
-      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">Sent</div>
-      <div class="ftab" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
-      <div class="ftab" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
-      <div class="ftab" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
-      <div class="ftab" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
       <div class="ftab" data-filter="scheduled" onclick="setFilter('scheduled',this)" style="color:var(--amber)" title="Emails approved and queued for a send window">🕐 Scheduled</div>
+      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">✓ Done</div>
+      <div class="ftab-more" onclick="toggleExtraFilters(this)">⋯ More</div>
+      <div class="ftab ftab-aux" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab ftab-aux" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
+      <div class="ftab ftab-aux" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
+      <div class="ftab ftab-aux" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
+      <div class="ftab ftab-aux" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
     </div>
     <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
     <span id="row-count" class="tag" style="font-size:10px"></span>
@@ -1133,6 +1138,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="mc-section-hdr">
     <h2>🗺️ Map Area Search</h2>
     <span class="mc-muted" style="font-size:12px">Click the map to set center, drag to adjust radius, then search</span>
+    <span class="mc-muted" style="font-size:11px;display:block;margin-top:4px">Queue and draft creation are authoritative; map markers may be partial when source coordinates are unavailable.</span>
   </div>
   <div class="map-instructions">
     <strong>How to use:</strong> Click anywhere on the map to place a search circle.
@@ -1325,23 +1331,35 @@ function _updateRepliedStat(count) {
   if (pulse) pulse.style.display = count > 0 ? 'inline-block' : 'none';
 }
 
+function isRowActionable(row) {
+  const terminal = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
+  return !row.sent_at && !row.send_after && !terminal.has(row.contact_result || '');
+}
+
 function applyFiltersAndSort() {
-  const _TERMINAL = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
   let rows = [...allRows];
   const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
   const sort = document.getElementById('sortSelect').value;
 
   if (currentFilter === 'active') {
     // Default view: unsent, unscheduled leads that aren't terminal — actionable now
-    rows = rows.filter(r => !r.sent_at && !r.send_after && !_TERMINAL.has(r.contact_result || ''));
-  } else if (currentFilter === 'pending')  rows = rows.filter(r => r.approved !== 'true' && !r.sent_at);
-  else if (currentFilter === 'approved')   rows = rows.filter(r => r.approved === 'true' && !r.sent_at);
+    rows = rows.filter(r => isRowActionable(r));
+  } else if (currentFilter === 'pending')  rows = rows.filter(r => isRowActionable(r) && r.approved !== 'true');
+  else if (currentFilter === 'approved')   rows = rows.filter(r => isRowActionable(r) && r.approved === 'true');
   else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
   else if (currentFilter === 'replied')    rows = rows.filter(r => r.replied === 'true');
   else if (currentFilter === 'stale')      rows = rows.filter(r => !r.sent_at && r.draft_version !== status_draft_version);
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+
+  else if (currentFilter === 'all')  {
+    // Keep actionable work at the top, then scheduled, then done history.
+    rows.sort((a,b) => {
+      const bucket = (r) => isRowActionable(r) ? 0 : ((r.send_after && !r.sent_at) ? 1 : 2);
+      return bucket(a) - bucket(b);
+    });
+  }
   else if (currentFilter === 'scheduled')  {
     rows = rows.filter(r => r.send_after && !r.sent_at);
     rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
@@ -1443,6 +1461,7 @@ function renderTable() {
     const replySnip = row.replied === 'true' && row.reply_snippet
       ? `<div class="reply-snippet">↩ ${escHtml(row.reply_snippet.substring(0,80))}</div>` : '';
 
+    const actionable = isRowActionable(row);
     const approveBtn = row.sent_at
       ? `<span style="color:var(--dim);font-size:10px">sent</span>`
       : row.approved === 'true'
@@ -1451,7 +1470,7 @@ function renderTable() {
 
     return `<tr class="${sentClass} ${repliedClass} ${scheduledClass}" onclick="openPanel(${fi})">
       <td class="td-chk" onclick="event.stopPropagation()">
-        <input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">
+        ${actionable ? `<input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">` : `<span style="color:var(--dim);font-size:10px">—</span>`}
       </td>
       <td class="td-biz">
         <span class="biz-name">${escHtml(row.business_name)}</span>
@@ -1467,18 +1486,28 @@ function renderTable() {
         <div class="row-acts">
           ${approveBtn}
           <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
-          <button class="act act-del" onclick="deleteRow(${gi})">Del</button>
+          ${actionable ? `<button class="act act-del" onclick="deleteRow(${gi})">Del</button>` : ''}
         </div>
       </td>
     </tr>`;
   }).join('');
+  updateBulkSafety();
 }
+
 
 function setFilter(name, el) {
   currentFilter = name;
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateBulkSafety();
   renderTable();
+}
+
+function toggleExtraFilters(btn) {
+  const tabs = document.querySelector('.filter-tabs');
+  if (!tabs) return;
+  const on = tabs.classList.toggle('show-aux');
+  if (btn) btn.textContent = on ? '⋯ Less' : '⋯ More';
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
@@ -1561,7 +1590,7 @@ async function fillPanel(row, fi) {
       const gi_s = allRows.indexOf(row);
       schedEl.innerHTML =
         `<span class="sched-time">🕐 Scheduled: ${_formatSendAfter(row.send_after)}</span>` +
-        `<button class="btn-sched-act" onclick="panelClearSchedule()">Clear</button>` +
+        `<button class="btn-sched-act" onclick="panelUnschedule()">Unschedule</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
@@ -1772,7 +1801,7 @@ async function panelScheduleTomorrow() {
 }
 
 // Pass 10 — clear existing schedule
-async function panelClearSchedule() {
+async function panelUnschedule() {
   const row = filteredRows[panelIdx];
   if (!row) return;
   const gi = allRows.indexOf(row);
@@ -1786,7 +1815,7 @@ async function panelClearSchedule() {
     row.send_after = '';
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Schedule cleared', 'ok');
+    toast('Unscheduled', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -1880,13 +1909,35 @@ async function deleteRow(gi) {
 }
 
 async function approveAll() {
+  const count = allRows.filter(r => r.approved !== 'true' && !r.sent_at).length;
+  if (!count) { toast('No pending unsent rows to approve', 'info'); return; }
+  if (!confirm(`Approve ${count} pending unsent row(s)? This writes approval state to the queue.`)) return;
   const res = await api('/api/approve_all',{});
   await loadAll(); toast(`Approved ${res.approved} rows`,'ok');
 }
 
 // ── Bulk ──────────────────────────────────────────────────────────────────────
 function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
+function _bulkAllowedInCurrentFilter() {
+  return ['active', 'pending', 'approved'].includes(currentFilter);
+}
+
+function updateBulkSafety() {
+  const bulk = document.getElementById('bulk-bar');
+  const master = document.getElementById('chk-all');
+  const allowed = _bulkAllowedInCurrentFilter();
+  if (master) {
+    master.disabled = !allowed;
+    if (!allowed) master.checked = false;
+  }
+  if (!allowed) {
+    document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+    if (bulk) bulk.classList.remove('visible');
+  }
+}
+
 function updateBulkBar() {
+  if (!_bulkAllowedInCurrentFilter()) return;
   const n = document.querySelectorAll('.row-chk:checked').length;
   document.getElementById('bulk-count').textContent = n;
   document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
@@ -1896,22 +1947,44 @@ function clearSelection() {
   document.getElementById('chk-all').checked=false;
   updateBulkBar();
 }
-function toggleCheckAll(master) { document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
+function toggleCheckAll(master) { if (!_bulkAllowedInCurrentFilter()) return; document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
 
 async function bulkApprove() {
   const idxs = getSelectedGIs();
-  const missing = idxs.filter(i=>!allRows[i]?.to_email);
-  if (missing.length) { toast(`${missing.length} row(s) need an email first`,'err'); return; }
-  await Promise.all(idxs.map(i=>api('/api/approve_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='true'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Approved ${idxs.length}`,'ok');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/approve_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='true';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Approved ${okCount}`,'ok');
 }
 
 async function bulkUnapprove() {
   const idxs = getSelectedGIs();
-  await Promise.all(idxs.map(i=>api('/api/unapprove_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='false'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Unapproved ${idxs.length}`,'info');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/unapprove_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='false';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Unapproved ${okCount}`,'info');
 }
 
 async function bulkDelete() {
@@ -3242,11 +3315,11 @@ function _cvRenderPanel(r, i) {
         <div class="cv-section-label">Quick Actions</div>
         <div class="cv-quick-actions">
           <button class="btn btn-primary" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'demo')">📎 Send Demo Link</button>
+            onclick="cvSendQuick(${idx},'demo')">📎 Copy Demo Reply</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'call')">📞 Schedule Call</button>
+            onclick="cvSendQuick(${idx},'call')">📞 Copy Call Invite</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'case_study')">📄 Send Case Study</button>
+            onclick="cvSendQuick(${idx},'case_study')">📄 Copy Case Study Reply</button>
           <button class="btn btn-danger" style="font-size:12px"
             onclick="cvClose(${idx},${i})">✗ Close Lead</button>
         </div>
@@ -3476,9 +3549,9 @@ function mcRenderClients() {
       <td><span class="tag-industry" style="${c.active===false?'opacity:.5':''}">${c.active===false?'Inactive':'Active'}</span></td>
       <td>
         <div class="mc-actions">
-          <button class="act act-edit" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">Leads</button>
+          <button class="act act-edit" disabled title="Leads view not enabled yet" style="opacity:.4;cursor:not-allowed">Leads</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.id||c.client_id||'')}','${escHtml(c.business_name)}')">🎬 Run Demo</button>
-          <button class="act act-del" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">✕</button>
+          <button class="act act-del" disabled title="Delete client not enabled yet" style="opacity:.4;cursor:not-allowed">✕</button>
         </div>
       </td>
     </tr>`).join('');
@@ -3539,14 +3612,7 @@ function closeDemoModal() {
 // ── Leads page ────────────────────────────────────────────────────────────────
 let _mcLeadsClientId = '';
 function mcViewLeads(cid, name) {
-  _mcLeadsClientId = cid;
-  document.getElementById('mc-leads-title').textContent = `Leads — ${name}`;
-  document.getElementById('mc-leads-date').value = '';
-  document.getElementById('mc-leads-caller').value = '';
-  switchPage('mc-leads', null);
-  // Manually highlight nav tab
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  mcLoadLeads();
+  toast('Leads view not enabled yet', 'info');
 }
 
 function mcClearFilters() {

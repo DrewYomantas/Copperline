@@ -1,10 +1,10 @@
 # Current Build Pass
 
 ## Active System
-Outreach Queue — Sent Reconciliation Safety
+Dashboard UX Safety Cleanup
 
 ## Status
-Pass 11 complete.
+Pass 14 complete.
 
 ---
 
@@ -91,7 +91,66 @@ No schema changes. No send pipeline rewrite.
 - Added `checkSent()` flow calling `/api/reconcile_sent`
 - Shows safe-skip toast for ambiguous matches and refreshes queue after updates
 
-## Next: Pass 12 — TBD
+
+## Completed: Pass 12 — Queue Bulk Action + Unschedule Fix — `c40d16d`
+
+One file changed: `dashboard_static/index.html`.
+No schema changes. No send logic changes.
+
+### Root cause
+Bulk Approve/Unapprove used `Promise.all` against `/api/approve_row` and `/api/unapprove_row`.
+Those endpoints read+write the full queue per call, so concurrent calls can race and overwrite each other.
+
+### Fix
+- `bulkApprove()` changed from parallel `Promise.all` to sequential per-row calls
+- `bulkUnapprove()` changed from parallel `Promise.all` to sequential per-row calls
+- Existing bulk Delete/Clear and single-row approve/unapprove flows were preserved
+- Panel schedule action label changed from `Clear` to explicit `Unschedule`
+- `panelUnschedule()` uses existing `/api/schedule_email` with `send_after: ""`
+
+
+## Completed: Pass 13 — Dashboard Startup Import Recovery — `c2234ea`
+
+Files changed:
+- `lead_engine/discovery/prospect_discovery_agent.py`
+- `lead_engine/run_lead_engine.py`
+- `lead_engine/intelligence/website_scan_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/scoring/opportunity_scoring_agent.py`
+- `lead_engine/city_planner.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+
+Root cause: startup import chain had drifted symbols/modules (`clean_website_for_key`, `generate_lead_insight`, `draft_social_messages`, `compute_numeric_score`, `score_priority_label`, `city_planner`, `email_extractor_agent`).
+
+Fix: restore missing compatibility exports/modules with minimal additive shims so dashboard import chain resolves.
+
+Verification:
+- `python -m py_compile` on touched startup files
+- `python lead_engine/dashboard_server.py` starts and serves on `127.0.0.1:5000`
+
+
+## Completed: Pass 14 — Dashboard UX Safety Cleanup — `014e68c`
+
+File changed:
+- `lead_engine/dashboard_static/index.html`
+
+UI cleanup delivered:
+- Broken client leads navigation path disabled (`mcViewLeads` informational toast only)
+- Disabled client actions now have explicit tooltips (`Leads view not enabled yet`, `Delete client not enabled yet`)
+- Conversation quick action labels now clarify copy behavior
+- `Approve All` now requires confirmation with explicit write-action copy and target count
+- Map disclosure note added for marker partiality expectations
+- Tools top-nav now visibly marked `Stub`
+
+Verification:
+- Browser script check: no JS page errors on load
+- Approve All confirms and still hits `/api/approve_all`
+- Conversation quick action still copies text via clipboard handler
+- `mcViewLeads()` no longer switches pages
+- Map disclosure note visible on Map page
+- No backend files modified
+
+## Next: Pass 15 — TBD
 
 Candidates:
 - Territory heatmap overlay

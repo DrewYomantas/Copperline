@@ -9,18 +9,18 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue Safety + Operator Recovery
+Dashboard UX Safety Cleanup
 
 ## Current Build Pass
-Pass 11 — Sent Mail Reconciliation Recovery (complete)
+Pass 14 — Dashboard UX Safety Cleanup (complete)
 
 ## Last Completed Pass
-Pass 11 — Sent Mail Reconciliation Recovery
+Pass 14 — Dashboard UX Safety Cleanup
 
-Commit: `aae0cb5`
+Commit: `014e68c`
 
 ## Next Pass
-Pass 12 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 15 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Upcoming Passes
 - Search Visible Area button

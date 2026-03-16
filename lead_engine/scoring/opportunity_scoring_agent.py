@@ -188,56 +188,22 @@ def score_label(score: int) -> str:
     return _LABELS.get(max(1, min(5, score)), "Unknown")
 
 
-# ---------------------------------------------------------------------------
-# Numeric opportunity score (0-100) for Part 3
-# ---------------------------------------------------------------------------
 
 def compute_numeric_score(prospect: Dict[str, str]) -> int:
-    """
-    Returns an integer 0-100 opportunity score based on available signals.
-    Used for queue sorting and display badges.
-
-    Scoring:
-      +30  email available
-      +20  contact form available (has_contact_form in scan or contact_form_url)
-      +10  facebook or instagram present
-      +10  poor website indicators (no_booking, no_chat automation_opportunity)
-      +10  emergency-service keywords in name
-      +10  high-fit industry
-      +10  website reachable
-    """
-    score = 0
-    email = (prospect.get("to_email") or "").strip()
-    contact_form = (prospect.get("contact_form_url") or "").strip()
-    fb = (prospect.get("facebook_url") or "").strip()
-    ig = (prospect.get("instagram_url") or "").strip()
-    opportunity = (prospect.get("automation_opportunity") or "").strip().lower()
-    industry = (prospect.get("industry") or "").strip().lower().replace(" ", "_")
-    website = (prospect.get("website") or "").strip()
-    name = (prospect.get("business_name") or "").lower()
-
-    if email:
-        score += 30
-    if contact_form:
-        score += 20
-    if fb or ig:
-        score += 10
-    if opportunity in ("no_booking", "no_chat", "missed_after_hours"):
-        score += 10
-    if any(sig in name for sig in ["emergency", "24/7", "24 hour", "same day", "urgent"]):
-        score += 10
-    if industry in _HIGH_FIT_INDUSTRIES:
-        score += 10
-    if website:
-        score += 10
-
-    return min(100, score)
+    """Compatibility helper: return deterministic 0-100 opportunity score."""
+    score5, _ = score_opportunity(prospect, {})
+    # map 1..5 to 20..100
+    return int(score5 * 20)
 
 
 def score_priority_label(numeric_score: int) -> str:
-    """Return High / Medium / Low based on numeric score."""
-    if numeric_score >= 60:
+    """Compatibility helper for UI chips based on 0-100 score."""
+    try:
+        s = int(numeric_score)
+    except (TypeError, ValueError):
+        s = 0
+    if s >= 80:
         return "High"
-    if numeric_score >= 30:
+    if s >= 50:
         return "Medium"
     return "Low"

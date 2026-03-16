@@ -13,7 +13,7 @@ Key design rules:
 from __future__ import annotations
 
 import csv
-import re
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Dict, List, Tuple
 from urllib.parse import urlparse
@@ -57,44 +57,27 @@ def normalize_identity_token(value: str | None) -> str:
     return " ".join(normalize_value(value).lower().split())
 
 
-def normalize_business_name(name: str) -> str:
-    """
-    Lowercase, strip punctuation, remove noise words.
-    Used for dedupe key computation only — not for display.
-
-    Examples:
-      "Dee's Plumbing & Construction, Inc." → "dee construction"
-      "Lars Plumbing LLC"                   → "lars"
-      "A-1 Affordable Electric & Plumbing"  → "a1 affordable"
-    """
-    s = (name or "").lower().strip()
-    s = _PUNCT_RE.sub(" ", s)          # remove punctuation
-    tokens = s.split()
-    tokens = [t for t in tokens if t not in _NAME_NOISE_WORDS]
-    return " ".join(tokens).strip()
 
 
-def clean_website_for_key(url: str) -> str:
-    """
-    Return bare domain from URL, stripping scheme, path, and query params.
-    Used so that UTM-decorated and clean URLs produce identical keys.
-
-    Examples:
-      "https://goodeplumbing.com/?utm_source=google" → "goodeplumbing.com"
-      "http://www.larsplumbing.com/contact-us"       → "larsplumbing.com"
-      ""                                              → ""
-    """
-    url = (url or "").strip()
-    if not url:
+def clean_website_for_key(website: str | None) -> str:
+    """Normalize website/domain for dedupe keys."""
+    raw = normalize_value(website)
+    if not raw:
         return ""
+
+    candidate = raw
+    if "://" not in candidate:
+        candidate = "https://" + candidate
+
     try:
-        parsed = urlparse(url)
-        domain = parsed.netloc.lower().replace("www.", "").strip()
-        return domain
+        parsed = urlparse(candidate)
+        host = (parsed.netloc or parsed.path or "").strip().lower()
     except Exception:
         return ""
 
-
+    if host.startswith("www."):
+        host = host[4:]
+    return host.strip("/")
 def dedupe_key_for_prospect(row: Dict[str, str]) -> Tuple[str, str]:
     """
     Compute a stable, normalized dedupe key for a prospect or queue row.

@@ -25,6 +25,69 @@ Update this file at the end of every pass.
 
 **Commit:** `aae0cb5`
 
+## 2026-03-16
+
+
+### Pass 12 — Queue Bulk Action + Unschedule Fix
+
+**Goal:** Restore reliable checked-row bulk approvals and provide explicit unschedule action in the panel UI.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Fixed bulk Approve / Unapprove race by replacing parallel `Promise.all` queue writes with sequential row updates.
+- Kept bulk Delete/Clear and single-row approve/unapprove behavior intact.
+- Changed schedule panel button from `Clear` to explicit `Unschedule` for operator clarity.
+- Unschedule path reuses guarded `/api/schedule_email` with `send_after: ""`; no new route added.
+- No send logic changes, no queue schema changes, no protected backend edits.
+
+**Commit:** `c40d16d`
+
+## 2026-03-16
+
+
+### Pass 13 — Dashboard Startup Import Recovery
+
+**Goal:** Restore dashboard startup by resolving missing symbols/modules in the server import chain.
+
+**Files changed:**
+- `lead_engine/discovery/prospect_discovery_agent.py`
+- `lead_engine/run_lead_engine.py`
+- `lead_engine/intelligence/website_scan_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/scoring/opportunity_scoring_agent.py`
+- `lead_engine/city_planner.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+
+**What changed:**
+- Added missing `clean_website_for_key()` to discovery agent.
+- Removed stale `normalize_business_name` import from `run_lead_engine.py`.
+- Added compatibility helpers expected by `run_lead_engine.py` (`generate_lead_insight`, `draft_social_messages`, `DRAFT_VERSION`, `compute_numeric_score`, `score_priority_label`).
+- Added missing modules imported by dashboard server (`city_planner`, `email_extractor_agent`).
+- Verified `dashboard_server.py` starts and binds to localhost without the previous import errors.
+
+**Commit:** `c2234ea`
+
+## 2026-03-16
+
+### Pass 14 — Dashboard UX Safety Cleanup
+
+**Goal:** Remove misleading/dead dashboard actions and clarify operator-facing copy without backend changes.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Disabled active navigation into broken client leads surface by making `mcViewLeads` informational only.
+- Kept client Leads/Delete surfaces disabled and added explicit tooltips for both.
+- Relabeled conversation quick actions to copy-oriented language while preserving clipboard behavior.
+- Added safety confirmation to `Approve All` including affected row count and explicit write warning.
+- Added short map disclosure note clarifying queue/draft authority and partial marker expectations.
+- Marked Tools tab as `Stub` in top navigation.
+
+**Commit:** `014e68c`
+
 ## 2026-03-15
 
 ### Pass A — Operator Safety Fixes

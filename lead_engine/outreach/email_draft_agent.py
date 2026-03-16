@@ -4,6 +4,8 @@ import hashlib
 import random
 from typing import Dict, List, Optional, Tuple
 
+DRAFT_VERSION = "v2_signal_templates"
+
 # ---------------------------------------------------------------------------
 # Industry detection (unchanged — used by pipeline)
 # ---------------------------------------------------------------------------
@@ -232,42 +234,23 @@ def draft_email_json(prospect: Dict[str, str], final_priority_score: int) -> Dic
 # ── Legacy helpers ────────────────────────────────────────────────────────────
 
 def pick_best_pitch_angle(likely_opportunity: str) -> str:
-    """Kept for backward compatibility. Always returns missed_after_hours for high-fit industries."""
-    return "missed_after_hours"
+    """Kept for backward compatibility."""
+    return (likely_opportunity or "booking automation").strip() or "booking automation"
 
 
-# ── Social DM Draft Generator (Part 1) ───────────────────────────────────────
 
-_FB_IG_TEMPLATE = (
-    "Hey {name} — quick question, do you ever miss calls when everyone's out on jobs? "
-    "I set up a simple text-back line for service companies so those after-hours callers "
-    "get a reply automatically instead of calling the next guy. Happy to send an example."
-)
+def draft_social_messages(prospect: Dict[str, str], email_body: str) -> Tuple[str, str, str]:
+    """Return basic social/contact-form drafts derived from the email body."""
+    business_name = (prospect.get("business_name") or "there").strip()
+    base = (email_body or "").replace("\n\nBest,\nDrew", "").strip()
+    if not base:
+        base = (
+            f"Hi {business_name} — quick note. "
+            "I can help with missed-call follow-up and lead capture. "
+            "Open to a quick chat?"
+        )
 
-_CONTACT_FORM_TEMPLATE = (
-    "Hi,\n\n"
-    "I came across {name} and had a quick question — do you currently have a way to "
-    "follow up with callers who reach your voicemail after hours?\n\n"
-    "I help local service businesses set up a simple text-back system so missed callers "
-    "get an automatic reply, keeping the lead warm until someone can call back.\n\n"
-    "Happy to share a quick example if that's something worth a look.\n\n"
-    "— Drew"
-)
-
-
-def draft_social_messages(prospect: Dict[str, str], email_body: str = "") -> tuple:
-    """
-    Generate platform-appropriate social outreach drafts.
-    Returns (facebook_dm_draft, instagram_dm_draft, contact_form_message).
-    Uses the business name for personalization. No banned-word check needed
-    (these are short, natural DMs).
-    """
-    name = (prospect.get("business_name") or "this business").strip()
-    # Short first name heuristic: take first word if it looks like a business name
-    short_name = name.split()[0] if name else "there"
-
-    fb_draft  = _FB_IG_TEMPLATE.replace("{name}", short_name)
-    ig_draft  = _FB_IG_TEMPLATE.replace("{name}", short_name)
-    form_msg  = _CONTACT_FORM_TEMPLATE.replace("{name}", name)
-
-    return fb_draft, ig_draft, form_msg
+    fb = base
+    ig = base
+    form = base
+    return fb, ig, form
