@@ -9,60 +9,44 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue Safety + Scheduled Send Foundations
+Outreach Queue — Scheduled Send UX
 
 ## Last Completed Pass
-Pass 9b — Scheduled Send Intent
+Pass 10 — Scheduled Queue UX
 
-Protected systems modified deliberately in this pass (schema extension only).
-Scheduling is intent-only — no auto-send, no Gmail trigger, no background scheduler.
+- Scheduled rows now display readable send times (Today · 7:30am / Tomorrow · 7:30am / Fri Mar 20 · 8:00am) under the badge in the table
+- Active filter now excludes scheduled rows — Active = "actionable now" only
+- Scheduled filter now sorts by send_after ascending (earliest first)
+- Panel schedule info block shows formatted time + Clear / +1 / +2 / +3 day action buttons
+- `panelClearSchedule()` clears send_after via guarded /api/schedule_email route
+- `panelReschedule(days)` reschedules to today+N at industry window time
+- `/api/schedule_email` backend updated to accept empty string (clear) while keeping all identity/bounds validation
+- No send logic changed. No auto-send. No schema changes.
 
-### Commit A — `24dc5b2`
-- `"send_after"` appended to `PENDING_COLUMNS` in `run_lead_engine.py`
-- `"send_after"` appended to `PENDING_COLUMNS` in `dashboard_server.py`
-- `"send_after"` appended to `PENDING_EMAIL_COLUMNS` in `send/email_sender_agent.py`
-- `"send_after"` appended to `PENDING_COLUMNS` in `outreach/followup_scheduler.py`
-- `reply_checker.py` truncation bug fixed: 20-col list replaced with full 42-col schema including `send_after`
-
-### Commit B — `52dd64a`
-- `POST /api/schedule_email` added to `dashboard_server.py`
-- Validates: index in bounds, business_name non-empty, send_after non-empty, index/name match
-- Writes `send_after` only — no other field touched, no send triggered
-
-### Commit C — `a5f09c5`
-- `SEND_WINDOWS` const added to `index.html` (industry → local HH:MM send time)
-- `panelScheduleTomorrow()` function added — computes tomorrow + window, POSTs to `/api/schedule_email`, updates row in memory, refreshes panel and table
-- `🕐 Schedule for Tomorrow` button added to panel footer (`#panel-schedule-btn`)
-- `fillPanel` extended to hide button when `row.sent_at` is set
-- No auto-send, no Gmail launch, no background scheduler activation
+Commit: `d31d720`
 
 ## Previous Completed Pass
-Pass 9a — Queue Visual Safety
+Pass 9b — Scheduled Send Intent
 
-Commit: `f712909`
+Commits: A `24dc5b2` / B `52dd64a` / C `a5f09c5`
 
 ## Next Pass
-Pass 10 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
-## Protected Systems Modified This Pass
-- `run_lead_engine.py` — `PENDING_COLUMNS` extended (append only, no reorder)
-- `send/email_sender_agent.py` — `PENDING_EMAIL_COLUMNS` extended (append only)
-- `outreach/followup_scheduler.py` — `PENDING_COLUMNS` extended (append only)
-- `outreach/reply_checker.py` — schema corrected to full 42-col list (was truncated to 20)
-- `dashboard_server.py` — `PENDING_COLUMNS` extended + new route added
-
-## Protected Systems Still Untouched
-- Queue schema column ordering (unchanged — append only)
+## Protected Systems
+- `run_lead_engine.py`
+- Queue schema (column order and naming)
+- `pending_emails.csv` pipeline
+- Email sender
+- Follow-up scheduler
 - `safe_autopilot_eligible` logic
-- Email sender send logic
-- Follow-up scheduler eligibility logic
-- Gmail SMTP send path
 
 ## Core Operator Workflow
 
 1. Discover businesses via map
 2. System generates outreach drafts
-3. Operator reviews and approves — or schedules for tomorrow morning
-4. Emails sent manually via Gmail
-5. Follow-ups tracked automatically
-6. Clients onboarded to missed-call texting service
+3. Operator reviews, approves, or schedules for tomorrow morning
+4. Scheduled queue sorted by send time — open it in the morning, send in order
+5. Emails sent manually via Gmail
+6. Follow-ups tracked automatically
+7. Clients onboarded to missed-call texting service

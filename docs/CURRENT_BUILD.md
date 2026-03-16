@@ -1,100 +1,83 @@
 # Current Build Pass
 
 ## Active System
-Outreach Queue Safety + Scheduled Send Foundations
+Outreach Queue — Scheduled Send UX
 
 ## Status
-Pass 9b complete. All three commits verified and pushed.
+Pass 10 complete.
 
 ---
 
-## Completed: Step 2 — Marker Clustering — `38da7c3`
-## Completed: Step 3 — Results Side Panel — `c0caa17`
-## Completed: Step 4 — Map Result Usability Polish — `a19bc16`
-## Completed: Step 5 — Discovery Coverage Memory — `f27a472`
-## Completed: Step 6 — Discovery History List — `6d79c64`
-## Completed: Step 7 — Human-Readable Discovery Labels — `3f86767`
-## Completed: Step 8 — Search Visible Area Button — `32ff2bf`
-## Completed: Step 8a — Decouple Search Visible Area Button — `651df94`
 ## Completed: Pass 9a — Queue Visual Safety — `f712909`
+## Completed: Pass 9b — Scheduled Send Intent — `24dc5b2` / `52dd64a` / `a5f09c5`
 
 ---
 
-## Completed: Pass 9b — Scheduled Send Intent
+## Completed: Pass 10 — Scheduled Queue UX — `d31d720`
 
-Three commits. Protected systems modified deliberately (schema append only).
-Scheduling is intent-only — writes `send_after` field, does NOT trigger send.
+Two files changed: `dashboard_server.py` + `dashboard_static/index.html`.
+No schema changes. No send logic changes.
 
-### Commit A — `24dc5b2`
-Queue schema alignment + reply_checker truncation fix.
+### Backend change (`dashboard_server.py`)
+`/api/schedule_email` now accepts `send_after: ""` to clear a schedule.
+Previously, empty string was rejected with 400. Now:
+- `send_after` absent/null → 400 (missing)
+- `send_after: ""` → accepted, clears schedule, writes `""` to row
+- `send_after: "2026-03-17T07:30:00"` → accepted, schedules
+All identity/bounds/name-match validation unchanged. No other field touched.
 
-**Files changed:**
-- `lead_engine/run_lead_engine.py` — appended `"send_after"` to `PENDING_COLUMNS`
-- `lead_engine/dashboard_server.py` — appended `"send_after"` to `PENDING_COLUMNS`
-- `lead_engine/send/email_sender_agent.py` — appended `"send_after"` to `PENDING_EMAIL_COLUMNS`
-- `lead_engine/outreach/followup_scheduler.py` — appended `"send_after"` to `PENDING_COLUMNS`
-- `lead_engine/outreach/reply_checker.py` — replaced truncated 20-col `PENDING_COLUMNS`
-  with full 42-col schema matching all other queue readers/writers
+### Frontend changes (`index.html`)
 
-**Verification (all passed):**
-- All 5 modules: 42 columns, `send_after` last, first-41 col order preserved
-- `pending_emails.csv` loads 174 rows cleanly, `send_after` defaults to `""`
-- No existing column names changed or moved
+**`_formatSendAfter(isoStr)` helper** (new function)
+Parses ISO string to local Date. Returns:
+- `Today · 7:30am` if same calendar day
+- `Tomorrow · 7:30am` if next calendar day
+- `Fri Mar 20 · 8:00am` for further dates
+- `""` for empty/null input
 
-### Commit B — `52dd64a`
-`POST /api/schedule_email` route in `dashboard_server.py`.
+**Table: readable time under scheduled badge**
+For `row.send_after && !row.sent_at`, a muted 10px sub-line appears under
+the `🕐 Scheduled` badge showing `_formatSendAfter(row.send_after)`.
 
-**Validation chain:**
-1. `index` must be present and an integer
-2. `business_name` must be non-empty
-3. `send_after` must be non-empty
-4. Row `business_name` at `index` must match supplied name (index-drift guard, 409 on mismatch)
-5. Index must be in bounds
+**`applyFiltersAndSort` — Active filter fix**
+Active was: `!sent_at && !_TERMINAL`
+Active now: `!sent_at && !send_after && !_TERMINAL`
+Scheduled rows move to the Scheduled tab. Active = true actionable drafts only.
 
-**Action:** writes `rows[index]["send_after"] = send_after` via `_write_pending()`. No other fields touched. No send. No background work.
+**`applyFiltersAndSort` — Scheduled sort**
+Scheduled filter now includes `rows.sort((a,b) => a.send_after.localeCompare(b.send_after))`
+Earliest scheduled rows appear first.
 
-**Verification (all passed):**
-- Route present, all rejection cases present
-- No `sent_at`/`approved`/`replied` writes in route body
-- No `process_pending_emails` or `_send_email_via_gmail` call in route body
-- Uses existing `_write_pending` helper
+**CSS additions**
+`.panel-sched-info` — amber-tinted schedule info block
+`.panel-sched-info .sched-time` — bold time label
+`.panel-sched-info .btn-sched-act` — inline action button style
 
-### Commit C — `a5f09c5`
-Dashboard schedule button in `index.html`.
+**Panel HTML addition**
+`<div id="panel-schedule-info">` inserted between social section and footer.
 
-**Changes:**
-- `SEND_WINDOWS` const: maps `industry` → local morning send time (HH:MM)
-- `panelScheduleTomorrow()`: computes `tomorrow YYYY-MM-DD + window time`, POSTs to
-  `/api/schedule_email`, updates `row.send_after` in memory, calls `renderTable()` +
-  `fillPanel()`, shows toast `Scheduled for tomorrow HH:MM`
-- `#panel-schedule-btn` added to panel footer, using `.btn-secondary`
-- `fillPanel` extended: button hidden when `row.sent_at` set; visible on unsent rows
-- No send trigger, no Gmail launch, no auto-send
+**`fillPanel` — schedule info wiring**
+When `row.send_after && !row.sent_at`:
+- Renders `🕐 Scheduled: [formatted time]` + Clear / +1 day / +2 / +3 buttons
+- Block is hidden when `send_after` is empty
 
-**Verification (all passed):**
-- 19/19 static checks passed (SEND_WINDOWS, function, API call, row update, toast,
-  button HTML, show/hide wiring, no-send guard, approve intact, save indicator intact)
+**`panelClearSchedule()` (new)**
+Calls `/api/schedule_email` with `send_after: ""`.
+Updates `row.send_after = ""`, calls `renderTable()` + `fillPanel()`.
+Toast: `Schedule cleared`.
 
----
-
-## Notes on Protected System Changes
-
-The audit (Pass 9b audit) revealed that `reply_checker.py` had a pre-existing
-data-loss risk: its `PENDING_COLUMNS` was truncated to 20 fields, meaning
-any write operation on a reply-matched row would strip 21 fields from that row.
-This was fixed in Commit A as part of the atomic schema alignment.
-
-All five `PENDING_COLUMNS` lists were updated in a single commit.
-All use `csv.DictWriter(fieldnames=PENDING_COLUMNS)` — named access only.
-No positional column indexing exists anywhere in the queue pipeline.
+**`panelReschedule(days)` (new)**
+Calls `/api/schedule_email` with `send_after = today + days + SEND_WINDOWS[industry]`.
+Updates `row.send_after`, calls `renderTable()` + `fillPanel()`.
+Toast: `Rescheduled for [formatted date]`.
 
 ---
 
-## Next: Pass 10 — TBD
+## Next: Pass 11 — TBD
 
 Candidates:
 - Territory heatmap overlay
 - Industry saturation view
-- Tiled backend improvements
+- Tiled backend improvements (rate-limit handling)
 
 Define scope before starting.

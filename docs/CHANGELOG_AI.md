@@ -453,3 +453,41 @@ Added `SEND_WINDOWS` const, `panelScheduleTomorrow()` function,
 Button hidden on sent rows. Intent-only — no auto-send.
 
 Verification: all 19 static checks passed.
+
+---
+
+### Pass 10 — Scheduled Queue UX
+
+**Date:** 2026-03-16
+
+**Goal:** Make scheduled rows clearly usable day-to-day — readable send times
+in the table, panel schedule info block, clear/reschedule actions, Active
+filter exclusion, and chronological sort of the Scheduled view.
+
+**Changes:**
+
+**`dashboard_server.py`:**
+- `/api/schedule_email` updated to accept `send_after: ""` for clearing
+- `send_after_raw is None` → 400 (absent); `""` → accepted (clears);
+  non-empty string → schedules
+- All identity/bounds/name-match validation preserved
+- No other field touched, no send triggered
+
+**`dashboard_static/index.html`:**
+- `_formatSendAfter(isoStr)` — local date parser, returns Today/Tomorrow/weekday labels
+- Table `td-status` cell: muted sub-line with formatted send time for scheduled rows
+- `applyFiltersAndSort` Active filter: added `!r.send_after` exclusion
+- `applyFiltersAndSort` Scheduled filter: added `localeCompare` sort by `send_after` asc
+- CSS: `.panel-sched-info`, `.sched-time`, `.btn-sched-act` added
+- `#panel-schedule-info` HTML element added to panel
+- `fillPanel` extended: renders schedule info block with formatted time + 4 action buttons
+- `panelClearSchedule()` — clears via `/api/schedule_email` with `send_after: ""`
+- `panelReschedule(days)` — reschedules to today+N at SEND_WINDOWS time
+
+**No send logic changed. No schema changes. No auto-send.**
+
+**Files changed:**
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+
+**Commit:** `d31d720`
