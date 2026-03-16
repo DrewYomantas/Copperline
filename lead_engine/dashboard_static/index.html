@@ -663,8 +663,8 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="stats">
   <div class="stat"><div class="stat-n blue" id="s-prospects">—</div><div class="stat-lbl">Prospects</div></div>
   <div class="stat"><div class="stat-n blue" id="s-drafted">—</div><div class="stat-lbl">Drafted</div></div>
-  <div class="stat"><div class="stat-n amber" id="s-pending">—</div><div class="stat-lbl">Pending</div></div>
-  <div class="stat"><div class="stat-n green" id="s-approved">—</div><div class="stat-lbl">Approved</div></div>
+  <div class="stat"><div class="stat-n amber" id="s-pending">—</div><div class="stat-lbl">Review</div></div>
+  <div class="stat"><div class="stat-n green" id="s-approved">—</div><div class="stat-lbl">Approved (Unscheduled)</div></div>
   <div class="stat"><div class="stat-n grey" id="s-sent">—</div><div class="stat-lbl">Sent</div></div>
   <div class="stat" title="Sent via log_contact (no SMTP message-id — not a confirmed send)"><div class="stat-n" id="s-logged" style="color:var(--muted)">—</div><div class="stat-lbl" style="color:var(--muted)">Logged Only</div></div>
   <div class="stat" style="cursor:pointer" onclick="setFilter('replied',document.querySelector('[data-filter=replied]'))" title="Click to view replies">
@@ -723,9 +723,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     <div class="queue-filters">
       <div class="toolbar-l">
         <div class="filter-tabs">
-      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Actionable</div>
-      <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Pending</div>
-      <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved</div>
+      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Drafted rows waiting for operator review">📝 Review</div>
+      <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Drafted</div>
+      <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved (Unscheduled)</div>
       <div class="ftab" data-filter="scheduled" onclick="setFilter('scheduled',this)" style="color:var(--amber)" title="Emails approved and queued for a send window">🕐 Scheduled</div>
       <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">✓ Done</div>
       <div class="ftab-more" onclick="toggleExtraFilters(this)">⋯ More</div>
@@ -769,6 +769,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="workflow-rail" id="workflow-rail">
   <button class="stage-chip active" id="stage-discover" onclick="setWorkflowStage('discover', this)"><span class="dot"></span>Discover <strong id="stage-discover-n">—</strong></button>
   <button class="stage-chip" id="stage-review" onclick="setWorkflowStage('review', this)"><span class="dot"></span>Review <strong id="stage-review-n">—</strong></button>
+  <button class="stage-chip" id="stage-approved" onclick="setWorkflowStage('approved', this)"><span class="dot"></span>Approved <strong id="stage-approved-n">—</strong></button>
   <button class="stage-chip" id="stage-scheduled" onclick="setWorkflowStage('scheduled', this)"><span class="dot"></span>Scheduled <strong id="stage-scheduled-n">—</strong></button>
   <button class="stage-chip" id="stage-sent" onclick="setWorkflowStage('sent', this)"><span class="dot"></span>Sent <strong id="stage-sent-n">—</strong></button>
   <button class="stage-chip" id="stage-replies" onclick="setWorkflowStage('replies', this)"><span class="dot"></span>Replies <strong id="stage-replies-n">—</strong></button>
@@ -1411,6 +1412,7 @@ async function loadAll() {
       const queue = queueRes.value;
       allRows = Array.isArray(queue) ? queue : [];
       if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
+      _refreshQueueWorkflowStats();
       renderTable();
       if (panelIdx >= 0 && document.getElementById('panel-overlay').classList.contains('open')) {
         const row = filteredRows[panelIdx];
@@ -1447,6 +1449,7 @@ async function loadStats() {
   document.getElementById('s-logged').textContent    = s.sent_logged_only ?? '—';
   _updateRepliedStat(s.replied ?? 0);
   document.getElementById('s-stale').textContent = s.stale_drafts ?? '—';
+  if (allRows.length) _refreshQueueWorkflowStats();
 }
 
 function _updateRepliedStat(count) {
@@ -1463,27 +1466,70 @@ function _isRowStaleDraft(row) {
   return !row.sent_at && !!status_draft_version && row.draft_version !== status_draft_version;
 }
 
+function _rowWorkflowState(row) {
+  if (row.replied === 'true') return 'replied';
+  if (row.sent_at) return 'sent';
+  if (row.send_after) return 'scheduled';
+  if (row.approved === 'true') return 'approved';
+  return 'drafted';
+}
+
+function _isDraftedRow(row) {
+  return _rowWorkflowState(row) === 'drafted';
+}
+
+function _isApprovedUnscheduledRow(row) {
+  return _rowWorkflowState(row) === 'approved';
+}
+
+function _isScheduledRow(row) {
+  return _rowWorkflowState(row) === 'scheduled';
+}
+
+function _isSentRow(row) {
+  return _rowWorkflowState(row) === 'sent';
+}
+
+function _isRepliedRow(row) {
+  return _rowWorkflowState(row) === 'replied';
+}
+
 function isRowActionable(row) {
-  const terminal = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
-  return !row.sent_at
-    && !row.send_after
-    && !terminal.has(row.contact_result || '');
+  return _isDraftedRow(row);
 }
 
 function _queueCounts() {
-  const actionable = allRows.filter(r => isRowActionable(r)).length;
-  const review = allRows.filter(r => !r.sent_at && !r.send_after && !isRowActionable(r)).length;
-  const scheduled = allRows.filter(r => r.send_after && !r.sent_at).length;
-  const sent = allRows.filter(r => !!r.sent_at).length;
-  const replies = allRows.filter(r => r.replied === 'true').length;
-  return { actionable, review, scheduled, sent, replies };
+  const drafted = allRows.filter(r => _isDraftedRow(r)).length;
+  const approved = allRows.filter(r => _isApprovedUnscheduledRow(r)).length;
+  const scheduled = allRows.filter(r => _isScheduledRow(r)).length;
+  const sent = allRows.filter(r => _isSentRow(r)).length;
+  const replies = allRows.filter(r => _isRepliedRow(r)).length;
+  return { drafted, approved, scheduled, sent, replies };
+}
+
+function _refreshQueueWorkflowStats() {
+  const c = _queueCounts();
+  const draftedOrReview = c.drafted;
+
+  const statMap = {
+    's-pending': draftedOrReview,
+    's-approved': c.approved,
+    's-sent': c.sent,
+    's-replied': c.replies,
+  };
+  Object.entries(statMap).forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(v);
+  });
+  _updateRepliedStat(c.replies);
 }
 
 function updateWorkflowRail() {
   const c = _queueCounts();
   const map = {
-    'stage-discover-n': c.actionable + c.review,
-    'stage-review-n': c.actionable,
+    'stage-discover-n': c.drafted,
+    'stage-review-n': c.drafted,
+    'stage-approved-n': c.approved,
     'stage-scheduled-n': c.scheduled,
     'stage-sent-n': c.sent,
     'stage-replies-n': c.replies,
@@ -1504,6 +1550,7 @@ function setWorkflowStage(stage, el) {
   if (el) el.classList.add('active');
   if (stage === 'discover') return switchMainPage('map', document.querySelector('#top-nav .nav-tab[data-page="map"]'));
   if (stage === 'review') return setFilter('active', document.querySelector('.filter-tabs .ftab[data-filter="active"]'));
+  if (stage === 'approved') return setFilter('approved', document.querySelector('.filter-tabs .ftab[data-filter="approved"]'));
   if (stage === 'scheduled') return setFilter('scheduled', document.querySelector('.filter-tabs .ftab[data-filter="scheduled"]'));
   if (stage === 'sent') return switchMainPage('sentview', document.querySelector('#top-nav .nav-tab[data-page="sentview"]'));
   if (stage === 'replies') return setFilter('replied', document.querySelector('.filter-tabs .ftab[data-filter="replied"]'));
@@ -1515,26 +1562,31 @@ function applyFiltersAndSort() {
   const sort = document.getElementById('sortSelect').value;
 
   if (currentFilter === 'active') {
-    // Default view: unsent, unscheduled leads that aren't terminal — actionable now
-    rows = rows.filter(r => isRowActionable(r));
-  } else if (currentFilter === 'pending')  rows = rows.filter(r => isRowActionable(r) && r.approved !== 'true');
-  else if (currentFilter === 'approved')   rows = rows.filter(r => isRowActionable(r) && r.approved === 'true');
-  else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
-  else if (currentFilter === 'replied')    rows = rows.filter(r => r.replied === 'true');
+    rows = rows.filter(r => _isDraftedRow(r));
+  } else if (currentFilter === 'pending')  rows = rows.filter(r => _isDraftedRow(r));
+  else if (currentFilter === 'approved')   rows = rows.filter(r => _isApprovedUnscheduledRow(r));
+  else if (currentFilter === 'sent')       rows = rows.filter(r => _isSentRow(r));
+  else if (currentFilter === 'replied')    rows = rows.filter(r => _isRepliedRow(r));
   else if (currentFilter === 'stale')      rows = rows.filter(r => !r.sent_at && r.draft_version !== status_draft_version);
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
 
   else if (currentFilter === 'all')  {
-    // Keep actionable work at the top, then scheduled, then done history.
     rows.sort((a,b) => {
-      const bucket = (r) => isRowActionable(r) ? 0 : ((r.send_after && !r.sent_at) ? 1 : 2);
+      const bucket = (r) => {
+        const state = _rowWorkflowState(r);
+        if (state === 'drafted') return 0;
+        if (state === 'approved') return 1;
+        if (state === 'scheduled') return 2;
+        if (state === 'sent') return 3;
+        return 4;
+      };
       return bucket(a) - bucket(b);
     });
   }
   else if (currentFilter === 'scheduled')  {
-    rows = rows.filter(r => r.send_after && !r.sent_at);
+    rows = rows.filter(r => _isScheduledRow(r));
     rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
   }
 
@@ -1564,13 +1616,14 @@ function scoreClass(s) { return 'sc-' + Math.max(1, Math.min(5, parseInt(s)||3))
 function scoreTip(s) { const n=Math.max(1,Math.min(5,parseInt(s)||3)); return `${n} — ${SCORE_LABELS[n]||''}`; }
 
 function statusBadge(row) {
-  if (row.replied === 'true') return '<span class="badge badge-replied">★ Replied</span>';
-  if (row.sent_at) return '<span class="badge badge-sent">✓ Sent</span>';
+  const state = _rowWorkflowState(row);
+  if (state === 'replied') return '<span class="badge badge-replied">★ Replied</span>';
+  if (state === 'sent') return '<span class="badge badge-sent">✓ Sent</span>';
   if (!row.sent_at && status_draft_version && row.draft_version !== status_draft_version)
     return '<span class="badge badge-stale" title="Old copy — regenerate before sending">⚠ Stale</span>';
-  if (row.send_after && !row.sent_at) return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">🕐 Scheduled</span>`;
-  if (row.approved === 'true') return '<span class="badge badge-approved" title="Approved = reviewed but not yet scheduled">● Approved</span>';
-  return '<span class="badge badge-pending">○ Pending</span>';
+  if (state === 'scheduled') return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">🕐 Scheduled</span>`;
+  if (state === 'approved') return '<span class="badge badge-approved" title="Approved = reviewed but not yet scheduled">● Approved</span>';
+  return '<span class="badge badge-pending">○ Drafted</span>';
 }
 
 // Pass 10 — human-readable schedule time label
@@ -1620,9 +1673,15 @@ function renderTable() {
     const c = _queueCounts();
     const titleEl = document.getElementById('empty-title');
     const subEl = document.getElementById('empty-sub');
-    if (currentFilter === 'active' && c.scheduled > 0) {
-      if (titleEl) titleEl.textContent = 'No actionable rows right now';
-      if (subEl) subEl.innerHTML = `You have <strong>${c.scheduled}</strong> scheduled row(s). Review Scheduled or discover a fresh batch.`;
+    if ((currentFilter === 'active' || currentFilter === 'pending') && c.approved > 0) {
+      if (titleEl) titleEl.textContent = 'No drafted rows need review';
+      if (subEl) subEl.innerHTML = `You have <strong>${c.approved}</strong> approved-but-unscheduled row(s). Open <strong>Approved</strong> to set a send window.`;
+    } else if ((currentFilter === 'active' || currentFilter === 'pending') && c.scheduled > 0) {
+      if (titleEl) titleEl.textContent = 'No drafted rows need review';
+      if (subEl) subEl.innerHTML = `You have <strong>${c.scheduled}</strong> scheduled row(s). Review <strong>Scheduled</strong> or discover a fresh batch.`;
+    } else if (currentFilter === 'approved' && c.approved === 0 && c.scheduled > 0) {
+      if (titleEl) titleEl.textContent = 'No approved-unscheduled rows';
+      if (subEl) subEl.innerHTML = `All approved rows are currently scheduled (<strong>${c.scheduled}</strong>).`;
     } else if (currentFilter === 'sent' && c.sent > 0) {
       if (titleEl) titleEl.textContent = 'No sent rows match this view';
       if (subEl) subEl.innerHTML = 'Try clearing search or sort filters to inspect sent history.';
@@ -2582,7 +2641,7 @@ function _formatSentAt(isoStr) {
 function _sentRows() {
   return allRows
     .map((r, gi) => ({ ...r, _gi: gi }))
-    .filter(r => !!r.sent_at)
+    .filter(r => _isSentRow(r) || _isRepliedRow(r))
     .sort((a,b) => (b.sent_at || '').localeCompare(a.sent_at || ''));
 }
 
@@ -2590,7 +2649,7 @@ function renderSentWorkspace() {
   const host = document.getElementById('sent-workspace-body');
   if (!host) return;
   const rows = _sentRows();
-  const replied = rows.filter(r => r.replied === 'true').length;
+  const replied = rows.filter(r => _isRepliedRow(r)).length;
   const followDue = rows.filter(r => !!r.next_followup_at).length;
   const totalEl = document.getElementById('sv-total');
   const repEl = document.getElementById('sv-replied');
@@ -2600,7 +2659,7 @@ function renderSentWorkspace() {
   if (fEl) fEl.textContent = String(followDue);
 
   if (!rows.length) {
-    host.innerHTML = '<div class="sent-empty">No sent outreach yet. Process Actionable rows in Queue, then send manually via Gmail.</div>';
+    host.innerHTML = '<div class="sent-empty">No sent outreach yet. Review drafted rows, approve/schedule them, then send manually via Gmail.</div>';
     return;
   }
 
@@ -2608,7 +2667,7 @@ function renderSentWorkspace() {
     + '<th>Sent</th><th>Business</th><th>Subject</th><th>Reply</th><th>Follow-Up</th><th>Actions</th>'
     + '</tr></thead><tbody>'
     + rows.map(r => {
-      const reply = r.replied === 'true' ? '<span class="badge badge-replied">★ Replied</span>' : '<span style="color:var(--dim)">—</span>';
+      const reply = _isRepliedRow(r) ? '<span class="badge badge-replied">★ Replied</span>' : '<span style="color:var(--dim)">—</span>';
       const fu = r.next_followup_at ? ('<span style="color:var(--amber)">' + escHtml(_formatSendAfter(r.next_followup_at)) + '</span>') : '<span style="color:var(--dim)">—</span>';
       return '<tr>'
         + '<td>' + escHtml(_formatSentAt(r.sent_at)) + '</td>'
@@ -2789,7 +2848,14 @@ function switchMainStage(filterName, el) {
   const tab = document.querySelector(`.filter-tabs .ftab[data-filter="${filterName}"]`);
   setFilter(filterName, tab);
   document.querySelectorAll('.workflow-rail .stage-chip').forEach(c => c.classList.remove('active'));
-  const stage = filterName === 'scheduled' ? 'stage-scheduled' : 'stage-review';
+  const stageMap = {
+    active: 'stage-review',
+    pending: 'stage-review',
+    approved: 'stage-approved',
+    scheduled: 'stage-scheduled',
+    replied: 'stage-replies',
+  };
+  const stage = stageMap[filterName] || 'stage-review';
   document.getElementById(stage)?.classList.add('active');
   if (el) {
     document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
@@ -4289,13 +4355,13 @@ async function healthLoad() {
 
       <div class="ops-section-hdr" style="margin-top:20px">Approved but Unsent</div>
       <div class="ops-stat-row">
-        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${s.approved_unsent ?? '—'}</div><div class="ops-stat-l">Approved Unsent</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${s.approved_unsent ?? '—'}</div><div class="ops-stat-l">Approved Unsent (all)</div></div>
         <div class="ops-stat"><div class="ops-stat-n" style="color:var(--green)">${s.sent ?? '—'}</div><div class="ops-stat-l">Real Sends</div></div>
         <div class="ops-stat"><div class="ops-stat-n" style="color:var(--muted)">${s.sent_logged_only ?? '—'}</div><div class="ops-stat-l">Logged Only</div></div>
       </div>
       ${(s.approved_unsent > 0)
-        ? `<div class="ops-notice ops-notice-amber">⚠ ${s.approved_unsent} row(s) are approved but haven't been sent yet. Switch to the Outreach tab to send them.</div>`
-        : `<div class="ops-notice ops-notice-green">✓ No approved rows waiting to be sent.</div>`}
+        ? `<div class="ops-notice ops-notice-amber">⚠ ${s.approved_unsent} row(s) are approved and unsent (includes scheduled). Use Outreach filters to separate Approved vs Scheduled.</div>`
+        : `<div class="ops-notice ops-notice-green">✓ No approved-unsent rows waiting to be sent.</div>`}
 
       <div class="ops-section-hdr" style="margin-top:20px">Follow-Ups Due</div>
       <div class="ops-stat-row">
