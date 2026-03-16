@@ -233,6 +233,12 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 .badge-replied{background:var(--copper-bg);color:var(--copper);border:1px solid rgba(184,115,51,.3)}
 .badge-stale{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.badge-scheduled{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
+.panel-save-state{font-size:11px;margin-left:8px;transition:color .2s}
+.panel-save-state.saving{color:var(--amber)}
+.panel-save-state.saved{color:var(--green)}
+.panel-save-state.save-err{color:var(--red)}
 .reply-snippet{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
 .panel-reply-box{background:var(--surface2);border:1px solid var(--copper);border-radius:var(--rs);padding:12px 14px;margin-top:4px}
 .panel-reply-box .reply-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--copper);margin-bottom:6px}
@@ -662,6 +668,7 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
       <div class="ftab" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
       <div class="ftab" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
       <div class="ftab" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
+      <div class="ftab" data-filter="scheduled" onclick="setFilter('scheduled',this)" style="color:var(--amber)" title="Emails approved and queued for a send window">🕐 Scheduled</div>
     </div>
     <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
     <span id="row-count" class="tag" style="font-size:10px"></span>
@@ -957,7 +964,7 @@ input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:poin
                oninput="panelFieldChanged('subject', this.value)">
       </div>
       <div class="panel-section" style="flex:1">
-        <div class="panel-label">Email Body</div>
+        <div class="panel-label">Email Body <span id="panel-save-state" class="panel-save-state"></span></div>
         <textarea class="panel-textarea" id="panel-body"
                   oninput="panelFieldChanged('body', this.value)"></textarea>
       </div>
@@ -1328,6 +1335,7 @@ function applyFiltersAndSort() {
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+  else if (currentFilter === 'scheduled')  rows = rows.filter(r => r.send_after && !r.sent_at);
 
   if (q) rows = rows.filter(r =>
     (r.business_name||'').toLowerCase().includes(q) ||
@@ -1359,6 +1367,7 @@ function statusBadge(row) {
   if (row.sent_at) return '<span class="badge badge-sent">✓ Sent</span>';
   if (!row.sent_at && status_draft_version && row.draft_version !== status_draft_version)
     return '<span class="badge badge-stale" title="Old copy — regenerate before sending">⚠ Stale</span>';
+  if (row.send_after && !row.sent_at) return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">🕐 Scheduled</span>`;
   if (row.approved === 'true') return '<span class="badge badge-approved">● Approved</span>';
   return '<span class="badge badge-pending">○ Pending</span>';
 }
@@ -1392,6 +1401,7 @@ function renderTable() {
     const sc = parseInt(row.final_priority_score) || 3;
     const sentClass = row.sent_at ? 'row-sent' : '';
     const repliedClass = row.replied === 'true' ? 'row-replied' : '';
+    const scheduledClass = (row.send_after && !row.sent_at) ? 'row-scheduled' : '';
     const emailHtml = row.to_email
       ? `<div class="email-cell">${escHtml(row.to_email)}</div>`
       : `<div class="email-missing">no email</div>`;
@@ -1408,7 +1418,7 @@ function renderTable() {
         ? `<button class="act act-unapprove" onclick="event.stopPropagation();unapproveRow(${gi})">Undo</button>`
         : `<button class="act act-approve" onclick="event.stopPropagation();approveRow(${gi})">Approve</button>`;
 
-    return `<tr class="${sentClass} ${repliedClass}" onclick="openPanel(${fi})">
+    return `<tr class="${sentClass} ${repliedClass} ${scheduledClass}" onclick="openPanel(${fi})">
       <td class="td-chk" onclick="event.stopPropagation()">
         <input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">
       </td>
@@ -1648,8 +1658,28 @@ function panelFieldChanged(field, value) {
   if (!row) return;
   const gi = allRows.indexOf(row);
   row[field] = value;
+  // Show saving indicator on body edits
+  if (field === 'body') {
+    const ind = document.getElementById('panel-save-state');
+    if (ind) { ind.textContent = 'Saving…'; ind.className = 'panel-save-state saving'; }
+  }
   clearTimeout(panelSaveTimer);
-  panelSaveTimer = setTimeout(() => { api('/api/update_row',{index:gi,updates:{[field]:value}}); renderTable(); }, 500);
+  panelSaveTimer = setTimeout(() => {
+    api('/api/update_row', {index: gi, updates: {[field]: value}})
+      .then(() => {
+        if (field === 'body') {
+          const ind = document.getElementById('panel-save-state');
+          if (ind) { ind.textContent = 'Saved ✓'; ind.className = 'panel-save-state saved'; }
+        }
+        renderTable();
+      })
+      .catch(() => {
+        if (field === 'body') {
+          const ind = document.getElementById('panel-save-state');
+          if (ind) { ind.textContent = 'Error saving'; ind.className = 'panel-save-state save-err'; }
+        }
+      });
+  }, 500);
 }
 
 async function panelApprove() {
