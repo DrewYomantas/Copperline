@@ -29,6 +29,7 @@ PENDING_EMAIL_COLUMNS = [
     "message_id",     # set after real SMTP send — absence means not truly sent
     "replied", "replied_at", "reply_snippet",
     "conversation_notes", "conversation_next_step",
+    "send_after",
 ]
 
 

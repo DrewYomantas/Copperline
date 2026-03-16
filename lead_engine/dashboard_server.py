@@ -113,6 +113,7 @@ PENDING_COLUMNS = [
     "contact_result", "next_followup_at", "campaign_key",
     "message_id", "replied", "replied_at", "reply_snippet",
     "conversation_notes", "conversation_next_step",
+    "send_after",
 ]
 
 _ACTIVE_RESULTS   = {"draft_ready", "sent", "submitted", "dm_sent", "no_reply"}
