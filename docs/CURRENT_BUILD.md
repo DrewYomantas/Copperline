@@ -1,10 +1,10 @@
 # Current Build Pass
 
 ## Active System
-Outreach Queue — Scheduled Send UX
+Outreach Queue — Sent Reconciliation Safety
 
 ## Status
-Pass 10 complete.
+Pass 11 complete.
 
 ---
 
@@ -73,7 +73,25 @@ Toast: `Rescheduled for [formatted date]`.
 
 ---
 
-## Next: Pass 11 — TBD
+
+## Completed: Pass 11 — Sent Mail Reconciliation Recovery — `aae0cb5`
+
+Three files changed: `outreach/reply_checker.py` + `dashboard_server.py` + `dashboard_static/index.html`.
+No schema changes. No send pipeline rewrite.
+
+### Backend changes
+- Added `reconcile_sent_mail(max_messages=150, lookback_hours=72)` in `reply_checker.py`
+- Added Sent mailbox probing (`[Gmail]/Sent Mail`, `[Gmail]/Sent`, `Sent`, `Sent Mail`)
+- Added strict reconciliation key: `(to_email, subject)` over approved rows where `sent_at` + `message_id` are blank
+- Added ambiguity guard: skip when queue has duplicate key or Gmail Sent has multiple matches
+- Added `/api/reconcile_sent` route in `dashboard_server.py`
+
+### Frontend changes
+- Added toolbar action button `↺ Check Sent`
+- Added `checkSent()` flow calling `/api/reconcile_sent`
+- Shows safe-skip toast for ambiguous matches and refreshes queue after updates
+
+## Next: Pass 12 — TBD
 
 Candidates:
 - Territory heatmap overlay

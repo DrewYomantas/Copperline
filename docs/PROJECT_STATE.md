@@ -9,21 +9,20 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue — Scheduled Send UX
+Outreach Queue — Sent Reconciliation Safety
 
 ## Last Completed Pass
-Pass 10 — Scheduled Queue UX
+Pass 11 — Sent Mail Reconciliation Recovery
 
-- Scheduled rows now display readable send times (Today · 7:30am / Tomorrow · 7:30am / Fri Mar 20 · 8:00am) under the badge in the table
-- Active filter now excludes scheduled rows — Active = "actionable now" only
-- Scheduled filter now sorts by send_after ascending (earliest first)
-- Panel schedule info block shows formatted time + Clear / +1 / +2 / +3 day action buttons
-- `panelClearSchedule()` clears send_after via guarded /api/schedule_email route
-- `panelReschedule(days)` reschedules to today+N at industry window time
-- `/api/schedule_email` backend updated to accept empty string (clear) while keeping all identity/bounds validation
-- No send logic changed. No auto-send. No schema changes.
+- Added `/api/reconcile_sent` operator action in dashboard backend
+- Added Gmail Sent mailbox scan + queue reconciliation helper (`reconcile_sent_mail`)
+- Matching logic is strict: recipient email + subject on approved rows where `sent_at` and `message_id` are blank
+- Ambiguous matches are skipped safely (no write)
+- Reconciliation sets `sent_at` and fills `message_id` from Gmail when available
+- New toolbar action `↺ Check Sent` triggers reconciliation from the dashboard
+- No lead deletion, no resends, no queue schema changes
 
-Commit: `d31d720`
+Commit: `aae0cb5`
 
 ## Previous Completed Pass
 Pass 9b — Scheduled Send Intent
@@ -31,7 +30,7 @@ Pass 9b — Scheduled Send Intent
 Commits: A `24dc5b2` / B `52dd64a` / C `a5f09c5`
 
 ## Next Pass
-Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 12 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Protected Systems
 - `run_lead_engine.py`

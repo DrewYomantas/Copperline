@@ -688,6 +688,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     </select>
     <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
     <button id="btnCheckReplies" class="btn btn-ghost" onclick="checkReplies()" title="Poll Gmail inbox for replies to sent emails"><span class="spin"></span>★ Check Replies</button>
+    <button id="btnCheckSent" class="btn btn-ghost" onclick="checkSent()" title="Reconcile queue with recent Gmail Sent mail after interrupted send runs"><span class="spin"></span>↺ Check Sent</button>
     <button id="btnSendDry" class="btn btn-ghost" onclick="sendDryRun()"><span class="spin"></span>Preview Send</button>
     <button id="btnSendLive" class="btn btn-success" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
   </div>
@@ -3684,6 +3685,35 @@ async function checkReplies(silent = false) {
     }
   } catch (e) {
     if (!silent) toast('Reply check error: ' + e, 'err');
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
+async function checkSent() {
+  const btn = document.getElementById('btnCheckSent');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const res = await api('/api/reconcile_sent', { max_messages: 150, lookback_hours: 72 });
+    if (!res.ok) {
+      toast('Sent reconciliation failed: ' + (res.error || 'unknown error'), 'err');
+      return;
+    }
+    const r = res.result || {};
+    if ((r.updated_rows || 0) > 0) {
+      await loadAll();
+      toast(`↺ Reconciled ${r.updated_rows} sent row${r.updated_rows === 1 ? '' : 's'} from Gmail Sent`, 'ok');
+    } else {
+      toast('No sent rows needed reconciliation', 'info');
+    }
+    if ((r.skipped_ambiguous || 0) > 0) {
+      toast(`Sent check skipped ${r.skipped_ambiguous} ambiguous row${r.skipped_ambiguous === 1 ? '' : 's'} (safe skip)`, 'err');
+    }
+    if (r.errors && r.errors.length) {
+      toast('Sent check warning: ' + r.errors[0], 'err');
+    }
+  } catch (e) {
+    toast('Sent reconciliation error: ' + e, 'err');
   } finally {
     if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
   }

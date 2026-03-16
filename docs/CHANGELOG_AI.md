@@ -5,6 +5,26 @@ Update this file at the end of every pass.
 
 ---
 
+## 2026-03-16
+
+### Pass 11 — Sent Mail Reconciliation Recovery
+
+**Goal:** Prevent duplicate resends when Gmail sends succeeded but the dashboard closed before queue state updated.
+
+**Files changed:**
+- `lead_engine/outreach/reply_checker.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Added `reconcile_sent_mail()` to scan recent Gmail Sent messages and reconcile only approved+unsent queue rows.
+- Matching key is strict: recipient email + exact subject, limited to recent sent window (`lookback_hours`, default 72h).
+- Ambiguity handling is fail-safe: if multiple queue rows share a key or multiple Sent messages match a key, rows are skipped and not modified.
+- Added dashboard API endpoint `/api/reconcile_sent` and UI action `↺ Check Sent` to trigger operator recovery.
+- Reconciliation writes `sent_at` and captures Gmail `Message-ID` when present; no lead deletion and no resend path invoked.
+
+**Commit:** `aae0cb5`
+
 ## 2026-03-15
 
 ### Pass A — Operator Safety Fixes
