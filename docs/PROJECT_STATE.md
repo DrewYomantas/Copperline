@@ -9,21 +9,17 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Outreach Queue — Scheduled Send UX
+Pass 11C — Discovery-to-Queue Continuity UX
 
 ## Last Completed Pass
-Pass 10 — Scheduled Queue UX
+Pass 11C — Discovery-to-Queue Continuity UX
 
-- Scheduled rows now display readable send times (Today · 7:30am / Tomorrow · 7:30am / Fri Mar 20 · 8:00am) under the badge in the table
-- Active filter now excludes scheduled rows — Active = "actionable now" only
-- Scheduled filter now sorts by send_after ascending (earliest first)
-- Panel schedule info block shows formatted time + Clear / +1 / +2 / +3 day action buttons
-- `panelClearSchedule()` clears send_after via guarded /api/schedule_email route
-- `panelReschedule(days)` reschedules to today+N at industry window time
-- `/api/schedule_email` backend updated to accept empty string (clear) while keeping all identity/bounds validation
-- No send logic changed. No auto-send. No schema changes.
+- Added a session handoff bar that appears after discovery runs with truthful summary text and direct next actions.
+- Added one-click continuity actions: Review New Drafts, Continue Discovering, and Return to Last Discovery Area.
+- Captured map context (center/radius/industry/city-state label) and restored it when returning from queue review.
+- Preserved explicit discovery triggers and existing queue/send behavior (no auto-search, no send logic changes).
 
-Commit: `d31d720`
+Commit: `70f1f96`
 
 ## Previous Completed Pass
 Pass 9b — Scheduled Send Intent
@@ -31,7 +27,7 @@ Pass 9b — Scheduled Send Intent
 Commits: A `24dc5b2` / B `52dd64a` / C `a5f09c5`
 
 ## Next Pass
-Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 17 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Protected Systems
 - `run_lead_engine.py`

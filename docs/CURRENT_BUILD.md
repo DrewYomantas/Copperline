@@ -1,10 +1,40 @@
 # Current Build Pass
 
 ## Active System
-Outreach Queue — Scheduled Send UX
+Outreach Command-Center Refinement
 
 ## Status
-Pass 10 complete.
+Pass 16 complete.
+
+---
+
+## Completed: Pass 16 — Outreach Command-Center Refinement — `7da49b5`
+
+One file changed: `lead_engine/dashboard_static/index.html`.
+No backend/protected system changes required.
+
+### Refinement outcomes
+- Tightened Actionable semantics to immediate-sendable rows only (requires deliverable email and current draft version).
+- Separated interface into clearer vertical flow: Discovery controls → Queue filters/view → Queue actions → Table.
+- Grouped review/reconciliation actions separately from primary send action for clearer hierarchy.
+- Added secondary visual treatment for stale/no-email/low-fit rows to reduce operator attention drag.
+
+---
+
+## Completed: Pass 15 — Outreach Queue Regression Fix — `347a842`
+
+One file changed: `lead_engine/dashboard_static/index.html`.
+No backend/protected system changes required.
+
+### Root cause
+`loadAll()` used `Promise.all([/api/status, /api/queue])`, so any single endpoint failure rejected the whole load cycle.
+That left stats as dashes, queue empty, and emitted a generic “Failed to load queue” toast.
+
+### Fix
+- Switched `loadAll()` to `Promise.allSettled` and applied status + queue updates independently
+- Added endpoint-specific error toasts (queue-only, status-only, both)
+- Added `loadIndustries()` fallback options so selector never remains at “Loading…”
+- Preserved Actionable/Pending/Approved/Scheduled/Done model and bulk safety gates
 
 ---
 
@@ -73,7 +103,84 @@ Toast: `Rescheduled for [formatted date]`.
 
 ---
 
-## Next: Pass 11 — TBD
+
+## Completed: Pass 11 — Sent Mail Reconciliation Recovery — `aae0cb5`
+
+Three files changed: `outreach/reply_checker.py` + `dashboard_server.py` + `dashboard_static/index.html`.
+No schema changes. No send pipeline rewrite.
+
+### Backend changes
+- Added `reconcile_sent_mail(max_messages=150, lookback_hours=72)` in `reply_checker.py`
+- Added Sent mailbox probing (`[Gmail]/Sent Mail`, `[Gmail]/Sent`, `Sent`, `Sent Mail`)
+- Added strict reconciliation key: `(to_email, subject)` over approved rows where `sent_at` + `message_id` are blank
+- Added ambiguity guard: skip when queue has duplicate key or Gmail Sent has multiple matches
+- Added `/api/reconcile_sent` route in `dashboard_server.py`
+
+### Frontend changes
+- Added toolbar action button `↺ Check Sent`
+- Added `checkSent()` flow calling `/api/reconcile_sent`
+- Shows safe-skip toast for ambiguous matches and refreshes queue after updates
+
+
+## Completed: Pass 12 — Queue Bulk Action + Unschedule Fix — `c40d16d`
+
+One file changed: `dashboard_static/index.html`.
+No schema changes. No send logic changes.
+
+### Root cause
+Bulk Approve/Unapprove used `Promise.all` against `/api/approve_row` and `/api/unapprove_row`.
+Those endpoints read+write the full queue per call, so concurrent calls can race and overwrite each other.
+
+### Fix
+- `bulkApprove()` changed from parallel `Promise.all` to sequential per-row calls
+- `bulkUnapprove()` changed from parallel `Promise.all` to sequential per-row calls
+- Existing bulk Delete/Clear and single-row approve/unapprove flows were preserved
+- Panel schedule action label changed from `Clear` to explicit `Unschedule`
+- `panelUnschedule()` uses existing `/api/schedule_email` with `send_after: ""`
+
+
+## Completed: Pass 13 — Dashboard Startup Import Recovery — `c2234ea`
+
+Files changed:
+- `lead_engine/discovery/prospect_discovery_agent.py`
+- `lead_engine/run_lead_engine.py`
+- `lead_engine/intelligence/website_scan_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/scoring/opportunity_scoring_agent.py`
+- `lead_engine/city_planner.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+
+Root cause: startup import chain had drifted symbols/modules (`clean_website_for_key`, `generate_lead_insight`, `draft_social_messages`, `compute_numeric_score`, `score_priority_label`, `city_planner`, `email_extractor_agent`).
+
+Fix: restore missing compatibility exports/modules with minimal additive shims so dashboard import chain resolves.
+
+Verification:
+- `python -m py_compile` on touched startup files
+- `python lead_engine/dashboard_server.py` starts and serves on `127.0.0.1:5000`
+
+
+## Completed: Pass 14 — Dashboard UX Safety Cleanup — `014e68c`
+
+File changed:
+- `lead_engine/dashboard_static/index.html`
+
+UI cleanup delivered:
+- Broken client leads navigation path disabled (`mcViewLeads` informational toast only)
+- Disabled client actions now have explicit tooltips (`Leads view not enabled yet`, `Delete client not enabled yet`)
+- Conversation quick action labels now clarify copy behavior
+- `Approve All` now requires confirmation with explicit write-action copy and target count
+- Map disclosure note added for marker partiality expectations
+- Tools top-nav now visibly marked `Stub`
+
+Verification:
+- Browser script check: no JS page errors on load
+- Approve All confirms and still hits `/api/approve_all`
+- Conversation quick action still copies text via clipboard handler
+- `mcViewLeads()` no longer switches pages
+- Map disclosure note visible on Map page
+- No backend files modified
+
+## Next: Pass 15 — TBD
 
 Candidates:
 - Territory heatmap overlay

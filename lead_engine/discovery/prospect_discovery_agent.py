@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -28,6 +29,27 @@ def normalize_identity_token(value: str | None) -> str:
     return " ".join(normalize_value(value).lower().split())
 
 
+
+
+def clean_website_for_key(website: str | None) -> str:
+    """Normalize website/domain for dedupe keys."""
+    raw = normalize_value(website)
+    if not raw:
+        return ""
+
+    candidate = raw
+    if "://" not in candidate:
+        candidate = "https://" + candidate
+
+    try:
+        parsed = urlparse(candidate)
+        host = (parsed.netloc or parsed.path or "").strip().lower()
+    except Exception:
+        return ""
+
+    if host.startswith("www."):
+        host = host[4:]
+    return host.strip("/")
 def dedupe_key_for_prospect(row: Dict[str, str]) -> Tuple[str, str]:
     """Primary key: business_name + website; fallback: business_name + city."""
     business_name = normalize_identity_token(row.get("business_name", ""))

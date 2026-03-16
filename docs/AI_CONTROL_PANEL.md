@@ -9,18 +9,18 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Map System + Operator Safety
+Outreach Command-Center Refinement
 
 ## Current Build Pass
-Pass 10 — Scheduled Queue UX (complete)
+Pass 16 — Outreach Command-Center Refinement (complete)
 
 ## Last Completed Pass
-Pass 10 — Scheduled Queue UX
+Pass 16 — Outreach Command-Center Refinement
 
-Commit: `d31d720`
+Commit: `7da49b5`
 
 ## Next Pass
-Pass 11 — TBD (territory heatmap, saturation view, or tiled backend improvements)
+Pass 17 — TBD (territory heatmap, saturation view, or tiled backend improvements)
 
 ## Upcoming Passes
 - Search Visible Area button

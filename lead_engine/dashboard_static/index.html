@@ -55,7 +55,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .stat-n.blue{color:var(--blue)}.stat-n.amber{color:var(--amber)}.stat-n.green{color:var(--green)}.stat-n.grey{color:var(--muted)}
 .stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
 
-.discover-bar{border-bottom:1px solid var(--border);padding:10px 24px;background:var(--surface)}
+.discover-bar{border-bottom:1px solid var(--border);padding:11px 24px;background:linear-gradient(180deg,rgba(79,142,247,.06),rgba(79,142,247,.015))}
+.discover-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.section-kicker{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
+.section-sub{font-size:11px;color:var(--muted)}
 .discover-inner{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .discover-label{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;margin-right:2px}
 .d-input{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:.12s}
@@ -64,11 +67,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .d-state{width:50px}.d-num{width:66px}
 .api-notice{margin-top:7px;font-size:12px;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,166,35,.3);border-radius:var(--rs);padding:6px 11px}
 
-.toolbar{display:flex;align-items:center;justify-content:space-between;padding:9px 24px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;background:var(--surface)}
+.toolbar{padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+.queue-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+.queue-layout{display:grid;gap:8px}
 .toolbar-l,.toolbar-r{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.queue-filters{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:7px 9px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2)}
+.queue-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:7px 9px;border:1px solid var(--border);border-radius:var(--rs);background:rgba(30,36,50,.55)}
+.action-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.group-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-right:1px}
+.btn-priority{background:var(--green);color:#0e1a12;border:1px solid rgba(74,222,128,.38);font-weight:700}
+.btn-priority:hover{background:#34c06a}
 .filter-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:2px}
 .ftab{padding:4px 11px;border-radius:3px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);transition:.12s;user-select:none;white-space:nowrap}
 .ftab.active{background:var(--surface3);color:var(--text)}.ftab:hover:not(.active){color:var(--text)}
+.ftab-aux{display:none}
+.filter-tabs.show-aux .ftab-aux{display:inline-block}
+.ftab-more{padding:4px 9px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;color:var(--dim);border:1px dashed var(--border-hi);background:transparent;user-select:none}
+.ftab-more:hover{color:var(--text)}
 .search-box{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;width:160px;transition:.12s}
 .search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
 .search-box::placeholder{color:var(--dim)}
@@ -85,6 +100,9 @@ thead th{background:var(--surface);color:var(--muted);font-size:10px;font-weight
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
 tbody tr:hover{background:rgba(255,255,255,.025)}
 tbody tr.row-sent{opacity:.45}
+tbody tr.row-secondary{opacity:.7}
+tbody tr.row-secondary:hover{opacity:.9}
+.row-note{font-size:10px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
 tbody td{padding:10px 14px;vertical-align:middle}
 .td-chk{width:32px;text-align:center}
 .td-biz{min-width:180px;max-width:240px}
@@ -427,6 +445,21 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .opp-mid{background:rgba(245,166,35,.13);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
 .opp-low{background:rgba(100,116,139,.1);color:var(--grey);border:1px solid rgba(100,116,139,.2)}
 
+
+/* ── Sent workspace ─────────────────────────────────────────────────── */
+.sent-wrap{padding:16px 24px}
+.sent-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.sent-title{font-size:18px;font-weight:600}
+.sent-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.sent-stats{display:flex;gap:8px;flex-wrap:wrap}
+.sent-stat{padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2);font-size:11px;color:var(--muted)}
+.sent-stat strong{display:block;font-family:var(--mono);font-size:14px;color:var(--text);margin-bottom:2px}
+.sent-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sent-table{width:100%;border-collapse:collapse}
+.sent-table th,.sent-table td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top}
+.sent-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left}
+.sent-empty{padding:26px;border:1px dashed var(--border-hi);border-radius:var(--rl);text-align:center;color:var(--muted);font-size:13px;background:rgba(255,255,255,.01)}
+
 /* ── Social Outreach page (Part 1) ───────────────────────────────── */
 .sq-wrap{max-width:1100px;margin:0 auto;padding:24px}
 .sq-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -553,7 +586,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mh-item-meta{font-size:11px;color:var(--dim);white-space:nowrap;margin-left:8px;flex-shrink:0}
 .map-instructions{font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
 /* ── Sub-navigation ──────────────────────────────────────────────── */
-.sub-nav{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 24px}
+.sub-nav{display:none;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:0 24px}
 .sub-tab{padding:8px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.12s;white-space:nowrap;user-select:none}
 .sub-tab:hover{color:var(--text)}
 .sub-tab.active{color:var(--text);border-bottom-color:var(--blue)}
@@ -581,17 +614,32 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 
 <!-- App Navigation -->
 <nav class="app-nav" id="top-nav">
-  <div class="nav-tab active" data-parent="pipeline"  onclick="switchParent('pipeline',this)">📤 Pipeline</div>
-  <div class="nav-tab"        data-parent="discovery" onclick="switchParent('discovery',this)">🔍 Discovery</div>
-  <div class="nav-tab"        data-parent="clients"   onclick="switchParent('clients',this)">📞 Clients</div>
-  <div class="nav-tab"        data-parent="health"    onclick="switchParent('health',this)" id="nav-health-top">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
-  <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools</div>
+  <div class="nav-tab" data-page="map" onclick="switchMainPage('map',this)">🔍 Discovery</div>
+  <div class="nav-tab active" data-page="outreach" onclick="switchMainPage('outreach',this)">📥 Queue</div>
+  <div class="nav-tab" data-page="scheduled" onclick="switchMainStage('scheduled',this)">🕐 Scheduled</div>
+  <div class="nav-tab" data-page="sentview" onclick="switchMainPage('sentview',this)">✓ Sent <span id="nav-sent-badge" style="display:none;margin-left:4px;background:rgba(74,222,128,.22);color:var(--green);border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle">0</span></div>
+  <div class="nav-tab" data-page="followup" onclick="switchMainPage('followup',this)">🔁 Follow-Up</div>
+  <div class="nav-tab" data-page="mc-clients" onclick="switchMainPage('mc-clients',this)">📞 Clients</div>
+  <div class="nav-tab" data-page="health" onclick="switchMainPage('health',this)" id="nav-health-top">🩺 System<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
 </nav>
+<div class="main-nav-hint"><strong>Pipeline flow:</strong> Discover → Review → Scheduled → Sent → Follow-Up</div>
+<div id="discovery-handoff" class="discovery-handoff">
+  <div>
+    <div id="handoff-copy" class="handoff-copy"></div>
+    <div id="handoff-meta" class="handoff-meta"></div>
+  </div>
+  <div class="handoff-acts">
+    <button class="btn btn-ghost" onclick="handoffReviewDrafts()">Review New Drafts</button>
+    <button class="btn btn-ghost" onclick="handoffContinueDiscovering()">Continue Discovering</button>
+    <button class="btn btn-ghost" onclick="handoffReturnToArea()">Return to Last Discovery Area</button>
+  </div>
+</div>
 
 <!-- Sub-tab bar — shown below top nav, content changes per parent -->
 <nav class="sub-nav" id="sub-nav">
   <!-- Pipeline sub-tabs -->
   <div class="sub-tab active" data-parent="pipeline" data-page="outreach"      onclick="switchSubPage('pipeline','outreach',this)">📤 Outreach</div>
+  <div class="sub-tab"        data-parent="pipeline" data-page="sentview"      onclick="switchSubPage('pipeline','sentview',this)" style="display:none">✓ Sent Workspace</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="followup"      onclick="switchSubPage('pipeline','followup',this)" id="nav-followup">🔁 Follow-Up</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="social"        onclick="switchSubPage('pipeline','social',this)"   id="nav-social">📲 Social</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="sprint"        onclick="switchSubPage('pipeline','sprint',this)"   id="nav-sprint">⚡ Sprint</div>
@@ -631,6 +679,10 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 </div>
 
 <div class="discover-bar">
+  <div class="discover-head">
+    <span class="section-kicker">Discovery controls</span>
+    <span class="section-sub">Find and draft new leads before they enter the work queue.</span>
+  </div>
   <div class="discover-inner">
     <span class="discover-label">🔍 New Leads</span>
     <select id="d-industry" class="d-input"><option value="">Loading…</option></select>
@@ -661,36 +713,63 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 </div>
 
 <div class="toolbar">
-  <div class="toolbar-l">
-    <div class="filter-tabs">
-      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Active</div>
-      <div class="ftab" data-filter="all" onclick="setFilter('all',this)">All</div>
+  <div class="queue-head">
+    <span class="section-kicker">Queue workflow</span>
+    <span class="section-sub">Filter work items, then run review and send actions.</span>
+  </div>
+  <div class="queue-layout">
+    <div class="queue-filters">
+      <div class="toolbar-l">
+        <div class="filter-tabs">
+      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Actionable</div>
       <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Pending</div>
       <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved</div>
-      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">Sent</div>
-      <div class="ftab" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
-      <div class="ftab" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
-      <div class="ftab" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
-      <div class="ftab" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
       <div class="ftab" data-filter="scheduled" onclick="setFilter('scheduled',this)" style="color:var(--amber)" title="Emails approved and queued for a send window">🕐 Scheduled</div>
+      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">✓ Done</div>
+      <div class="ftab-more" onclick="toggleExtraFilters(this)">⋯ More</div>
+      <div class="ftab ftab-aux" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab ftab-aux" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
+      <div class="ftab ftab-aux" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
+      <div class="ftab ftab-aux" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
+      <div class="ftab ftab-aux" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
     </div>
-    <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
-    <span id="row-count" class="tag" style="font-size:10px"></span>
-  </div>
-  <div class="toolbar-r">
-    <select class="sort-select" id="sortSelect" onchange="renderTable()">
+        <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
+        <span id="row-count" class="tag" style="font-size:10px"></span>
+      </div>
+      <div class="toolbar-r">
+        <span class="group-label">View</span>
+        <select class="sort-select" id="sortSelect" onchange="renderTable()">
       <option value="opp_desc">Opp Score ↓</option>
       <option value="default">Sort: Default</option>
       <option value="score_desc">Fit Score ↓</option>
       <option value="score_asc">Fit Score ↑</option>
       <option value="name_asc">Name A–Z</option>
       <option value="name_desc">Name Z–A</option>
-    </select>
-    <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
-    <button id="btnCheckReplies" class="btn btn-ghost" onclick="checkReplies()" title="Poll Gmail inbox for replies to sent emails"><span class="spin"></span>★ Check Replies</button>
-    <button id="btnSendDry" class="btn btn-ghost" onclick="sendDryRun()"><span class="spin"></span>Preview Send</button>
-    <button id="btnSendLive" class="btn btn-success" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
+        </select>
+      </div>
+    </div>
+    <div class="queue-actions">
+      <div class="action-group">
+        <span class="group-label">Review</span>
+        <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
+        <button id="btnCheckReplies" class="btn btn-ghost" onclick="checkReplies()" title="Poll Gmail inbox for replies to sent emails"><span class="spin"></span>★ Check Replies</button>
+        <button id="btnCheckSent" class="btn btn-ghost" onclick="checkSent()" title="Reconcile queue with recent Gmail Sent mail after interrupted send runs"><span class="spin"></span>↺ Check Sent</button>
+        <button id="btnSendDry" class="btn btn-ghost" onclick="sendDryRun()"><span class="spin"></span>Preview Send</button>
+      </div>
+      <div class="action-group">
+        <span class="group-label">Primary</span>
+        <button id="btnSendLive" class="btn btn-priority" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
+      </div>
+    </div>
   </div>
+</div>
+
+<div class="workflow-rail" id="workflow-rail">
+  <button class="stage-chip active" id="stage-discover" onclick="setWorkflowStage('discover', this)"><span class="dot"></span>Discover <strong id="stage-discover-n">—</strong></button>
+  <button class="stage-chip" id="stage-review" onclick="setWorkflowStage('review', this)"><span class="dot"></span>Review <strong id="stage-review-n">—</strong></button>
+  <button class="stage-chip" id="stage-scheduled" onclick="setWorkflowStage('scheduled', this)"><span class="dot"></span>Scheduled <strong id="stage-scheduled-n">—</strong></button>
+  <button class="stage-chip" id="stage-sent" onclick="setWorkflowStage('sent', this)"><span class="dot"></span>Sent <strong id="stage-sent-n">—</strong></button>
+  <button class="stage-chip" id="stage-replies" onclick="setWorkflowStage('replies', this)"><span class="dot"></span>Replies <strong id="stage-replies-n">—</strong></button>
 </div>
 
 <div class="bulk-bar" id="bulk-bar">
@@ -720,14 +799,39 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     </table>
     <div id="empty-state" class="empty" style="display:none">
       <div class="empty-icon">📭</div>
-      <h3>No leads in queue</h3>
-      <p>Use <strong>Discover + Draft</strong> to find local service businesses and generate outreach emails</p>
+      <h3 id="empty-title">No leads in queue</h3>
+      <p id="empty-sub">Use <strong>Discover + Draft</strong> to find local service businesses and generate outreach emails.</p>
     </div>
   </div>
 </div>
 
 <!-- END PAGE: OUTREACH -->
 </div>
+
+<div class="page" id="page-sentview">
+  <div class="sent-wrap">
+    <div class="sent-head">
+      <div>
+        <div class="sent-title">✓ Completed Outreach</div>
+        <div class="sent-sub">Sent emails live here so the live queue stays focused on unsent work.</div>
+      </div>
+      <div class="sent-stats">
+        <div class="sent-stat"><strong id="sv-total">0</strong>Sent</div>
+        <div class="sent-stat"><strong id="sv-replied">0</strong>Replied</div>
+        <div class="sent-stat"><strong id="sv-followup">0</strong>Follow-Up Due</div>
+      </div>
+    </div>
+    <div class="sent-tools">
+      <button class="btn btn-ghost" onclick="sentJumpToReplied()">★ View Replied</button>
+      <button class="btn btn-ghost" onclick="sentJumpToFollowup()">🔁 Open Follow-Up Queue</button>
+      <button class="btn btn-ghost" onclick="sentBackToQueue()">← Back to Live Queue</button>
+    </div>
+    <div id="sent-workspace-body"></div>
+  </div>
+</div>
+
+<!-- END PAGE: SENT WORKSPACE -->
+
 
 <!-- ══════════════ PAGE: SOCIAL OUTREACH ══════════════ -->
 <div class="page" id="page-social">
@@ -1132,6 +1236,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="mc-section-hdr">
     <h2>🗺️ Map Area Search</h2>
     <span class="mc-muted" style="font-size:12px">Click the map to set center, drag to adjust radius, then search</span>
+    <span class="mc-muted" style="font-size:11px;display:block;margin-top:4px">Queue and draft creation are authoritative; map markers may be partial when source coordinates are unavailable.</span>
   </div>
   <div class="map-instructions">
     <strong>How to use:</strong> Click anywhere on the map to place a search circle.
@@ -1266,6 +1371,8 @@ let currentFilter = 'active';
 let panelIdx = -1;
 let panelSaveTimer = null;
 let status_draft_version = '';
+let _lastDiscoveryHandoff = null;
+let _lastDiscoveryMapContext = null;
 
 async function api(path, body) {
   const opts = body !== undefined
@@ -1281,28 +1388,50 @@ async function api(path, body) {
 
 async function loadAll() {
   try {
-    const [status, queue] = await Promise.all([api('/api/status'), api('/api/queue')]);
-    document.getElementById('s-prospects').textContent = status.prospects_loaded ?? '—';
-    document.getElementById('s-drafted').textContent   = status.total_drafted ?? '—';
-    document.getElementById('s-pending').textContent   = status.pending_approval ?? '—';
-    document.getElementById('s-approved').textContent  = status.approved_unsent ?? '—';
-    document.getElementById('s-sent').textContent      = status.sent ?? '—';
-    document.getElementById('s-logged').textContent    = status.sent_logged_only ?? '—';
-    _updateRepliedStat(status.replied ?? 0);
-    document.getElementById('s-stale').textContent = status.stale_drafts ?? '—';
-    status_draft_version = status.current_draft_version ?? '';
+    const [statusRes, queueRes] = await Promise.allSettled([api('/api/status'), api('/api/queue')]);
+
+    if (statusRes.status === 'fulfilled') {
+      const status = statusRes.value || {};
+      document.getElementById('s-prospects').textContent = status.prospects_loaded ?? '—';
+      document.getElementById('s-drafted').textContent   = status.total_drafted ?? '—';
+      document.getElementById('s-pending').textContent   = status.pending_approval ?? '—';
+      document.getElementById('s-approved').textContent  = status.approved_unsent ?? '—';
+      document.getElementById('s-sent').textContent      = status.sent ?? '—';
+      document.getElementById('s-logged').textContent    = status.sent_logged_only ?? '—';
+      _updateRepliedStat(status.replied ?? 0);
+      document.getElementById('s-stale').textContent = status.stale_drafts ?? '—';
+      status_draft_version = status.current_draft_version ?? '';
+    } else {
+      console.error('Status API failed:', statusRes.reason);
+    }
+
+    if (queueRes.status === 'fulfilled') {
+      const queue = queueRes.value;
+      allRows = Array.isArray(queue) ? queue : [];
+      if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
+      renderTable();
+      if (panelIdx >= 0 && document.getElementById('panel-overlay').classList.contains('open')) {
+        const row = filteredRows[panelIdx];
+        if (row) fillPanel(row, panelIdx);
+      }
+      renderSentWorkspace();
+    } else {
+      console.error('Queue API failed:', queueRes.reason);
+    }
+
     // Background badge fetch — doesn't block queue load
     _refreshNavBadges();
-    allRows = Array.isArray(queue) ? queue : [];
-    if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
-    renderTable();
-    if (panelIdx >= 0 && document.getElementById('panel-overlay').classList.contains('open')) {
-      const row = filteredRows[panelIdx];
-      if (row) fillPanel(row, panelIdx);
+
+    if (statusRes.status !== 'fulfilled' && queueRes.status !== 'fulfilled') {
+      toast('Failed to load queue and stats — check server is running', 'err');
+    } else if (queueRes.status !== 'fulfilled') {
+      toast('Failed to load queue — stats are available', 'err');
+    } else if (statusRes.status !== 'fulfilled') {
+      toast('Failed to load status metrics — queue is available', 'err');
     }
   } catch(err) {
     console.error('loadAll failed:', err);
-    toast('Failed to load queue — check server is running', 'err');
+    toast('Failed to load dashboard data — check server is running', 'err');
   }
 }
 
@@ -1324,23 +1453,84 @@ function _updateRepliedStat(count) {
   if (pulse) pulse.style.display = count > 0 ? 'inline-block' : 'none';
 }
 
+function _rowHasDeliverableEmail(row) {
+  return !!(row.to_email && row.to_email.includes('@'));
+}
+
+function _isRowStaleDraft(row) {
+  return !row.sent_at && !!status_draft_version && row.draft_version !== status_draft_version;
+}
+
+function isRowActionable(row) {
+  const terminal = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
+  return !row.sent_at
+    && !row.send_after
+    && !terminal.has(row.contact_result || '');
+}
+
+function _queueCounts() {
+  const actionable = allRows.filter(r => isRowActionable(r)).length;
+  const review = allRows.filter(r => !r.sent_at && !r.send_after && !isRowActionable(r)).length;
+  const scheduled = allRows.filter(r => r.send_after && !r.sent_at).length;
+  const sent = allRows.filter(r => !!r.sent_at).length;
+  const replies = allRows.filter(r => r.replied === 'true').length;
+  return { actionable, review, scheduled, sent, replies };
+}
+
+function updateWorkflowRail() {
+  const c = _queueCounts();
+  const map = {
+    'stage-discover-n': c.actionable + c.review,
+    'stage-review-n': c.actionable,
+    'stage-scheduled-n': c.scheduled,
+    'stage-sent-n': c.sent,
+    'stage-replies-n': c.replies,
+  };
+  Object.entries(map).forEach(([id,v]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(v);
+  });
+  const sentBadge = document.getElementById('nav-sent-badge');
+  if (sentBadge) {
+    if (c.sent > 0) { sentBadge.style.display = 'inline'; sentBadge.textContent = String(c.sent); }
+    else { sentBadge.style.display = 'none'; }
+  }
+}
+
+function setWorkflowStage(stage, el) {
+  document.querySelectorAll('.workflow-rail .stage-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (stage === 'discover') return switchMainPage('map', document.querySelector('#top-nav .nav-tab[data-page="map"]'));
+  if (stage === 'review') return setFilter('active', document.querySelector('.filter-tabs .ftab[data-filter="active"]'));
+  if (stage === 'scheduled') return setFilter('scheduled', document.querySelector('.filter-tabs .ftab[data-filter="scheduled"]'));
+  if (stage === 'sent') return switchMainPage('sentview', document.querySelector('#top-nav .nav-tab[data-page="sentview"]'));
+  if (stage === 'replies') return setFilter('replied', document.querySelector('.filter-tabs .ftab[data-filter="replied"]'));
+}
+
 function applyFiltersAndSort() {
-  const _TERMINAL = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
   let rows = [...allRows];
   const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
   const sort = document.getElementById('sortSelect').value;
 
   if (currentFilter === 'active') {
     // Default view: unsent, unscheduled leads that aren't terminal — actionable now
-    rows = rows.filter(r => !r.sent_at && !r.send_after && !_TERMINAL.has(r.contact_result || ''));
-  } else if (currentFilter === 'pending')  rows = rows.filter(r => r.approved !== 'true' && !r.sent_at);
-  else if (currentFilter === 'approved')   rows = rows.filter(r => r.approved === 'true' && !r.sent_at);
+    rows = rows.filter(r => isRowActionable(r));
+  } else if (currentFilter === 'pending')  rows = rows.filter(r => isRowActionable(r) && r.approved !== 'true');
+  else if (currentFilter === 'approved')   rows = rows.filter(r => isRowActionable(r) && r.approved === 'true');
   else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
   else if (currentFilter === 'replied')    rows = rows.filter(r => r.replied === 'true');
   else if (currentFilter === 'stale')      rows = rows.filter(r => !r.sent_at && r.draft_version !== status_draft_version);
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+
+  else if (currentFilter === 'all')  {
+    // Keep actionable work at the top, then scheduled, then done history.
+    rows.sort((a,b) => {
+      const bucket = (r) => isRowActionable(r) ? 0 : ((r.send_after && !r.sent_at) ? 1 : 2);
+      return bucket(a) - bucket(b);
+    });
+  }
   else if (currentFilter === 'scheduled')  {
     rows = rows.filter(r => r.send_after && !r.sent_at);
     rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
@@ -1423,7 +1613,25 @@ function renderTable() {
   const empty = document.getElementById('empty-state');
   document.getElementById('row-count').textContent = filteredRows.length + ' rows';
 
-  if (!filteredRows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  if (!filteredRows.length) {
+    tbody.innerHTML = '';
+    const c = _queueCounts();
+    const titleEl = document.getElementById('empty-title');
+    const subEl = document.getElementById('empty-sub');
+    if (currentFilter === 'active' && c.scheduled > 0) {
+      if (titleEl) titleEl.textContent = 'No actionable rows right now';
+      if (subEl) subEl.innerHTML = `You have <strong>${c.scheduled}</strong> scheduled row(s). Review Scheduled or discover a fresh batch.`;
+    } else if (currentFilter === 'sent' && c.sent > 0) {
+      if (titleEl) titleEl.textContent = 'No sent rows match this view';
+      if (subEl) subEl.innerHTML = 'Try clearing search or sort filters to inspect sent history.';
+    } else {
+      if (titleEl) titleEl.textContent = 'No leads in queue';
+      if (subEl) subEl.innerHTML = 'Use <strong>Discover + Draft</strong> to find local service businesses and generate outreach emails.';
+    }
+    empty.style.display = 'block';
+    updateWorkflowRail();
+    return;
+  }
   empty.style.display = 'none';
 
   tbody.innerHTML = filteredRows.map((row, fi) => {
@@ -1432,6 +1640,8 @@ function renderTable() {
     const sentClass = row.sent_at ? 'row-sent' : '';
     const repliedClass = row.replied === 'true' ? 'row-replied' : '';
     const scheduledClass = (row.send_after && !row.sent_at) ? 'row-scheduled' : '';
+    const staleClass = _isRowStaleDraft(row) ? 'row-stale' : '';
+    const noEmailClass = !_rowHasDeliverableEmail(row) ? 'row-no-email' : '';
     const emailHtml = row.to_email
       ? `<div class="email-cell">${escHtml(row.to_email)}</div>`
       : `<div class="email-missing">no email</div>`;
@@ -1442,15 +1652,22 @@ function renderTable() {
     const replySnip = row.replied === 'true' && row.reply_snippet
       ? `<div class="reply-snippet">↩ ${escHtml(row.reply_snippet.substring(0,80))}</div>` : '';
 
+    const actionable = isRowActionable(row);
+    const lowFit = (parseInt(row.final_priority_score) || 0) <= 2;
+    const secondaryReason = _isRowStaleDraft(row)
+      ? 'stale draft'
+      : (!_rowHasDeliverableEmail(row) ? 'missing email' : (!actionable && lowFit ? 'low fit' : ''));
     const approveBtn = row.sent_at
       ? `<span style="color:var(--dim);font-size:10px">sent</span>`
       : row.approved === 'true'
         ? `<button class="act act-unapprove" onclick="event.stopPropagation();unapproveRow(${gi})">Undo</button>`
         : `<button class="act act-approve" onclick="event.stopPropagation();approveRow(${gi})">Approve</button>`;
 
-    return `<tr class="${sentClass} ${repliedClass} ${scheduledClass}" onclick="openPanel(${fi})">
+    const secondaryClass = (!actionable && secondaryReason) ? 'row-secondary' : '';
+
+    return `<tr class="${sentClass} ${repliedClass} ${scheduledClass} ${staleClass} ${noEmailClass} ${secondaryClass}" onclick="openPanel(${fi})">
       <td class="td-chk" onclick="event.stopPropagation()">
-        <input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">
+        ${actionable ? `<input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">` : `<span style="color:var(--dim);font-size:10px">—</span>`}
       </td>
       <td class="td-biz">
         <span class="biz-name">${escHtml(row.business_name)}</span>
@@ -1458,7 +1675,7 @@ function renderTable() {
         <div class="biz-meta" style="display:flex;gap:8px">${phoneHtml}${siteLink}</div>
       </td>
       <td class="td-email">${emailHtml}${channelBadges}${scanNote}</td>
-      <td class="td-subject"><div class="subj-text">${escHtml(row.subject)}</div>${replySnip}</td>
+      <td class="td-subject"><div class="subj-text">${escHtml(row.subject)}</div>${replySnip}${secondaryReason ? `<div class="row-note">${escHtml(secondaryReason)}</div>` : ''}</td>
       <td class="td-score"><div class="score-chip ${scoreClass(row.final_priority_score)}" data-tip="${scoreTip(row.final_priority_score)}">${sc}</div></td>
       <td>${oppScoreBadge(row)}</td>
       <td class="td-status">${statusBadge(row)}${row.send_after && !row.sent_at ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${_formatSendAfter(row.send_after)}</div>` : ''}</td>
@@ -1466,18 +1683,28 @@ function renderTable() {
         <div class="row-acts">
           ${approveBtn}
           <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
-          <button class="act act-del" onclick="deleteRow(${gi})">Del</button>
+          ${actionable ? `<button class="act act-del" onclick="deleteRow(${gi})">Del</button>` : ''}
         </div>
       </td>
     </tr>`;
   }).join('');
+  updateBulkSafety();
 }
+
 
 function setFilter(name, el) {
   currentFilter = name;
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateBulkSafety();
   renderTable();
+}
+
+function toggleExtraFilters(btn) {
+  const tabs = document.querySelector('.filter-tabs');
+  if (!tabs) return;
+  const on = tabs.classList.toggle('show-aux');
+  if (btn) btn.textContent = on ? '⋯ Less' : '⋯ More';
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
@@ -1560,7 +1787,7 @@ async function fillPanel(row, fi) {
       const gi_s = allRows.indexOf(row);
       schedEl.innerHTML =
         `<span class="sched-time">🕐 Scheduled: ${_formatSendAfter(row.send_after)}</span>` +
-        `<button class="btn-sched-act" onclick="panelClearSchedule()">Clear</button>` +
+        `<button class="btn-sched-act" onclick="panelUnschedule()">Unschedule</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
@@ -1771,7 +1998,7 @@ async function panelScheduleTomorrow() {
 }
 
 // Pass 10 — clear existing schedule
-async function panelClearSchedule() {
+async function panelUnschedule() {
   const row = filteredRows[panelIdx];
   if (!row) return;
   const gi = allRows.indexOf(row);
@@ -1785,7 +2012,7 @@ async function panelClearSchedule() {
     row.send_after = '';
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Schedule cleared', 'ok');
+    toast('Unscheduled', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -1879,13 +2106,35 @@ async function deleteRow(gi) {
 }
 
 async function approveAll() {
+  const count = allRows.filter(r => r.approved !== 'true' && !r.sent_at).length;
+  if (!count) { toast('No pending unsent rows to approve', 'info'); return; }
+  if (!confirm(`Approve ${count} pending unsent row(s)? This writes approval state to the queue.`)) return;
   const res = await api('/api/approve_all',{});
   await loadAll(); toast(`Approved ${res.approved} rows`,'ok');
 }
 
 // ── Bulk ──────────────────────────────────────────────────────────────────────
 function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
+function _bulkAllowedInCurrentFilter() {
+  return ['active', 'pending', 'approved'].includes(currentFilter);
+}
+
+function updateBulkSafety() {
+  const bulk = document.getElementById('bulk-bar');
+  const master = document.getElementById('chk-all');
+  const allowed = _bulkAllowedInCurrentFilter();
+  if (master) {
+    master.disabled = !allowed;
+    if (!allowed) master.checked = false;
+  }
+  if (!allowed) {
+    document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+    if (bulk) bulk.classList.remove('visible');
+  }
+}
+
 function updateBulkBar() {
+  if (!_bulkAllowedInCurrentFilter()) return;
   const n = document.querySelectorAll('.row-chk:checked').length;
   document.getElementById('bulk-count').textContent = n;
   document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
@@ -1895,22 +2144,44 @@ function clearSelection() {
   document.getElementById('chk-all').checked=false;
   updateBulkBar();
 }
-function toggleCheckAll(master) { document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
+function toggleCheckAll(master) { if (!_bulkAllowedInCurrentFilter()) return; document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
 
 async function bulkApprove() {
   const idxs = getSelectedGIs();
-  const missing = idxs.filter(i=>!allRows[i]?.to_email);
-  if (missing.length) { toast(`${missing.length} row(s) need an email first`,'err'); return; }
-  await Promise.all(idxs.map(i=>api('/api/approve_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='true'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Approved ${idxs.length}`,'ok');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/approve_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='true';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Approved ${okCount}`,'ok');
 }
 
 async function bulkUnapprove() {
   const idxs = getSelectedGIs();
-  await Promise.all(idxs.map(i=>api('/api/unapprove_row',{index:i})));
-  idxs.forEach(i=>{ if(allRows[i]) allRows[i].approved='false'; });
-  clearSelection(); renderTable(); loadStats(); toast(`Unapproved ${idxs.length}`,'info');
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/unapprove_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='false';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Unapproved ${okCount}`,'info');
 }
 
 async function bulkDelete() {
@@ -1955,6 +2226,73 @@ async function sendLive() {
   sb.classList.remove('loading'); sb.disabled=false;
 }
 
+function _captureMapContext(extra = {}) {
+  const mapIndustry = document.getElementById('map-industry')?.value || '';
+  const dIndustry = document.getElementById('d-industry')?.value || '';
+  _lastDiscoveryMapContext = {
+    center: _mapCenter ? { lat: _mapCenter.lat, lng: _mapCenter.lng } : null,
+    radiusM: _mapRadiusM || null,
+    industry: extra.industry || mapIndustry || dIndustry || '',
+    city: extra.city || document.getElementById('d-city')?.value?.trim() || '',
+    state: extra.state || document.getElementById('d-state')?.value?.trim() || '',
+    label: extra.label || '',
+    source: extra.source || 'discovery',
+    ts: Date.now(),
+  };
+}
+
+function _publishDiscoveryHandoff({ drafted = 0, queueTotal = null, source = 'search', label = '', industry = '', city = '', state = '' }) {
+  _captureMapContext({ industry, city, state, label, source });
+  _lastDiscoveryHandoff = {
+    drafted, queueTotal, source, label, industry, city, state,
+    at: new Date().toISOString(),
+  };
+  const wrap = document.getElementById('discovery-handoff');
+  const copy = document.getElementById('handoff-copy');
+  const meta = document.getElementById('handoff-meta');
+  if (!wrap || !copy || !meta) return;
+
+  const where = label || [city, state].filter(Boolean).join(', ') || 'recent discovery area';
+  const indTxt = industry ? industry.replace('_',' ') : 'service';
+  copy.innerHTML = `<strong>${drafted}</strong> lead${drafted===1?'':'s'} drafted from ${where} (${indTxt}).`;
+  meta.textContent = queueTotal !== null
+    ? `Queue now has ${queueTotal} total rows. Next step: review and approve/schedule.`
+    : 'Discovery completed. Next step: review and approve/schedule.';
+  wrap.classList.add('show');
+}
+
+function handoffReviewDrafts() {
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  setFilter('active', document.querySelector('.filter-tabs .ftab[data-filter="active"]'));
+}
+
+function handoffContinueDiscovering() {
+  switchMainPage('map', document.querySelector('#top-nav .nav-tab[data-page="map"]'));
+}
+
+function handoffReturnToArea() {
+  switchMainPage('map', document.querySelector('#top-nav .nav-tab[data-page="map"]'));
+  requestAnimationFrame(() => {
+    _mapInit();
+    const ctx = _lastDiscoveryMapContext || {};
+    const mapIndustry = document.getElementById('map-industry');
+    if (mapIndustry && ctx.industry) {
+      mapIndustry.value = ctx.industry;
+      const b = document.getElementById('btnSearchVisible');
+      if (b) b.disabled = !ctx.industry;
+    }
+    if (ctx.center) {
+      _mapDrawCircle(ctx.center.lat, ctx.center.lng, ctx.radiusM || _mapRadiusM || 1000);
+      if (_mapInstance) _mapInstance.setView([ctx.center.lat, ctx.center.lng], Math.max(_mapInstance.getZoom(), 12));
+      const status = document.getElementById('map-status');
+      if (status) status.textContent = `Returned to last discovery area${ctx.label ? ' — ' + ctx.label : ''}.`;
+    } else {
+      const status = document.getElementById('map-status');
+      if (status) status.textContent = 'No map area captured yet. Set a discovery area on the map.';
+    }
+  });
+}
+
 // ── Discover ──────────────────────────────────────────────────────────────────
 async function discoverLeads() {
   const industry=document.getElementById('d-industry').value;
@@ -1970,6 +2308,13 @@ async function discoverLeads() {
     if (res.ok) {
       await loadAll();
       toast(`Found ${res.found} new — ${res.total_queue} total in queue`,'ok');
+      _publishDiscoveryHandoff({
+        drafted: res.found || 0,
+        queueTotal: (res.total_queue ?? null),
+        source: 'discover-bar',
+        industry, city, state,
+        label: `${city}, ${state}`
+      });
       document.getElementById('api-key-notice').style.display='none';
       // Refresh search history if that tab is open
       if (document.getElementById('page-searches')?.classList.contains('active')) loadSearchHistory();
@@ -2110,7 +2455,13 @@ async function loadIndustries() {
     const sel = document.getElementById('d-industry');
     sel.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
     sel.value='plumbing';
-  } catch(e) {}
+  } catch(e) {
+    console.error('Industry API failed:', e);
+    const fallback = ['plumbing','hvac','electrical','garage_door','locksmith','roofing','construction','pest_control','towing','auto'];
+    const sel = document.getElementById('d-industry');
+    sel.innerHTML = fallback.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+    sel.value = 'plumbing';
+  }
 }
 
 function _mapPopulateIndustries() {
@@ -2161,6 +2512,80 @@ async function runFollowupsDryRun() {
       console.table((res.preview||[]).map(r=>({ business: r.business_name, email: r.to_email, step: r.followup_step, sent_at: r.sent_at })));
     } else { toast('Error: '+res.error,'err'); }
   } catch(e) { toast('Connection error','err'); }
+}
+
+
+function _formatSentAt(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  return d.toLocaleString([], { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+}
+
+function _sentRows() {
+  return allRows
+    .map((r, gi) => ({ ...r, _gi: gi }))
+    .filter(r => !!r.sent_at)
+    .sort((a,b) => (b.sent_at || '').localeCompare(a.sent_at || ''));
+}
+
+function renderSentWorkspace() {
+  const host = document.getElementById('sent-workspace-body');
+  if (!host) return;
+  const rows = _sentRows();
+  const replied = rows.filter(r => r.replied === 'true').length;
+  const followDue = rows.filter(r => !!r.next_followup_at).length;
+  const totalEl = document.getElementById('sv-total');
+  const repEl = document.getElementById('sv-replied');
+  const fEl = document.getElementById('sv-followup');
+  if (totalEl) totalEl.textContent = String(rows.length);
+  if (repEl) repEl.textContent = String(replied);
+  if (fEl) fEl.textContent = String(followDue);
+
+  if (!rows.length) {
+    host.innerHTML = '<div class="sent-empty">No sent outreach yet. Process Actionable rows in Queue, then send manually via Gmail.</div>';
+    return;
+  }
+
+  host.innerHTML = '<table class="sent-table"><thead><tr>'
+    + '<th>Sent</th><th>Business</th><th>Subject</th><th>Reply</th><th>Follow-Up</th><th>Actions</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(r => {
+      const reply = r.replied === 'true' ? '<span class="badge badge-replied">★ Replied</span>' : '<span style="color:var(--dim)">—</span>';
+      const fu = r.next_followup_at ? ('<span style="color:var(--amber)">' + escHtml(_formatSendAfter(r.next_followup_at)) + '</span>') : '<span style="color:var(--dim)">—</span>';
+      return '<tr>'
+        + '<td>' + escHtml(_formatSentAt(r.sent_at)) + '</td>'
+        + '<td><div style="font-weight:600">' + escHtml(r.business_name || '—') + '</div><div style="font-size:11px;color:var(--muted)">' + escHtml((r.city||'') + (r.state ? ', ' + r.state : '')) + '</div></td>'
+        + '<td>' + escHtml(r.subject || '—') + '</td>'
+        + '<td>' + reply + '</td>'
+        + '<td>' + fu + '</td>'
+        + '<td><button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="sentOpenRow(' + r._gi + ')">Open Row</button></td>'
+        + '</tr>';
+    }).join('')
+    + '</tbody></table>';
+}
+
+function sentOpenRow(gi) {
+  const row = allRows[gi];
+  if (!row) return;
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  setFilter('sent', document.querySelector('.filter-tabs .ftab[data-filter="sent"]'));
+  const fi = filteredRows.findIndex(r => allRows.indexOf(r) === gi);
+  if (fi >= 0) openPanel(fi);
+}
+
+function sentJumpToReplied() {
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  setFilter('replied', document.querySelector('.filter-tabs .ftab[data-filter="replied"]'));
+}
+
+function sentJumpToFollowup() {
+  switchMainPage('followup', document.querySelector('#top-nav .nav-tab[data-page="followup"]'));
+}
+
+function sentBackToQueue() {
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  setFilter('active', document.querySelector('.filter-tabs .ftab[data-filter="active"]'));
 }
 
 // ── Nav badge refresh — runs in background on every loadAll() ─────────────────
@@ -2246,6 +2671,7 @@ function _runPageHooks(name) {
   if (name === 'searches')      loadSearchHistory();
   if (name === 'mc-clients')    mcLoadClients();
   if (name === 'social')        socialLoad();
+  if (name === 'sentview')      renderSentWorkspace();
   if (name === 'sprint')        sprintLoad();
   if (name === 'conversations') convLoad();
   if (name === 'health')        { healthLoad(); exceptionsLoad(); }
@@ -2253,6 +2679,7 @@ function _runPageHooks(name) {
     requestAnimationFrame(() => {
       _mapInit();
       _mapPopulateIndustries();
+      _captureMapContext({ source: 'map-nav' });
     });
   }
 }
@@ -2291,6 +2718,28 @@ function switchSubPage(parent, name, el) {
   _runPageHooks(name);
 }
 
+
+function switchMainPage(name, el) {
+  document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (name === 'health') return switchPage('health', document.querySelector('#sub-nav .sub-tab[data-page="health"]'));
+  return switchPage(name, document.querySelector(`#sub-nav .sub-tab[data-page="${name}"]`));
+}
+
+function switchMainStage(filterName, el) {
+  if (filterName === 'sent') return switchMainPage('sentview', document.querySelector('#top-nav .nav-tab[data-page="sentview"]'));
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  const tab = document.querySelector(`.filter-tabs .ftab[data-filter="${filterName}"]`);
+  setFilter(filterName, tab);
+  document.querySelectorAll('.workflow-rail .stage-chip').forEach(c => c.classList.remove('active'));
+  const stage = filterName === 'scheduled' ? 'stage-scheduled' : 'stage-review';
+  document.getElementById(stage)?.classList.add('active');
+  if (el) {
+    document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+}
+
 // Legacy shim — existing code calls switchPage(name, el) in many places
 // (e.g. mcViewLeads, cvOpenInOutreach, _shRerun, etc.).  This translates
 // those calls into the new system without touching any caller.
@@ -2301,15 +2750,13 @@ function switchPage(name, el) {
 
   // Activate the correct top-tab if parent changed
   if (parent !== _currentParent) {
-    const topTabEl = document.querySelector(`#top-nav .nav-tab[data-parent="${parent}"]`);
+    const topTabEl = document.querySelector(`#top-nav .nav-tab[data-parent="${parent}"]`) || document.querySelector(`#top-nav .nav-tab[data-page="${name}"]`) || document.querySelector('#top-nav .nav-tab[data-page="outreach"]');
     document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
     if (topTabEl) topTabEl.classList.add('active');
     _currentParent = parent;
 
     // Show the right sub-tabs
-    document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
-      t.style.display = (t.dataset.parent === parent) ? '' : 'none';
-    });
+    document.querySelectorAll('#sub-nav .sub-tab').forEach(t => { t.style.display = 'none'; });
   }
 
   _parentLastPage[parent] = name;
@@ -3241,11 +3688,11 @@ function _cvRenderPanel(r, i) {
         <div class="cv-section-label">Quick Actions</div>
         <div class="cv-quick-actions">
           <button class="btn btn-primary" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'demo')">📎 Send Demo Link</button>
+            onclick="cvSendQuick(${idx},'demo')">📎 Copy Demo Reply</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'call')">📞 Schedule Call</button>
+            onclick="cvSendQuick(${idx},'call')">📞 Copy Call Invite</button>
           <button class="btn btn-ghost" style="font-size:12px"
-            onclick="cvSendQuick(${idx},'case_study')">📄 Send Case Study</button>
+            onclick="cvSendQuick(${idx},'case_study')">📄 Copy Case Study Reply</button>
           <button class="btn btn-danger" style="font-size:12px"
             onclick="cvClose(${idx},${i})">✗ Close Lead</button>
         </div>
@@ -3475,9 +3922,9 @@ function mcRenderClients() {
       <td><span class="tag-industry" style="${c.active===false?'opacity:.5':''}">${c.active===false?'Inactive':'Active'}</span></td>
       <td>
         <div class="mc-actions">
-          <button class="act act-edit" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">Leads</button>
+          <button class="act act-edit" disabled title="Leads view not enabled yet" style="opacity:.4;cursor:not-allowed">Leads</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.id||c.client_id||'')}','${escHtml(c.business_name)}')">🎬 Run Demo</button>
-          <button class="act act-del" disabled title="Feature not available yet" style="opacity:.4;cursor:not-allowed">✕</button>
+          <button class="act act-del" disabled title="Delete client not enabled yet" style="opacity:.4;cursor:not-allowed">✕</button>
         </div>
       </td>
     </tr>`).join('');
@@ -3538,14 +3985,7 @@ function closeDemoModal() {
 // ── Leads page ────────────────────────────────────────────────────────────────
 let _mcLeadsClientId = '';
 function mcViewLeads(cid, name) {
-  _mcLeadsClientId = cid;
-  document.getElementById('mc-leads-title').textContent = `Leads — ${name}`;
-  document.getElementById('mc-leads-date').value = '';
-  document.getElementById('mc-leads-caller').value = '';
-  switchPage('mc-leads', null);
-  // Manually highlight nav tab
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  mcLoadLeads();
+  toast('Leads view not enabled yet', 'info');
 }
 
 function mcClearFilters() {
@@ -3689,6 +4129,35 @@ async function checkReplies(silent = false) {
   }
 }
 
+async function checkSent() {
+  const btn = document.getElementById('btnCheckSent');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const res = await api('/api/reconcile_sent', { max_messages: 150, lookback_hours: 72 });
+    if (!res.ok) {
+      toast('Sent reconciliation failed: ' + (res.error || 'unknown error'), 'err');
+      return;
+    }
+    const r = res.result || {};
+    if ((r.updated_rows || 0) > 0) {
+      await loadAll();
+      toast(`↺ Reconciled ${r.updated_rows} sent row${r.updated_rows === 1 ? '' : 's'} from Gmail Sent`, 'ok');
+    } else {
+      toast('No sent rows needed reconciliation', 'info');
+    }
+    if ((r.skipped_ambiguous || 0) > 0) {
+      toast(`Sent check skipped ${r.skipped_ambiguous} ambiguous row${r.skipped_ambiguous === 1 ? '' : 's'} (safe skip)`, 'err');
+    }
+    if (r.errors && r.errors.length) {
+      toast('Sent check warning: ' + r.errors[0], 'err');
+    }
+  } catch (e) {
+    toast('Sent reconciliation error: ' + e, 'err');
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
 // ── Keyboard shortcuts when panel open ───────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (!document.getElementById('panel-overlay').classList.contains('open')) return;
@@ -3710,12 +4179,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sendModal) sendModal.addEventListener('click', e => {
     if (e.target === sendModal) closeModal();
   });
-  // Boot nav: show Pipeline sub-tabs, hide all others, Outreach active
+  // Boot nav: keep legacy sub-tabs hidden and start in Queue
   document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
-    t.style.display = (t.dataset.parent === 'pipeline') ? '' : 'none';
+    t.style.display = 'none';
     t.classList.remove('active');
     if (t.dataset.page === 'outreach') t.classList.add('active');
   });
+  switchMainPage('outreach', document.querySelector('#top-nav .nav-tab[data-page="outreach"]'));
+  setFilter('active', document.querySelector('.filter-tabs .ftab[data-filter="active"]'));
+  updateWorkflowRail();
 });
 
 
@@ -4212,7 +4684,16 @@ async function mapSearchVisible() {
   statusEl.textContent = didCancel
     ? `Cancelled — ${tilesDone} of ${tiles.length} tiles completed — ${totalFound} total found`
     : `✓ Visible-area search complete — ${tiles.length} tiles — ${totalFound} total found`;
-  if (!didCancel) toast(`Visible-area search done — ${totalFound} results across ${tiles.length} tiles`, 'ok');
+  if (!didCancel) {
+    toast(`Visible-area search done — ${totalFound} results across ${tiles.length} tiles`, 'ok');
+    _publishDiscoveryHandoff({
+      drafted: totalFound || 0,
+      queueTotal: null,
+      source: 'map-visible',
+      industry,
+      label: (_histLabel || `${tiles.length} tiles`)
+    });
+  }
 }
 
 // Step 8 — cancel: flag stops loop after current tile finishes
@@ -4353,6 +4834,13 @@ async function mapSearch() {
       // Append to session search history
       const _histLabel = _mapAreaLabel(res.markers || []);
       _mapSearchHistory.unshift({ lat: _mapCenter.lat, lng: _mapCenter.lng, radiusM: _mapRadiusM, found: res.places_found || 0, label: _histLabel });
+      _publishDiscoveryHandoff({
+        drafted: res.drafts_created || 0,
+        queueTotal: (res.queue_total ?? null),
+        source: 'map-search',
+        industry,
+        label: _histLabel || `${_mapCenter.lat.toFixed(3)}, ${_mapCenter.lng.toFixed(3)}`
+      });
       if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
       _mapRenderHistory();
     } else {

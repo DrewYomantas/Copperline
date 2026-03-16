@@ -38,7 +38,7 @@ from send.email_sender_agent import process_pending_emails, is_real_send
 from intelligence.email_extractor_agent import enrich_prospects_with_emails
 from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES, discover_prospects_area
 from outreach.followup_scheduler import run_followup_scheduler
-from outreach.reply_checker import check_for_replies
+from outreach.reply_checker import check_for_replies, reconcile_sent_mail
 from outreach.email_draft_agent import DRAFT_VERSION as _CURRENT_DRAFT_VERSION
 from city_planner import CityPlanner
 
@@ -340,6 +340,25 @@ def api_check_replies():
         return jsonify({"ok": True, "result": result})
     except Exception as exc:
         log.error("Reply check error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+@app.route("/api/reconcile_sent", methods=["POST"])
+def api_reconcile_sent():
+    try:
+        d = request.json or {}
+        max_messages = int(d.get("max_messages", 150))
+        lookback_hours = int(d.get("lookback_hours", 72))
+        result = reconcile_sent_mail(max_messages=max_messages, lookback_hours=lookback_hours)
+        if result.get("updated_rows", 0) > 0:
+            log.info(
+                "Sent reconciliation: updated=%d ambiguous=%d checked=%d",
+                result.get("updated_rows", 0),
+                result.get("skipped_ambiguous", 0),
+                result.get("checked_sent_messages", 0),
+            )
+        return jsonify({"ok": True, "result": result})
+    except Exception as exc:
+        log.error("Sent reconciliation error: %s", exc, exc_info=True)
         return jsonify({"ok": False, "error": str(exc)}), 500
 
 @app.route("/api/extract_emails", methods=["POST"])

@@ -1,9 +1,195 @@
+### 2026-03-16 — Pass 11C: Discovery-to-Queue Continuity UX
+
+**Goal:** Reduce context-switch friction between map discovery and queue processing without introducing fake campaign abstractions.
+
+**Changes:**
+- Added a persistent discovery handoff bar under top navigation with truthful post-run summary and direct actions:
+  - Review New Drafts
+  - Continue Discovering
+  - Return to Last Discovery Area
+- Added lightweight session state for continuity:
+  - `_lastDiscoveryHandoff`
+  - `_lastDiscoveryMapContext`
+  - `_captureMapContext(...)`
+  - `_publishDiscoveryHandoff(...)`
+- Wired handoff publishing into successful discovery flows (`discoverLeads`, `mapSearch`, `mapSearchVisible`).
+- Added map-context restore behavior so operators can jump to queue and return to the previous discovery area quickly.
+- No backend changes; discovery remains explicit/operator-triggered.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** `70f1f96`
+
+---
+
+### 2026-03-16 — Pass 11B: Separate Sent Workspace / Completed Outreach View
+
+**Goal:** Keep the live unsent queue clean by moving completed outreach into a separate destination view.
+
+**Changes:**
+- Added a dedicated Sent Workspace page (`page-sentview`) with its own header, stats, and table.
+- Kept live queue default on unsent work and preserved existing queue-state filter semantics.
+- Added Sent Workspace context using existing fields: sent time, business, subject, reply badge, and follow-up hint.
+- Added quick actions from Sent Workspace to Replied filter, Follow-Up queue, and original business row panel.
+- Added top-nav Sent badge and wired Sent stage/primary nav to the separate Sent destination.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** `3a597b1`
+
+---
+
+### 2026-03-16 — Pass 11A: Pipeline UX V2 Flow Cleanup
+
+**Goal:** Make the operator workflow read as one continuous flow: Discover → Review → Approve/Schedule → Sent → Follow-Up.
+
+**Changes:**
+- Simplified top-level navigation to direct destinations (Discovery, Queue, Scheduled, Sent, Follow-Up, Clients, System), reducing parent/sub-tab dependence.
+- Added a workflow stage rail inside Outreach with live counts and quick stage jumps.
+- Preserved queue-state separation and behavior: Actionable (unsent and not scheduled), Scheduled (send_after and not sent), Sent (sent_at), Replied.
+- Improved queue empty-state messaging for mode-switch scenarios (e.g., no actionable rows but scheduled work exists).
+- Kept send behavior, queue schema, and backend routes unchanged.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** `84d4a7b`
+
+---
+
+### 2026-03-16 — Pass 16: Outreach Command-Center Refinement
+
+**Goal:** Improve operator clarity in Outreach by tightening immediate-work semantics and visually separating discovery, queue filtering, and queue actions.
+
+**Changes:**
+- Tightened `Actionable` definition to exclude stale-draft and missing-email rows in addition to scheduled/sent/terminal rows.
+- Reorganized Outreach layout into clear stacked groups: Discovery controls, Queue workflow filters/view controls, and Queue actions.
+- Grouped review/reconciliation tools separately from the primary send action (`▶ Send Approved`).
+- Added secondary row treatment and note labels (`stale draft`, `missing email`, `low fit`) to reduce visual weight of lower-priority rows.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+
+**Commit:** `7da49b5`
+
+---
+
+### 2026-03-16 — Pass 15: Outreach Queue Regression Fix
+
+**Goal:** Restore queue/stats/industry/table loading after the command-center cleanup regression while preserving the new filter architecture.
+
+**Root cause:** `loadAll()` used `Promise.all` for `/api/status` + `/api/queue`, so a failure from either endpoint aborted both updates and left Outreach appearing fully broken. `loadIndustries()` silently swallowed API failures, leaving the industry selector stuck on “Loading…”.
+
+**Changes:**
+- Updated `loadAll()` to `Promise.allSettled` with independent status/queue application and endpoint-specific operator toasts.
+- Added diagnostics (`console.error`) for status and queue failures.
+- Added resilient `loadIndustries()` fallback options so the industry selector still initializes when `/api/industries` fails.
+- Preserved existing Actionable/Pending/Approved/Scheduled/Done model and non-actionable bulk disable behavior from prior cleanup.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+
+**Commit:** `347a842`
+
+---
+
 # AI Development Log
 
 Chronological record of all AI-assisted implementation passes on the Copperline project.
 Update this file at the end of every pass.
 
 ---
+
+## 2026-03-16
+
+### Pass 11 — Sent Mail Reconciliation Recovery
+
+**Goal:** Prevent duplicate resends when Gmail sends succeeded but the dashboard closed before queue state updated.
+
+**Files changed:**
+- `lead_engine/outreach/reply_checker.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Added `reconcile_sent_mail()` to scan recent Gmail Sent messages and reconcile only approved+unsent queue rows.
+- Matching key is strict: recipient email + exact subject, limited to recent sent window (`lookback_hours`, default 72h).
+- Ambiguity handling is fail-safe: if multiple queue rows share a key or multiple Sent messages match a key, rows are skipped and not modified.
+- Added dashboard API endpoint `/api/reconcile_sent` and UI action `↺ Check Sent` to trigger operator recovery.
+- Reconciliation writes `sent_at` and captures Gmail `Message-ID` when present; no lead deletion and no resend path invoked.
+
+**Commit:** `aae0cb5`
+
+## 2026-03-16
+
+
+### Pass 12 — Queue Bulk Action + Unschedule Fix
+
+**Goal:** Restore reliable checked-row bulk approvals and provide explicit unschedule action in the panel UI.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Fixed bulk Approve / Unapprove race by replacing parallel `Promise.all` queue writes with sequential row updates.
+- Kept bulk Delete/Clear and single-row approve/unapprove behavior intact.
+- Changed schedule panel button from `Clear` to explicit `Unschedule` for operator clarity.
+- Unschedule path reuses guarded `/api/schedule_email` with `send_after: ""`; no new route added.
+- No send logic changes, no queue schema changes, no protected backend edits.
+
+**Commit:** `c40d16d`
+
+## 2026-03-16
+
+
+### Pass 13 — Dashboard Startup Import Recovery
+
+**Goal:** Restore dashboard startup by resolving missing symbols/modules in the server import chain.
+
+**Files changed:**
+- `lead_engine/discovery/prospect_discovery_agent.py`
+- `lead_engine/run_lead_engine.py`
+- `lead_engine/intelligence/website_scan_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/scoring/opportunity_scoring_agent.py`
+- `lead_engine/city_planner.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+
+**What changed:**
+- Added missing `clean_website_for_key()` to discovery agent.
+- Removed stale `normalize_business_name` import from `run_lead_engine.py`.
+- Added compatibility helpers expected by `run_lead_engine.py` (`generate_lead_insight`, `draft_social_messages`, `DRAFT_VERSION`, `compute_numeric_score`, `score_priority_label`).
+- Added missing modules imported by dashboard server (`city_planner`, `email_extractor_agent`).
+- Verified `dashboard_server.py` starts and binds to localhost without the previous import errors.
+
+**Commit:** `c2234ea`
+
+## 2026-03-16
+
+### Pass 14 — Dashboard UX Safety Cleanup
+
+**Goal:** Remove misleading/dead dashboard actions and clarify operator-facing copy without backend changes.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+- Disabled active navigation into broken client leads surface by making `mcViewLeads` informational only.
+- Kept client Leads/Delete surfaces disabled and added explicit tooltips for both.
+- Relabeled conversation quick actions to copy-oriented language while preserving clipboard behavior.
+- Added safety confirmation to `Approve All` including affected row count and explicit write warning.
+- Added short map disclosure note clarifying queue/draft authority and partial marker expectations.
+- Marked Tools tab as `Stub` in top navigation.
+
+**Commit:** `014e68c`
 
 ## 2026-03-15
 
