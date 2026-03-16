@@ -69,6 +69,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .filter-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:2px}
 .ftab{padding:4px 11px;border-radius:3px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);transition:.12s;user-select:none;white-space:nowrap}
 .ftab.active{background:var(--surface3);color:var(--text)}.ftab:hover:not(.active){color:var(--text)}
+.ftab-aux{display:none}
+.filter-tabs.show-aux .ftab-aux{display:inline-block}
+.ftab-more{padding:4px 9px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;color:var(--dim);border:1px dashed var(--border-hi);background:transparent;user-select:none}
+.ftab-more:hover{color:var(--text)}
 .search-box{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;width:160px;transition:.12s}
 .search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
 .search-box::placeholder{color:var(--dim)}
@@ -663,16 +667,17 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="toolbar">
   <div class="toolbar-l">
     <div class="filter-tabs">
-      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Active</div>
-      <div class="ftab" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab active" data-filter="active" onclick="setFilter('active',this)" title="Unsent leads that need action — default view">⚡ Actionable</div>
       <div class="ftab" data-filter="pending" onclick="setFilter('pending',this)">Pending</div>
       <div class="ftab" data-filter="approved" onclick="setFilter('approved',this)">Approved</div>
-      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">Sent</div>
-      <div class="ftab" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
-      <div class="ftab" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
-      <div class="ftab" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
-      <div class="ftab" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
       <div class="ftab" data-filter="scheduled" onclick="setFilter('scheduled',this)" style="color:var(--amber)" title="Emails approved and queued for a send window">🕐 Scheduled</div>
+      <div class="ftab" data-filter="sent" onclick="setFilter('sent',this)">✓ Done</div>
+      <div class="ftab-more" onclick="toggleExtraFilters(this)">⋯ More</div>
+      <div class="ftab ftab-aux" data-filter="all" onclick="setFilter('all',this)">All</div>
+      <div class="ftab ftab-aux" data-filter="replied" onclick="setFilter('replied',this)" style="color:var(--copper)">★ Replied</div>
+      <div class="ftab ftab-aux" data-filter="stale" onclick="setFilter('stale',this)" style="color:var(--amber)" title="Rows with old copy — regenerate before sending">⚠ Stale</div>
+      <div class="ftab ftab-aux" data-filter="no_email" onclick="setFilter('no_email',this)">No Email</div>
+      <div class="ftab ftab-aux" data-filter="high_score" onclick="setFilter('high_score',this)">High Score</div>
     </div>
     <input class="search-box" id="searchBox" type="text" placeholder="Search business…" oninput="renderTable()">
     <span id="row-count" class="tag" style="font-size:10px"></span>
@@ -1326,23 +1331,35 @@ function _updateRepliedStat(count) {
   if (pulse) pulse.style.display = count > 0 ? 'inline-block' : 'none';
 }
 
+function isRowActionable(row) {
+  const terminal = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
+  return !row.sent_at && !row.send_after && !terminal.has(row.contact_result || '');
+}
+
 function applyFiltersAndSort() {
-  const _TERMINAL = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
   let rows = [...allRows];
   const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
   const sort = document.getElementById('sortSelect').value;
 
   if (currentFilter === 'active') {
     // Default view: unsent, unscheduled leads that aren't terminal — actionable now
-    rows = rows.filter(r => !r.sent_at && !r.send_after && !_TERMINAL.has(r.contact_result || ''));
-  } else if (currentFilter === 'pending')  rows = rows.filter(r => r.approved !== 'true' && !r.sent_at);
-  else if (currentFilter === 'approved')   rows = rows.filter(r => r.approved === 'true' && !r.sent_at);
+    rows = rows.filter(r => isRowActionable(r));
+  } else if (currentFilter === 'pending')  rows = rows.filter(r => isRowActionable(r) && r.approved !== 'true');
+  else if (currentFilter === 'approved')   rows = rows.filter(r => isRowActionable(r) && r.approved === 'true');
   else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
   else if (currentFilter === 'replied')    rows = rows.filter(r => r.replied === 'true');
   else if (currentFilter === 'stale')      rows = rows.filter(r => !r.sent_at && r.draft_version !== status_draft_version);
   else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
   else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
   else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+
+  else if (currentFilter === 'all')  {
+    // Keep actionable work at the top, then scheduled, then done history.
+    rows.sort((a,b) => {
+      const bucket = (r) => isRowActionable(r) ? 0 : ((r.send_after && !r.sent_at) ? 1 : 2);
+      return bucket(a) - bucket(b);
+    });
+  }
   else if (currentFilter === 'scheduled')  {
     rows = rows.filter(r => r.send_after && !r.sent_at);
     rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
@@ -1444,6 +1461,7 @@ function renderTable() {
     const replySnip = row.replied === 'true' && row.reply_snippet
       ? `<div class="reply-snippet">↩ ${escHtml(row.reply_snippet.substring(0,80))}</div>` : '';
 
+    const actionable = isRowActionable(row);
     const approveBtn = row.sent_at
       ? `<span style="color:var(--dim);font-size:10px">sent</span>`
       : row.approved === 'true'
@@ -1452,7 +1470,7 @@ function renderTable() {
 
     return `<tr class="${sentClass} ${repliedClass} ${scheduledClass}" onclick="openPanel(${fi})">
       <td class="td-chk" onclick="event.stopPropagation()">
-        <input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">
+        ${actionable ? `<input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">` : `<span style="color:var(--dim);font-size:10px">—</span>`}
       </td>
       <td class="td-biz">
         <span class="biz-name">${escHtml(row.business_name)}</span>
@@ -1468,18 +1486,28 @@ function renderTable() {
         <div class="row-acts">
           ${approveBtn}
           <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
-          <button class="act act-del" onclick="deleteRow(${gi})">Del</button>
+          ${actionable ? `<button class="act act-del" onclick="deleteRow(${gi})">Del</button>` : ''}
         </div>
       </td>
     </tr>`;
   }).join('');
+  updateBulkSafety();
 }
+
 
 function setFilter(name, el) {
   currentFilter = name;
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateBulkSafety();
   renderTable();
+}
+
+function toggleExtraFilters(btn) {
+  const tabs = document.querySelector('.filter-tabs');
+  if (!tabs) return;
+  const on = tabs.classList.toggle('show-aux');
+  if (btn) btn.textContent = on ? '⋯ Less' : '⋯ More';
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
@@ -1890,7 +1918,26 @@ async function approveAll() {
 
 // ── Bulk ──────────────────────────────────────────────────────────────────────
 function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
+function _bulkAllowedInCurrentFilter() {
+  return ['active', 'pending', 'approved'].includes(currentFilter);
+}
+
+function updateBulkSafety() {
+  const bulk = document.getElementById('bulk-bar');
+  const master = document.getElementById('chk-all');
+  const allowed = _bulkAllowedInCurrentFilter();
+  if (master) {
+    master.disabled = !allowed;
+    if (!allowed) master.checked = false;
+  }
+  if (!allowed) {
+    document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+    if (bulk) bulk.classList.remove('visible');
+  }
+}
+
 function updateBulkBar() {
+  if (!_bulkAllowedInCurrentFilter()) return;
   const n = document.querySelectorAll('.row-chk:checked').length;
   document.getElementById('bulk-count').textContent = n;
   document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
@@ -1900,7 +1947,7 @@ function clearSelection() {
   document.getElementById('chk-all').checked=false;
   updateBulkBar();
 }
-function toggleCheckAll(master) { document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
+function toggleCheckAll(master) { if (!_bulkAllowedInCurrentFilter()) return; document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
 
 async function bulkApprove() {
   const idxs = getSelectedGIs();
