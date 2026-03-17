@@ -667,7 +667,7 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 - Ran a targeted Python verification script that exercised representative hidden-email patterns, candidate ranking, enrichment updates on a temporary prospects CSV, and multiple email/social draft outputs.
 - Reconfirmed the live dashboard still loads at `http://127.0.0.1:5000` after the backend changes.
 
-**Commit:** pending
+**Commit:** `3098082`
 
 ---
 
