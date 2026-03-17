@@ -182,7 +182,7 @@ def api_status():
         "approved_unsent":       sum(1 for r in rows if (r.get("approved") or "").lower() == "true" and not r.get("sent_at")),
         "sent":                  sent_real,
         "sent_logged_only":      sent_logged,
-        "replied":               sum(1 for r in rows if r.get("replied","").lower() == "true"),
+        "replied":               sum(1 for r in rows if (r.get("replied") or "").lower() == "true"),
         "stale_drafts":          stale,
         "current_draft_version": _CURRENT_DRAFT_VERSION,
     })
@@ -327,7 +327,7 @@ def api_run_followups_dry_run():
 @app.route("/api/replies")
 def api_replies():
     rows = _read_pending()
-    replied = sorted([r for r in rows if r.get("replied","").lower() == "true"],
+    replied = sorted([r for r in rows if (r.get("replied") or "").lower() == "true"],
                      key=lambda r: r.get("replied_at",""), reverse=True)
     return jsonify(replied)
 
@@ -681,7 +681,7 @@ def api_sprint_next():
 def api_conversation_queue():
     rows = _read_pending(); convos = []
     for i,r in enumerate(rows):
-        if r.get("replied","").lower()=="true": _enrich_row(r,i); convos.append(r)
+        if (r.get("replied") or "").lower()=="true": _enrich_row(r,i); convos.append(r)
     convos.sort(key=lambda r:r.get("replied_at",""),reverse=True); return jsonify(convos)
 
 @app.route("/api/update_conversation", methods=["POST"])
