@@ -32,6 +32,24 @@ Pass 37 - Discovery Review Recovery + Action Feedback
 
 Commit: `4224d78`
 
+
+## Queue State Management Note — Pass 38
+**Date:** 2026-03-17
+**Operation:** Bulk unschedule of 56 pre-Pass-36 (v7 draft) scheduled rows.
+
+All 56 rows were scheduled for 2026-03-18 morning windows but carry old-style
+pre-observation drafts that should not auto-send. `send_after` was cleared on
+each. No rows deleted. No other fields altered. 50 sent rows untouched.
+Total row count unchanged at 180.
+
+Backup: `_backups/pending_emails_pre_p38_20260317_182909.csv`
+
+**Queue state after:**
+- total rows: 180
+- sent rows: 50
+- scheduled+unsent: 0
+- unscheduled+unsent: 130
+
 ## Previous Completed Pass
 Pass 36 - Observation-Led Outreach Rewrite
 

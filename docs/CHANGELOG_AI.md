@@ -1,4 +1,25 @@
-﻿### 2026-03-17 - Pass 37: Discovery Review Recovery + Action Feedback
+﻿### 2026-03-17 - Pass 38: Pre-Pass-36 Queue State Cleanup (Bulk Unschedule)
+
+**Type:** Operational state management. No product code changed.
+
+**Goal:** Stop 56 old-style (v7 draft) scheduled rows from auto-sending tomorrow morning without losing any lead identity or contact history.
+
+**What happened:**
+- Inspected `pending_emails.csv`: 56 rows scheduled+unsent, all `draft_version=v7`, all targeting 2026-03-18 windows.
+- Backed up queue to `_backups/pending_emails_pre_p38_20260317_182909.csv`.
+- Cleared `send_after` on all 56 rows. No other fields touched.
+- Verified: total rows 180→180, sent rows 50→50, scheduled+unsent 56→0.
+- All assertions passed.
+
+**Files changed (docs only — queue is gitignored):**
+- `docs/PROJECT_STATE.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** TBD
+
+---
+
+### 2026-03-17 - Pass 37: Discovery Review Recovery + Action Feedback
 
 **Goal:** Fix operator friction introduced by recent dashboard passes — restore editable map preview, add pending-state feedback, fix backdrop close with drag guard, surface Unschedule clearly.
 
