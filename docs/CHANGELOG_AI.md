@@ -134,6 +134,49 @@ Update this file at the end of every pass.
 
 ## 2026-03-16
 
+### Pass 20c -- Live Scheduler Verification
+
+**Goal:** Verify the automated scheduled-send system end-to-end against the live codebase.
+
+**Files changed:** None (verification only).
+
+**Verification script:** `_verify_20c.py` (temp, deleted after run).
+
+**Results: 17/17 checks passed.**
+
+Part 1 -- Imports and lock:
+- `CSV_WRITE_LOCK` confirmed as a real mutex (`threading.Lock`)
+- Second concurrent acquire correctly blocked
+
+Part 2 -- Thread guard:
+- `_scheduler_started` flips on first `_start_scheduler_once()` call
+- Second call is a confirmed no-op
+- Exactly 1 thread named `copperline-scheduler` running after both calls
+- Thread is daemon and alive
+
+Part 3 -- Early-send protection:
+- Future `send_after` (+2 hours): `_is_send_eligible` returns `False`
+- Past-due `send_after` (-5 seconds): returns `True`
+- No `send_after`: returns `True`
+- Malformed `send_after`: returns `True` (does not block)
+
+Part 4 -- Row selection:
+- `send_next_due_email` returns `False` with no due rows
+- Injected past-due test row at queue position 26; confirmed selected as `target_idx`
+- Queue restored to 26 rows after cleanup
+
+Part 5 -- Future row not selected:
+- Future row injected and confirmed NOT selected by scheduler logic
+- Cleaned up
+
+**SMTP boundary:** Not tested end-to-end. Verification covers all logic up to and including `_send_email_via_gmail()` call site. Actual delivery requires live Gmail credentials and safe recipient.
+
+**Verdict: READY for overnight scheduled sending.** No fixes required.
+
+**Commit:** `76be407` (Pass 20a, last code change — no new code this pass)
+
+---
+
 ### Pass 18b — Human Draft Enforcement Layer
 
 **Goal:** Add a post-processing layer to `draft_email()` that enforces human-style copy constraints after generation.
