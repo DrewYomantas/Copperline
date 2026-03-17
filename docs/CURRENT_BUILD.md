@@ -8,7 +8,7 @@ Pass 29 complete.
 
 ---
 
-## Completed: Pass 29 - Discovery Coverage Expansion + Bulk Unschedule - pending
+## Completed: Pass 29 - Discovery Coverage Expansion + Bulk Unschedule - `aaa3276`
 
 Product change was one file: `lead_engine/dashboard_static/index.html`.
 No backend changes. No scheduler core changes. No protected systems touched.

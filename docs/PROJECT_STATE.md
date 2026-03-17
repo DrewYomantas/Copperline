@@ -31,7 +31,7 @@ Pass 29 - Discovery Coverage Expansion + Bulk Unschedule
 - Fixed a small stabilization bug so bulk `Unschedule` becomes visibly available when scheduled rows are selected.
 - Kept the pass frontend-only. No scheduler core, queue schema, or protected pipeline logic changed.
 
-Commit: pending
+Commit: `aaa3276`
 
 ## Previous Completed Pass
 Pass 18b - Human Draft Enforcement Layer
