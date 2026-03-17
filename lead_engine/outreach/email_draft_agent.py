@@ -163,7 +163,9 @@ OPENERS = [
 
 _SECOND_SENTENCES = [
     "feels like those usually just go to the next company",
-    "guessing most people don't try again",
+    "guessing most people don't call back",
+    "kinda seems like those get lost",
+    "probably just ends up going to someone else",
     "seems like those turn into lost jobs pretty quick",
 ]
 
@@ -226,6 +228,16 @@ def enforce_human_style(body_text: str) -> str:
         # Find last punctuation and cut there cleanly
         last_punct = max(trimmed.rfind("."), trimmed.rfind("?"), trimmed.rfind("!"))
         body_text = trimmed[:last_punct + 1] if last_punct > 0 else trimmed
+
+    # 6. Optional run-on merge — 50% chance (Step 1 from 18Y).
+    #    Replaces ". " between the two sentences with " " to create
+    #    a slight run-on that reads less templated.
+    #    Only applied when exactly one mid-sentence ". " exists.
+    if random.random() < 0.5:
+        # Find the first ". " that is NOT at the end of the string
+        idx = body_text.find(". ")
+        if idx != -1 and idx < len(body_text) - 2:
+            body_text = body_text[:idx] + " " + body_text[idx + 2:]
 
     return body_text
 
@@ -305,13 +317,24 @@ def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[st
         "hey",
     ])
 
-    # Steps 4+5 — Build 2-sentence body using industry-aware opener
-    opener       = random.choice(OPENERS)
-    ind_phrase   = _industry_phrase(industry)
-    second       = random.choice(_SECOND_SENTENCES)
-    sentence_one = f"hey {business_name} — {opener}, {ind_phrase} do calls just get missed sometimes"
-    sentence_two = second
-    body_text    = f"{sentence_one}. {sentence_two}."
+    # Steps 4+5 — Build 2-sentence body with opener format variation
+    opener     = random.choice(OPENERS)
+    ind_phrase = _industry_phrase(industry)
+    second     = random.choice(_SECOND_SENTENCES)
+
+    # Three opener formats — randomly chosen (Step 2)
+    fmt = random.randint(0, 2)
+    if fmt == 0:
+        # Format A: hey {name} — {opener}, {industry phrase}...
+        sentence_one = f"hey {business_name} — {opener}, {ind_phrase} do calls just get missed sometimes"
+    elif fmt == 1:
+        # Format B: hey {name} — {opener} {industry phrase}... (no comma)
+        sentence_one = f"hey {business_name} — {opener} {ind_phrase} do calls just get missed sometimes"
+    else:
+        # Format C: hey {name} — {industry phrase}... (opener omitted)
+        sentence_one = f"hey {business_name} — {ind_phrase} do calls just get missed sometimes"
+
+    body_text = f"{sentence_one}. {second}."
 
     # Legacy word-count guard (kept for safety; enforce_human_style trims harder below)
     wc = _word_count(body_text)
