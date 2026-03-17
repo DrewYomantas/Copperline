@@ -244,6 +244,77 @@ def count_real_sends(pending_csv_path: str | Path) -> int:
     return sum(1 for r in rows if is_real_send(r))
 
 
+# ── Shared write lock — protects CSV read/write against scheduler concurrency ──
+# Imported by dashboard_server.py so both the scheduler thread and Flask routes
+# acquire the same lock before any CSV mutation.
+import threading as _threading
+CSV_WRITE_LOCK = _threading.Lock()
+
+
+def send_next_due_email(pending_csv_path: str | Path) -> bool:
+    """
+    Find and send the FIRST scheduled email whose send_after time has passed.
+
+    Behavior:
+      - Loads pending_emails.csv
+      - Scans for first row where:
+          approved == "true"
+          sent_at is empty
+          send_after is set
+          datetime.now() >= send_after  (local naive comparison)
+      - Sends that ONE email via Gmail SMTP
+      - Writes sent_at + message_id immediately
+      - Saves CSV
+      - Returns True if an email was sent, False otherwise
+
+    Thread safety: acquires CSV_WRITE_LOCK around the read-modify-write.
+    Never sends if now < send_after (enforced by _is_send_eligible via Pass 19).
+    """
+    with CSV_WRITE_LOCK:
+        rows = _read_pending_rows(pending_csv_path)
+        now  = datetime.now()
+
+        target_idx = None
+        for i, row in enumerate(rows):
+            send_after_raw = (row.get("send_after") or "").strip()
+            if not send_after_raw:
+                continue  # not scheduled
+            # Parse send_after — skip malformed timestamps
+            try:
+                send_after_dt = datetime.fromisoformat(send_after_raw)
+            except ValueError:
+                continue
+            if now < send_after_dt:
+                continue  # not yet due — never send early
+            # Must also pass all other eligibility checks
+            if not _is_send_eligible(row):
+                continue
+            target_idx = i
+            break  # process one email per call
+
+        if target_idx is None:
+            return False
+
+        row      = rows[target_idx]
+        to_email = (row.get("to_email") or "").strip()
+        subject  = row.get("subject", "")
+        body     = row.get("body", "")
+        name     = (row.get("business_name") or "").strip()
+
+        try:
+            mid = _send_email_via_gmail(to_email, subject, body)
+            row["sent_at"]    = datetime.now(timezone.utc).isoformat()
+            row["message_id"] = mid
+            _write_pending_rows(pending_csv_path, rows)
+            print(f"[scheduler] Auto-sent email to {name} <{to_email}>")
+            # Update prospects.csv sent status
+            _update_prospects_sent_status(Path(pending_csv_path), {name.lower()})
+            return True
+        except Exception as exc:
+            print(f"[scheduler] Send failed for {name} <{to_email}>: {exc}")
+            return False
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Process pending lead_engine email queue.")
     parser.add_argument("--queue", default="lead_engine/queue/pending_emails.csv")

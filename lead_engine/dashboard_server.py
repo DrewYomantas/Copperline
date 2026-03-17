@@ -34,7 +34,7 @@ except ImportError:
 
 from run_lead_engine import run as run_pipeline, DEFAULT_PENDING_CSV, DEFAULT_PROSPECTS_CSV
 from scoring.opportunity_scoring_agent import score_label as get_score_label, compute_numeric_score, score_priority_label
-from send.email_sender_agent import process_pending_emails, is_real_send
+from send.email_sender_agent import process_pending_emails, is_real_send, send_next_due_email, CSV_WRITE_LOCK
 from intelligence.email_extractor_agent import enrich_prospects_with_emails
 from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES, discover_prospects_area
 from outreach.followup_scheduler import run_followup_scheduler
@@ -182,10 +182,11 @@ def _read_pending() -> list:
 def _write_pending(rows: list) -> None:
     PENDING_CSV.parent.mkdir(parents=True, exist_ok=True)
     safe = [{col: row.get(col, "") for col in PENDING_COLUMNS} for row in rows]
-    with PENDING_CSV.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=PENDING_COLUMNS)
-        writer.writeheader()
-        writer.writerows(safe)
+    with CSV_WRITE_LOCK:
+        with PENDING_CSV.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=PENDING_COLUMNS)
+            writer.writeheader()
+            writer.writerows(safe)
 
 def _prospects_count() -> int:
     if not PROSPECTS_CSV.exists():
@@ -912,6 +913,48 @@ def mc_api_health():
         return jsonify({"ok":True,"service":{**body,"clients_loaded":body.get("clients_loaded",len(_mc_load_clients()))}})
     except Exception as exc: return jsonify({"ok":False,"error":str(exc)})
 
+# ── Automated scheduler ───────────────────────────────────────────────────────
+import threading as _threading_ds
+import time as _time
+
+_scheduler_started = False
+
+
+def scheduler_loop() -> None:
+    """
+    Background thread: sends scheduled emails as their send_after time arrives.
+
+    Loop behavior:
+      - If an email was sent: sleep 5s (catch-up for multiple due emails)
+      - If nothing was due: sleep 30s (idle poll)
+
+    One email per iteration. No batching.
+    Thread is daemon — exits automatically when the main process exits.
+    """
+    log.info("[scheduler] Auto-send runner started.")
+    while True:
+        try:
+            sent = send_next_due_email(PENDING_CSV)
+            if sent:
+                _time.sleep(5)
+            else:
+                _time.sleep(30)
+        except Exception as exc:
+            log.error("[scheduler] Unexpected error: %s", exc, exc_info=True)
+            _time.sleep(30)
+
+
+def _start_scheduler_once() -> None:
+    """Start the scheduler background thread exactly once."""
+    global _scheduler_started
+    if _scheduler_started:
+        return
+    _scheduler_started = True
+    t = _threading_ds.Thread(target=scheduler_loop, daemon=True, name="copperline-scheduler")
+    t.start()
+    log.info("[scheduler] Thread started (daemon=True).")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8","utf_8"):
@@ -923,4 +966,5 @@ if __name__ == "__main__":
     print("  |  Opening at  http://localhost:5000             |")
     print("  +------------------------------------------------+"); print()
     Timer(1.2,lambda: webbrowser.open("http://localhost:5000")).start()
+    _start_scheduler_once()
     app.run(host="127.0.0.1",port=5000,debug=False)
