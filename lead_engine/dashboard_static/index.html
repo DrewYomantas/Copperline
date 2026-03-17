@@ -538,6 +538,24 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-ctrl-select option{background:var(--surface2)}
 .mrp-ctrl-chk{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .mrp-ctrl-chk input{cursor:pointer;accent-color:var(--green)}
+/* Pass 23 — map panel command center */
+.mrp-bulk-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.mrp-bulk-lbl{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.mrp-bulk-btn{padding:3px 8px;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.mrp-bulk-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.mrp-bulk-btn.danger:hover{background:#c0392b;color:#fff;border-color:#c0392b}
+.mrp-item-acts{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.mrp-act{padding:2px 7px;font-size:10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;line-height:1.5;transition:background .12s,color .12s}
+.mrp-act:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.mrp-act.approved{background:rgba(46,204,113,.15);color:var(--green);border-color:rgba(46,204,113,.35)}
+.mrp-act.danger:hover{background:#c0392b;color:#fff;border-color:#c0392b}
+.mrp-status-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.mrp-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mrp-pill.drafted{background:rgba(var(--primary-rgb),.12);color:var(--primary)}
+.mrp-pill.approved{background:rgba(46,204,113,.15);color:var(--green)}
+.mrp-pill.scheduled{background:rgba(245,166,35,.18);color:var(--amber)}
+.mrp-pill.sent{background:rgba(100,100,120,.15);color:var(--muted)}
+.mrp-pill.score{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
 .map-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 10px}
 .map-status{font-size:12px;color:var(--muted);min-height:18px}
 .btn-coverage{background:transparent;color:var(--muted);border:1px solid var(--border-hi);font-size:11px;padding:4px 9px}
@@ -1174,6 +1192,12 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
               <option value="city">Sort: City A–Z</option>
             </select>
             <label class="mrp-ctrl-chk"><input type="checkbox" id="mrp-email-only" onchange="_mapRenderPanel()"> Email only</label>
+          </div>
+          <div class="mrp-bulk-bar" id="mrp-bulk-bar" style="display:none">
+            <span class="mrp-bulk-lbl">Visible:</span>
+            <button class="mrp-bulk-btn" onclick="_mrpBulkApprove()" title="Approve all visible results that are in queue">✓ Approve</button>
+            <button class="mrp-bulk-btn" onclick="_mrpBulkSchedule()" title="Schedule all visible approved results for tomorrow">🕐 Schedule</button>
+            <button class="mrp-bulk-btn danger" onclick="_mrpBulkDelete()" title="Delete all visible results from queue">✕ Delete</button>
           </div>
           <div class="mrp-list" id="mrp-list"></div>
         </div>
@@ -4031,16 +4055,22 @@ function _mapClearResultMarkers() {
   if (filterEl) filterEl.checked = false;
 }
 
+function _mrpFindQueueRow(bizName) {
+  if (!bizName || !allRows || !allRows.length) return null;
+  const key = bizName.trim().toLowerCase();
+  return allRows.find(r => (r.business_name || '').trim().toLowerCase() === key) || null;
+}
+
 function _mapRenderPanel() {
   const panel     = document.getElementById('map-results-panel');
   const list      = document.getElementById('mrp-list');
   const count     = document.getElementById('mrp-count');
+  const bulkBar   = document.getElementById('mrp-bulk-bar');
   const sortEl    = document.getElementById('mrp-sort');
   const filterEl  = document.getElementById('mrp-email-only');
   if (!panel || !list || !count) return;
-  if (_mapResultItems.length === 0) return;  // no results loaded yet
+  if (_mapResultItems.length === 0) return;
 
-  // Apply filter then sort — source array _mapResultItems is never mutated
   const emailOnly = filterEl ? filterEl.checked : false;
   const sortKey   = sortEl  ? sortEl.value      : '';
 
@@ -4054,34 +4084,206 @@ function _mapRenderPanel() {
     items.sort((a, b) => (a.biz.city || '').localeCompare(b.biz.city || ''));
   }
 
+  // Track visible item names for bulk actions
+  window._mrpVisibleNames = items.map(({ biz }) => biz.name);
+  if (bulkBar) bulkBar.style.display = items.length ? '' : 'none';
+
   list.innerHTML = '';
   items.forEach(({ biz, marker }) => {
     const hasEmail = biz.email && biz.email.length > 0;
+    const qrow     = _mrpFindQueueRow(biz.name);
+
     const item = document.createElement('div');
     item.className = 'mrp-item';
-    // Use textContent for name to avoid breakage on names with quotes or angle brackets
+
+    // Name
     const nameDiv = document.createElement('div');
     nameDiv.className = 'mrp-name';
     nameDiv.title = biz.name || '';
     nameDiv.textContent = biz.name || '';
+
+    // Meta row: city + email dot
     const metaDiv = document.createElement('div');
     metaDiv.className = 'mrp-meta';
     metaDiv.innerHTML =
       `<span class="mrp-dot ${hasEmail ? 'has-email' : 'no-email'}"></span>` +
       `<span>${biz.city || ''}${hasEmail ? ' — email' : ' — no email'}</span>`;
+
     item.appendChild(nameDiv);
     item.appendChild(metaDiv);
+
+    // Queue state pills
+    if (qrow) {
+      const pillsDiv = document.createElement('div');
+      pillsDiv.className = 'mrp-status-pills';
+      const isSent     = !!(qrow.sent_at || '').trim();
+      const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+      const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+      const score      = parseInt(qrow.final_priority_score) || 0;
+      if (isSent)      pillsDiv.innerHTML += `<span class="mrp-pill sent">Sent</span>`;
+      else if (isScheduled) pillsDiv.innerHTML += `<span class="mrp-pill scheduled">Scheduled</span>`;
+      else if (isApproved) pillsDiv.innerHTML += `<span class="mrp-pill approved">Approved</span>`;
+      else             pillsDiv.innerHTML += `<span class="mrp-pill drafted">Drafted</span>`;
+      if (score)       pillsDiv.innerHTML += `<span class="mrp-pill score">Score ${score}</span>`;
+      item.appendChild(pillsDiv);
+
+      // Per-item actions (only if not sent)
+      if (!isSent) {
+        const actsDiv = document.createElement('div');
+        actsDiv.className = 'mrp-item-acts';
+        actsDiv.addEventListener('click', e => e.stopPropagation()); // don't trigger map zoom
+
+        if (!isApproved) {
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'mrp-act';
+          btnApprove.textContent = '✓ Approve';
+          btnApprove.onclick = () => _mrpApprove(biz.name, qrow.index);
+          actsDiv.appendChild(btnApprove);
+        }
+        if (!isScheduled) {
+          const btnSched = document.createElement('button');
+          btnSched.className = 'mrp-act';
+          btnSched.textContent = '🕐 Schedule';
+          btnSched.onclick = () => _mrpSchedule(biz.name, qrow.index, qrow.business_name);
+          actsDiv.appendChild(btnSched);
+        }
+        const btnPreview = document.createElement('button');
+        btnPreview.className = 'mrp-act';
+        btnPreview.textContent = '👁 Preview';
+        btnPreview.onclick = () => _mrpPreview(biz.name, qrow.index);
+        actsDiv.appendChild(btnPreview);
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'mrp-act danger';
+        btnDel.textContent = '✕ Delete';
+        btnDel.onclick = () => _mrpDelete(biz.name, qrow.index);
+        actsDiv.appendChild(btnDel);
+
+        item.appendChild(actsDiv);
+      }
+    }
+
+    // Click on item body zooms map to marker
     item.addEventListener('click', () => {
       if (_mapClusterGroup) _mapClusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
       else marker.openPopup();
     });
+
     list.appendChild(item);
   });
+
   count.textContent = emailOnly
     ? `(${items.length} of ${_mapResultItems.length})`
     : `(${_mapResultItems.length})`;
   panel.classList.add('visible');
   setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+}
+  panel.classList.add('visible');
+  setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+}
+
+// Pass 23 — map panel per-item and bulk actions
+
+async function _mrpApprove(bizName, idx) {
+  try {
+    await api('/api/approve_row', { index: idx });
+    await loadAll();
+    _mapRenderPanel();
+    toast('Approved: ' + bizName, 'ok');
+  } catch(e) { toast('Approve failed', 'err'); }
+}
+
+async function _mrpSchedule(bizName, idx, businessName) {
+  const qrow = _mrpFindQueueRow(bizName);
+  if (!qrow) { toast('Not in queue', 'err'); return; }
+  try {
+    const res = await api('/api/schedule_email', {
+      index: idx,
+      business_name: businessName || bizName,
+      days_ahead: 1,
+    });
+    if (!res.ok) { toast('Schedule failed: ' + (res.error || ''), 'err'); return; }
+    await loadAll();
+    _mapRenderPanel();
+    toast('Scheduled: ' + bizName, 'ok');
+  } catch(e) { toast('Schedule failed', 'err'); }
+}
+
+function _mrpPreview(bizName, idx) {
+  // Find the row in filteredRows/allRows and open the existing panel
+  const row = _mrpFindQueueRow(bizName);
+  if (!row) { toast('Row not found in queue', 'err'); return; }
+  const fi = filteredRows.indexOf(row);
+  if (fi >= 0) {
+    // Switch to Pipeline tab first so the panel is visible
+    switchPage('outreach');
+    openPanel(fi);
+  } else {
+    // Row exists in allRows but not in current filter — open via allRows index
+    const ai = allRows.indexOf(row);
+    if (ai < 0) { toast('Row not visible in current filter', 'err'); return; }
+    switchPage('outreach');
+    // Force it visible by temporarily switching to All filter
+    const prevFilter = currentFilter;
+    currentFilter = 'all';
+    applyFiltersAndSort();
+    const fi2 = filteredRows.indexOf(row);
+    if (fi2 >= 0) openPanel(fi2);
+    else { currentFilter = prevFilter; applyFiltersAndSort(); toast('Could not open panel', 'err'); }
+  }
+}
+
+async function _mrpDelete(bizName, idx) {
+  if (!confirm('Delete "' + bizName + '" from queue?')) return;
+  try {
+    await api('/api/delete_row', { index: idx });
+    await loadAll();
+    _mapRenderPanel();
+    toast('Deleted: ' + bizName, 'ok');
+  } catch(e) { toast('Delete failed', 'err'); }
+}
+
+async function _mrpBulkApprove() {
+  const names = window._mrpVisibleNames || [];
+  const toApprove = names.map(_mrpFindQueueRow).filter(r => r && (r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
+  if (!toApprove.length) { toast('No unapproved rows in visible set', 'err'); return; }
+  if (!confirm('Approve ' + toApprove.length + ' visible lead(s)?')) return;
+  for (const row of toApprove) {
+    try { await api('/api/approve_row', { index: row.index }); } catch(e) {}
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast('Approved ' + toApprove.length + ' lead(s)', 'ok');
+}
+
+async function _mrpBulkSchedule() {
+  const names = window._mrpVisibleNames || [];
+  const toSched = names.map(_mrpFindQueueRow).filter(r => r && (r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
+  if (!toSched.length) { toast('No approved+unscheduled rows in visible set', 'err'); return; }
+  if (!confirm('Schedule ' + toSched.length + ' approved lead(s) for tomorrow?')) return;
+  for (const row of toSched) {
+    try {
+      await api('/api/schedule_email', { index: row.index, business_name: row.business_name, days_ahead: 1 });
+    } catch(e) {}
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast('Scheduled ' + toSched.length + ' lead(s)', 'ok');
+}
+
+async function _mrpBulkDelete() {
+  const names = window._mrpVisibleNames || [];
+  const toDel = names.map(_mrpFindQueueRow).filter(r => r && !(r.sent_at || '').trim());
+  if (!toDel.length) { toast('No deletable rows in visible set', 'err'); return; }
+  if (!confirm('Delete ' + toDel.length + ' visible lead(s) from queue? This cannot be undone.')) return;
+  // Delete in reverse index order to avoid index drift
+  const sorted = toDel.slice().sort((a, b) => b.index - a.index);
+  for (const row of sorted) {
+    try { await api('/api/delete_row', { index: row.index }); } catch(e) {}
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast('Deleted ' + toDel.length + ' lead(s)', 'ok');
 }
 
 function _mapPlaceResultMarkers(markers) {
