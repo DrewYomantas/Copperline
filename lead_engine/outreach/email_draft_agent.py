@@ -93,7 +93,7 @@ _SUBJECTS = [
 
 # Increment this string whenever the template copy changes.
 # Stored in pending_emails.csv so stale rows can be identified.
-DRAFT_VERSION = "v6"
+DRAFT_VERSION = "v7"
 
 _TEMPLATES: Dict[str, List[Tuple[str, str]]] = {
     # Kept for routing compatibility — all keys now produce the same structure.
@@ -134,7 +134,38 @@ _FORMAL_OPENER_SUBS = [
     ("platform", "system"),
 ]
 
-_WORD_TARGET_MAX = 65  # soft word ceiling for body_text (sign-off excluded)
+_WORD_TARGET_MAX = 50  # target word ceiling for final body (sign-off excluded)
+
+# ── Industry-aware context phrase ─────────────────────────────────────────────
+
+def _industry_phrase(industry: str) -> str:
+    """Return a short situational phrase relevant to the industry."""
+    return {
+        "hvac":        "when you're out on jobs",
+        "plumbing":    "when you're out in the field",
+        "garage_door": "when you're on installs",
+        "auto":        "when the shop gets busy",
+        "electrical":  "when you're out on jobs",
+        "locksmith":   "when you're out on calls",
+        "towing":      "when you're out on a run",
+        "roofing":     "when you're on a job site",
+    }.get(industry, "when you're busy during the day")
+
+
+# ── Opener and second-sentence variation pools ────────────────────────────────
+
+OPENERS = [
+    "quick question",
+    "random but",
+    "not sure if this happens to you but",
+    "was thinking about this earlier",
+]
+
+_SECOND_SENTENCES = [
+    "feels like those usually just go to the next company",
+    "guessing most people don't try again",
+    "seems like those turn into lost jobs pretty quick",
+]
 
 
 def enforce_human_style(body_text: str) -> str:
@@ -173,13 +204,28 @@ def enforce_human_style(body_text: str) -> str:
         lines[0] = lines[0][0].lower() + lines[0][1:]
         body_text = "\n".join(lines)
 
-    # 3. Trim to word target by dropping last paragraph if over limit.
-    #    Last paragraph is always the softest CTA — safe to drop first.
-    if len(body_text.split()) > _WORD_TARGET_MAX:
-        paragraphs = body_text.split("\n\n")
-        while len(paragraphs) > 2 and len("\n\n".join(paragraphs).split()) > _WORD_TARGET_MAX:
-            paragraphs.pop()
-        body_text = "\n\n".join(paragraphs)
+    # 3. Collapse all paragraph breaks into single spaces (Step 1A).
+    #    Produces one continuous block — the final required format.
+    body_text = body_text.replace("\n\n", " ").replace("\n", " ")
+
+    # 4. Sentence clamp — keep max 2 sentences (Step 1B).
+    #    Split on sentence-ending punctuation, preserve the delimiter.
+    import re as _re
+    parts = _re.split(r'(?<=[.?!])\s+', body_text.strip())
+    if len(parts) > 2:
+        body_text = " ".join(parts[:2])
+        # Ensure final punctuation
+        if body_text and body_text[-1] not in ".?!":
+            body_text += "."
+
+    # 5. Word trim — enforce hard ~50-word ceiling (Step 1C).
+    words = body_text.split()
+    if len(words) > _WORD_TARGET_MAX:
+        # Walk back to the last sentence boundary within the limit
+        trimmed = " ".join(words[:_WORD_TARGET_MAX])
+        # Find last punctuation and cut there cleanly
+        last_punct = max(trimmed.rfind("."), trimmed.rfind("?"), trimmed.rfind("!"))
+        body_text = trimmed[:last_punct + 1] if last_punct > 0 else trimmed
 
     return body_text
 
@@ -251,26 +297,27 @@ def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[st
         if opportunity not in _TEMPLATES:
             opportunity = "unknown"
 
-    variants = _TEMPLATES[opportunity]
-    # Pick subject — None sentinel produces the personalised variant
-    _chosen = random.choice(_SUBJECTS)
-    subject = f"quick question for {business_name}" if _chosen is None else _chosen
-    opening = random.choice(_OPENING_QUESTIONS)
-    body_text = f"Hi {business_name},\n\n{opening}\n\n{_BODY_FIXED}"
+    # Step 6 — Subject selection from updated pool
+    subject = random.choice([
+        "quick question",
+        "random thought",
+        business_name,
+        "hey",
+    ])
 
-    # Guard: word count (sign-off excluded from limit)
+    # Steps 4+5 — Build 2-sentence body using industry-aware opener
+    opener       = random.choice(OPENERS)
+    ind_phrase   = _industry_phrase(industry)
+    second       = random.choice(_SECOND_SENTENCES)
+    sentence_one = f"hey {business_name} — {opener}, {ind_phrase} do calls just get missed sometimes"
+    sentence_two = second
+    body_text    = f"{sentence_one}. {sentence_two}."
+
+    # Legacy word-count guard (kept for safety; enforce_human_style trims harder below)
     wc = _word_count(body_text)
     if wc > _WORD_LIMIT:
-        sentences = body_text.replace("?", ".").split(".")
-        trimmed = []
-        running = 0
-        for s in sentences:
-            words = len(s.split())
-            if running + words > _WORD_LIMIT:
-                break
-            trimmed.append(s)
-            running += words
-        body_text = ". ".join(trimmed).strip() + "."
+        words = body_text.split()
+        body_text = " ".join(words[:_WORD_LIMIT]).rstrip(",;") + "."
 
     # Enforce human style BEFORE appending sign-off
     body_text = enforce_human_style(body_text)
