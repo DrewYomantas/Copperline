@@ -446,7 +446,7 @@ def api_discover():
             log.warning("Discover returned 0 rows: industry=%s city=%s state=%s",industry,city,state)
             _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,"found":0,"status":"all_duplicates"})
             _city_planner.record_discovery(city,state,0,industry=industry)
-            return jsonify({"ok":False,"error":"All businesses already in prospects list. Try a different city or industry."}),400
+            return jsonify({"ok":False,"all_duplicates":True,"error":"No new leads found — all results already in pipeline."}),200
         log.info("Discovered %d prospects: industry=%s city=%s state=%s",len(rows),industry,city,state)
         _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,"found":len(rows),"status":"ok"})
         _city_planner.record_discovery(city,state,len(rows),industry=industry)
@@ -504,11 +504,12 @@ def api_discover_area():
                         industry, lat, lng, radius_m)
             return jsonify({
                 "ok": False,
+                "all_duplicates": True,
                 "places_found": 0, "prospects_added": 0, "prospects_skipped": limit,
                 "drafts_created": 0, "queue_total": queue_before,
                 "markers": [],
-                "error": "No new businesses found in this area — all duplicates or no results.",
-            }), 400
+                "error": "No new leads found — all results already in pipeline.",
+            }), 200
 
         log.info("discover_area: added=%d industry=%s lat=%.4f lng=%.4f r=%.0f",
                  prospects_added, industry, lat, lng, radius_m)

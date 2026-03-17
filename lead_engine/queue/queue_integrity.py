@@ -106,7 +106,7 @@ def scan_queue_integrity(csv_path: Path = PENDING_CSV) -> Dict:
             })
 
         # Approved but no email
-        if row.get("approved", "").strip().lower() == "true" and not email:
+        if (row.get("approved") or "").strip().lower() == "true" and not email:
             approved_no_email += 1
 
         # Missing required fields

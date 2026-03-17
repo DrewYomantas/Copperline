@@ -48,6 +48,27 @@ _PUNCT_RE = re.compile(r"[^\w\s]")
 # Normalization helpers
 # ---------------------------------------------------------------------------
 
+def normalize_business_name(name: str | None) -> str:
+    """
+    Normalize a business name for use as a dedupe key component.
+
+    Steps:
+      1. Lowercase and strip
+      2. Remove punctuation
+      3. Strip noise words (LLC, Inc, industry terms, etc.)
+      4. Collapse whitespace
+
+    Returns empty string if nothing meaningful remains.
+    """
+    raw = (name or "").strip().lower()
+    if not raw:
+        return ""
+    # Remove punctuation
+    raw = _PUNCT_RE.sub(" ", raw)
+    # Strip noise words
+    tokens = [t for t in raw.split() if t not in _NAME_NOISE_WORDS]
+    return " ".join(tokens).strip()
+
 def normalize_value(value: str | None) -> str:
     text = (value or "").strip()
     return "" if text.lower() in BLANK_LIKE_VALUES else text

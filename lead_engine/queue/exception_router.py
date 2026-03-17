@@ -121,7 +121,7 @@ def detect_row_exceptions(
         flags.append(DRAFT_ERROR)
 
     # ── Approved but no valid email ───────────────────────────────────────
-    is_approved = row.get("approved", "").strip().lower() == "true"
+    is_approved = (row.get("approved") or "").strip().lower() == "true"
     if is_approved and not _is_valid_email(email):
         if APPROVED_NO_EMAIL not in flags:
             flags.append(APPROVED_NO_EMAIL)
