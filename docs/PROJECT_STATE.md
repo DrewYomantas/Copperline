@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Triage + Lead Qualification Controls
+Bulk Discovery-to-Outreach Workflow Acceleration
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,19 +21,19 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 32 - Discovery Triage + Lead Qualification Controls
+Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration
 
-- Added a frontend-only qualification layer to the discovery results rail so leads are classified at a glance as `Ready now`, `Maybe later`, `Needs contact info`, `Weak / skip`, or `Sent / closed`.
-- Added compact triage chips with live counts so operators can instantly narrow large result sets to ready leads, weak leads, no-email leads, or contact-info gaps without manually scanning a flat list.
-- Added a `Group: Qualification` mode and per-result qualification badges/reason chips so large discovery sweeps are easier to sort into work-now vs later buckets.
-- Preserved Pass 30 edit stability by keeping the visible review context tied to the current narrowed result set and verifying overlay clicks still do not dismiss the review panel.
-- Verified the dashboard still loads, triage chips/grouping render correctly, item clicks still drive marker popups, review opening remains stable, and Pass 29 discovery controls still load.
+- Added a discovery-panel handoff layer that works on the current visible qualified subset instead of forcing row-by-row `Edit` clicks after triage.
+- Added visible-set review/prep controls in the discovery bulk bar so operators can open the current filtered subset in the outreach review panel or bulk-prepare outreach-ready visible rows first.
+- Added compact visible-subset summary counts showing how many current results are reviewable, outreach-ready, and still need approval.
+- Tightened the discovery bulk helpers to use the actual visible queue-row context rather than weaker name-only lookups, keeping actions aligned with Pass 30/32 filtered subsets.
+- Verified the dashboard still loads, triage views still narrow correctly, the new handoff actions open the expected visible subset in review, and prep-first review works without disturbing Pass 29-32 behaviors.
 - Reconfirmed no protected systems were touched; the pass stayed in `lead_engine/dashboard_static/index.html`.
 
-Commit: `8868847`
+Commit: `c1a56a4`
 
 ## Previous Completed Pass
-Pass 31 - Contact Quality Upgrade
+Pass 32 - Discovery Triage + Lead Qualification Controls
 
 ## Next Pass
 TBD

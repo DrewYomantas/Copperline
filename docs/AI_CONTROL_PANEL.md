@@ -9,15 +9,15 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Triage + Lead Qualification Controls
+Bulk Discovery-to-Outreach Workflow Acceleration
 
 ## Current Build Pass
-Pass 32 - Discovery Triage + Lead Qualification Controls (complete)
+Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration (complete)
 
 ## Last Completed Pass
-Pass 32 - Discovery Triage + Lead Qualification Controls
+Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration
 
-Commit: `8868847`
+Commit: `c1a56a4`
 
 ## Next Pass
 TBD
@@ -43,7 +43,7 @@ Passes use bounded cohesive blocks, not artificially tiny micro-changes.
 Examples:
 - Correct: hidden email extraction + contact cleanup + message guardrails because all three improve one outreach-readiness workflow
 - Incorrect: discovery + scheduler UX + message quality in one pass
-- Previous completed example: Pass 32 added qualification buckets, triage chips, and readiness grouping because all three improved one discovery-to-outreach workflow
+- Previous completed example: Pass 33 added visible-subset prep/review actions and smarter bulk handling because all three improved one discovery-to-outreach handoff workflow
 
 ---
 

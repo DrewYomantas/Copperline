@@ -751,3 +751,24 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 **Commit:** `8868847`
 
 ---
+### 2026-03-17 - Pass 33: Bulk Discovery-to-Outreach Workflow Acceleration
+
+**Goal:** Reduce repetitive operator work once strong discovery leads have been identified by making the visible qualified subset faster to move into outreach review/actions.
+
+**Changes:**
+- Added a discovery-panel handoff layer built around the current visible subset after triage/filtering instead of forcing row-by-row `Edit` clicks.
+- Added `Review Visible` to open the current visible discovery subset directly in the outreach review panel.
+- Added `Prep Outreach` to bulk-approve outreach-ready visible rows and then open that prepared subset in review.
+- Added compact visible-set summary counts for reviewable rows, outreach-ready rows, and rows that still need approval.
+- Tightened discovery bulk actions to use the actual visible queue-row context rather than weaker business-name matching, keeping bulk behavior aligned with the current qualified view.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**Commit:** `c1a56a4`
+
+---

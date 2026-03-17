@@ -1,10 +1,48 @@
 # Current Build Pass
 
 ## Active System
-Discovery Triage + Lead Qualification Controls
+Bulk Discovery-to-Outreach Workflow Acceleration
 
 ## Status
-Pass 32 complete.
+Pass 33 complete.
+
+---
+
+## Completed: Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration - `c1a56a4`
+
+Product change stayed in `lead_engine/dashboard_static/index.html`.
+No backend changes. No protected systems touched.
+
+### Faster discovery-to-outreach handoff
+
+- Added a direct bridge from the discovery results rail into the outreach review workflow, built around the current visible subset after triage/filtering.
+- Added `Review Visible` so operators can take the exact current visible discovery subset into the review panel as a navigable outreach set.
+- Added `Prep Outreach` so outreach-ready visible leads are bulk-approved first, then opened immediately in review.
+
+### Smarter visible-set bulk behavior
+
+- Tightened discovery bulk actions to use the actual visible queue-row context instead of weaker business-name matching.
+- This keeps visible-set `Approve`, `Schedule`, and `Delete` aligned with the filtered/qualified subset the operator is looking at.
+- Added compact visible-set summary counts showing reviewable rows, outreach-ready rows, and how many still need approval.
+
+### Workflow continuity
+
+- The discovery panel now supports a cleaner progression: narrow to strong leads, prep them in bulk, then review that same subset without rebuilding context manually.
+- The review panel still opens against a snapshot of the intended row set, preserving Pass 30 edit stability.
+- Pass 29 grid/visible/exhaust discovery controls and Pass 32 triage controls remain intact.
+
+### Verification
+
+- Extracted inline dashboard JavaScript and ran `node --check` successfully.
+- Ran a focused live headless-browser smoke pass against `http://127.0.0.1:5000` using a synthetic discovery dataset with stubbed API writes to verify:
+  - dashboard load
+  - triage controls still rendering
+  - visible-set summary counts
+  - `Review Visible` opening the correct subset in outreach review
+  - `Prep Outreach` approving outreach-ready visible rows and opening that subset in review
+  - overlay-close guard stability
+  - basic Pass 29 discovery control availability
+- Reconfirmed the pass stayed frontend-only and did not touch protected systems.
 
 ---
 
