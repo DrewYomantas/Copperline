@@ -34,7 +34,7 @@ except ImportError:
 
 from run_lead_engine import run as run_pipeline, DEFAULT_PENDING_CSV, DEFAULT_PROSPECTS_CSV
 from scoring.opportunity_scoring_agent import score_label as get_score_label, compute_numeric_score, score_priority_label
-from send.email_sender_agent import process_pending_emails, is_real_send, send_next_due_email, CSV_WRITE_LOCK
+from send.email_sender_agent import process_pending_emails, is_real_send, send_next_due_email, CSV_WRITE_LOCK, _is_send_eligible
 from intelligence.email_extractor_agent import enrich_prospects_with_emails
 from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES, discover_prospects_area
 from outreach.followup_scheduler import run_followup_scheduler
@@ -810,6 +810,58 @@ def api_schedule_email():
     action = "cleared" if not send_after else "scheduled"
     log.info("schedule_email %s idx=%s business=%r send_after=%r", action, idx, business_name, send_after)
     return jsonify({"ok": True, "send_after": send_after})
+
+@app.route("/api/debug/scheduled_send_probe", methods=["POST"])
+def api_debug_scheduled_send_probe():
+    """
+    Read-only helper for controlled scheduled-send verification.
+    Returns scheduler-relevant state for one queue row without mutating data.
+    """
+    if os.getenv("COPPERLINE_ENABLE_DEBUG_ROUTES", "").strip().lower() not in {"1", "true", "yes"}:
+        return jsonify({"ok": False, "error": "Not found"}), 404
+
+    d = request.json or {}
+    idx = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+
+    if idx is None or not isinstance(idx, int):
+        return jsonify({"ok": False, "error": "index is required and must be an integer"}), 400
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name is required"}), 400
+
+    rows = _read_pending()
+    if not (0 <= idx < len(rows)):
+        return jsonify({"ok": False, "error": "Invalid index"}), 400
+
+    row = rows[idx]
+    row_name = row.get("business_name", "").strip().lower()
+    if row_name != business_name.lower():
+        return jsonify({"ok": False, "error": "Row index/name mismatch — queue may have changed"}), 409
+
+    send_after_raw = (row.get("send_after") or "").strip()
+    now_local = _datetime.now()
+    send_after_due = False
+    send_after_parse_error = False
+    if send_after_raw:
+        try:
+            send_after_due = now_local >= _datetime.fromisoformat(send_after_raw)
+        except ValueError:
+            send_after_parse_error = True
+
+    payload = {
+        "ok": True,
+        "index": idx,
+        "business_name": row.get("business_name", ""),
+        "to_email": row.get("to_email", ""),
+        "approved": (row.get("approved") or "").strip().lower() == "true",
+        "sent_at": (row.get("sent_at") or "").strip(),
+        "message_id": (row.get("message_id") or "").strip(),
+        "send_after": send_after_raw,
+        "send_after_due": send_after_due,
+        "send_after_parse_error": send_after_parse_error,
+        "is_send_eligible": _is_send_eligible(row),
+    }
+    return jsonify(payload)
 
 @app.route("/api/social_queue")
 def api_social_queue():
