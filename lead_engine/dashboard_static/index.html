@@ -1155,6 +1155,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     <button id="btnSearchVisible" class="btn btn-secondary" onclick="mapSearchVisible()" disabled title="Tile the visible map area and run sequential discovery across each cell">
       <span class="spin"></span>⊞ Search Visible Area
     </button>
+    <button id="btnExhaust" class="btn btn-ghost" onclick="mapSearchExhaust()" disabled title="Repeat discovery on this circle until results are exhausted (max 25 runs)">
+      <span class="spin"></span>♻ Run Until Exhausted
+    </button>
     <button id="btnCancelVisible" class="btn btn-ghost" onclick="_mapCancelVisible()" style="display:none" title="Cancel after current tile finishes">✕ Cancel</button>
     <button class="btn btn-ghost" onclick="mapClearCircle()" title="Remove current circle">✕ Clear</button>
     <button id="btnClearCoverage" class="btn btn-coverage" onclick="_mapClearCoverage()" title="Remove prior search overlays" style="display:none">◌ Clear Coverage</button>
@@ -4307,6 +4310,70 @@ function _mapCancelVisible() {
   if (statusEl) statusEl.textContent = 'Cancelling after current tile…';
 }
 
+// Pass 21 — Run Until Exhausted: single batch call to /api/discover_area_batch
+async function mapSearchExhaust() {
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first', 'err'); return; }
+  if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+
+  const btn      = document.getElementById('btnExhaust');
+  const statusEl = document.getElementById('map-status');
+  const limit    = parseInt(document.getElementById('map-limit').value) || 20;
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.getElementById('btnMapSearch').disabled = true;
+  document.getElementById('btnSearchVisible').disabled = true;
+  if (statusEl) statusEl.textContent = 'Batch scan running — do not close this tab...';
+
+  try {
+    const res = await api('/api/discover_area_batch', {
+      industry,
+      lat:      _mapCenter.lat,
+      lng:      _mapCenter.lng,
+      radius_m: _mapRadiusM,
+      limit,
+    });
+
+    if (res.ok) {
+      const reasonLabels = {
+        no_results:         'no new results',
+        diminishing_returns:'diminishing returns (<5 found)',
+        max_iterations:     '25 iterations reached',
+        error:              'an error occurred',
+      };
+      const reason = reasonLabels[res.stopped_reason] || res.stopped_reason;
+      toast(`Done — ${res.total_new} new leads in ${res.iterations_run} scan(s), stopped: ${reason}`, 'ok');
+
+      if (res.markers && res.markers.length) {
+        _mapAppendResultMarkers(res.markers);
+      }
+
+      _mapRenderHistory([{
+        label:    `Exhausted: ${industry} (${res.total_new} new)`,
+        lat:      _mapCenter.lat,
+        lng:      _mapCenter.lng,
+        radiusM:  _mapRadiusM,
+        found:    res.total_new,
+      }]);
+
+      // Single queue reload at end
+      loadAll();
+    } else {
+      toast('Batch scan error: ' + (res.error || 'unknown'), 'err');
+    }
+  } catch(e) {
+    toast('Connection error during batch scan', 'err');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    document.getElementById('btnMapSearch').disabled = false;
+    const svBtn = document.getElementById('btnSearchVisible');
+    if (svBtn && industry) svBtn.disabled = false;
+    if (statusEl) statusEl.textContent = 'Batch scan complete.';
+  }
+}
+
 function _mapUpdateRadiusLabel() {
   const el = document.getElementById('map-radius-label');
   if (el && _mapRadiusM) el.textContent = `Radius: ${_mapMetresToMiles(_mapRadiusM)} mi (${(_mapRadiusM/1000).toFixed(1)} km)`;
@@ -4349,6 +4416,8 @@ function _mapDrawCircle(lat, lng) {
   _mapPlaceDragHandle();
   _mapUpdateRadiusLabel();
   document.getElementById('btnMapSearch').disabled = false;
+  const _btnEx = document.getElementById('btnExhaust');
+  if (_btnEx && document.getElementById('map-industry').value) _btnEx.disabled = false;
   document.getElementById('map-status').textContent = `Center: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
@@ -4358,6 +4427,8 @@ function mapClearCircle() {
   _mapClearResultMarkers();
   _mapCenter = null;
   document.getElementById('btnMapSearch').disabled = true;
+  const _btnEx2 = document.getElementById('btnExhaust');
+  if (_btnEx2) _btnEx2.disabled = true;
   document.getElementById('map-status').textContent = 'Circle cleared.';
   document.getElementById('map-radius-label').textContent = '';
 }

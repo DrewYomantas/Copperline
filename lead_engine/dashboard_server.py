@@ -592,6 +592,130 @@ def api_discover_area():
         log.error("discover_area error: %s", exc, exc_info=True)
         return jsonify({"ok":False,"error":str(exc)}), 500
 
+@app.route("/api/discover_area_batch", methods=["POST"])
+def api_discover_area_batch():
+    """
+    Run discover_area in a loop until the area is exhausted.
+
+    Same input as /api/discover_area: { industry, lat, lng, radius_m, limit }
+
+    Stop conditions (first to trigger):
+      - 0 new prospects found in an iteration
+      - < 5 new prospects found in an iteration
+      - 25 iterations reached
+
+    Returns: { ok, total_new, iterations_run, stopped_reason, queue_total, markers }
+    """
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
+    if not api_key:
+        return jsonify({"ok": False, "error": "GOOGLE_PLACES_API_KEY not set."}), 400
+
+    data     = request.json or {}
+    industry = data.get("industry", "plumbing")
+    limit    = int(data.get("limit", 20))  # hard-capped to 20 per spec
+
+    try:
+        lat      = float(data["lat"])
+        lng      = float(data["lng"])
+        radius_m = float(data.get("radius_m", 5000))
+    except (KeyError, ValueError, TypeError) as exc:
+        return jsonify({"ok": False, "error": f"lat/lng required and must be numeric: {exc}"}), 400
+
+    if not (1000 <= radius_m <= 50000):
+        return jsonify({"ok": False, "error": "radius_m must be between 1000 and 50000"}), 400
+
+    import time as _t
+    from datetime import datetime as _dt
+
+    MAX_ITERATIONS   = 25
+    STOP_THRESHOLD   = 5   # stop if found < this
+    ITER_DELAY       = 1.5  # seconds between iterations
+
+    total_new      = 0
+    iterations_run = 0
+    stopped_reason = "max_iterations"
+    all_markers    = []
+    queue_before   = len(_read_pending())
+
+    for iteration in range(1, MAX_ITERATIONS + 1):
+        iterations_run = iteration
+        try:
+            new_rows = discover_prospects_area(
+                industry=industry, lat=lat, lng=lng,
+                radius_m=radius_m, api_key=api_key,
+                limit=limit, scrape_emails=True,
+            )
+        except Exception as exc:
+            log.error("discover_area_batch error at iteration %d: %s", iteration, exc, exc_info=True)
+            stopped_reason = "error"
+            break
+
+        found = len(new_rows)
+        log.info("discover_area_batch iter=%d found=%d industry=%s lat=%.4f lng=%.4f",
+                 iteration, found, industry, lat, lng)
+
+        ts = _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        _append_search_history({
+            "ts": ts, "city": f"{lat:.4f},{lng:.4f}", "state": "area",
+            "industry": industry, "limit": limit,
+            "found": found,
+            "status": "ok" if found else "all_duplicates",
+            "batch_iteration": iteration,
+        })
+
+        if found > 0:
+            total_new += found
+            all_markers.extend([
+                {
+                    "name":    r.get("business_name", ""),
+                    "city":    r.get("city", ""),
+                    "email":   r.get("to_email", ""),
+                    "channel": r.get("contact_method", ""),
+                    "lat":     r.get("lat", ""),
+                    "lng":     r.get("lng", ""),
+                }
+                for r in new_rows
+            ])
+
+        if found == 0:
+            stopped_reason = "no_results"
+            break
+
+        if found < STOP_THRESHOLD:
+            stopped_reason = "diminishing_returns"
+            break
+
+        if iteration < MAX_ITERATIONS:
+            _t.sleep(ITER_DELAY)
+
+    # Run pipeline once after all iterations complete
+    if total_new > 0:
+        try:
+            run_pipeline(input_csv=PROSPECTS_CSV, skip_scan=True)
+        except Exception as exc:
+            log.error("discover_area_batch pipeline error: %s", exc, exc_info=True)
+
+    queue_after    = len(_read_pending())
+    drafts_created = max(0, queue_after - queue_before)
+
+    _city_planner.record_discovery(
+        f"{lat:.4f},{lng:.4f}", "area", total_new, industry=industry
+    )
+
+    log.info("discover_area_batch done: total_new=%d iterations=%d reason=%s",
+             total_new, iterations_run, stopped_reason)
+
+    return jsonify({
+        "ok":            True,
+        "total_new":     total_new,
+        "iterations_run": iterations_run,
+        "stopped_reason": stopped_reason,
+        "drafts_created": drafts_created,
+        "queue_total":   queue_after,
+        "markers":       all_markers,
+    })
+
+
 @app.route("/api/presets")
 def api_presets(): return jsonify(_load_presets())
 
