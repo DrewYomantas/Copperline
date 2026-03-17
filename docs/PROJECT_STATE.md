@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Review Recovery + Action Feedback
+V2 Stage 2 — Unified Lead Workspace Backbone
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,16 +21,18 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 37 - Discovery Review Recovery + Action Feedback
+Pass 39 - V2 Stage 2A+2B — Unified Lead Record + Workspace Panel
 
-- Restored editable map preview modal: subject input + body textarea + Save Edits button so operator can edit and save directly from the Discovery map panel without returning to Pipeline.
-- Added Unschedule button to the map preview modal for scheduled rows.
-- Added pending-state feedback to all slow panel actions: panelApprove, panelUnapprove, panelScheduleTomorrow, panelUnschedule — buttons disable and show in-progress label during the API call.
-- Fixed backdrop close: clicking outside the review panel now closes it (was blocked by a toast). True backdrop mousedown+click required; drag-select inside panel never closes it.
-- Added mousedown origin guard (`_panelMousedownOnBackdrop`) so text selection or input interaction inside the panel cannot accidentally dismiss it.
-- Pending-state helpers `_btnPending` / `_btnRestore` added as shared utilities.
+- Added `_leadKey(input)` — single stable identity key from either a biz object or queue row (place_id → website → phone → name+city priority).
+- Added `_leadRecord(input)` — canonical normalizer returning one flat record covering identity, contact, qualification, workflow status, draft, observation, and history from either input type.
+- Added `_leadResolve(input)` — resolves either input to a `{ biz, qrow, key }` pair. Synthesizes the missing half when only one side is provided.
+- Added `_renderLeadWorkspaceHeader(record)` — shared HTML renderer for status badge, channel badges, score, observation hint, and next recommended action. Used in both Pipeline panel and Discovery preview modal.
+- Wired `_renderLeadWorkspaceHeader` into `fillPanel` (Pipeline panel meta section).
+- Wired `_renderLeadWorkspaceHeader` into `_mrpPreview` (Discovery map preview modal header).
+- Added `mrp-modal-lws-header` div to modal HTML.
+- Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: `4224d78`
+Commit: TBD
 
 
 ## Queue State Management Note — Pass 38
@@ -51,7 +53,7 @@ Backup: `_backups/pending_emails_pre_p38_20260317_182909.csv`
 - unscheduled+unsent: 130
 
 ## Previous Completed Pass
-Pass 36 - Observation-Led Outreach Rewrite
+Pass 37 - Discovery Review Recovery + Action Feedback
 
 ## Next Pass
 TBD

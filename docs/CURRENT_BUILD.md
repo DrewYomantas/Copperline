@@ -1,10 +1,75 @@
 ﻿# Current Build Pass
 
 ## Active System
-Discovery Review Recovery + Action Feedback
+V2 Stage 2 — Unified Lead Workspace Backbone
 
 ## Status
-Pass 37 complete.
+Pass 39 complete.
+
+---
+
+## Completed: Pass 39 - V2 Stage 2A+2B — Unified Lead Record + Workspace Panel - TBD
+
+Product change: `lead_engine/dashboard_static/index.html` only.
+No backend changes. No protected systems touched.
+
+### Stage 2A — Unified Lead Record Backbone
+
+Added three shared JS utilities that give Discovery and Pipeline a common
+record shape for any business, regardless of which side the data comes from.
+
+**`_leadKey(input)`**
+- Single identity key from either a `biz` map object or a queue `row`.
+- Priority: `place_id` → normalized `website` → normalized `phone` → `name|city`.
+- Produces the same key for the same business regardless of input type.
+- Reuses existing `_mapNormalizeWebsite` / `_mapNormalizePhone` helpers.
+
+**`_leadResolve(input)`**
+- Returns `{ biz, qrow, key }` from either input type.
+- Populates the missing half: biz → qrow via `_mrpResolveRow`; qrow → biz synthesized inline.
+- `_mrpResolveRow` and existing callers unchanged — this wraps them.
+
+**`_leadRecord(input)`**
+- Canonical normalizer. Returns one flat object covering:
+  - identity: name, city, state, website, phone, industry
+  - contact: email, facebookUrl, instagramUrl, formUrl, hasEmail/hasFacebook/hasInstagram/hasForm, bestChannel
+  - qualification: priorityScore, opportunityScore, scoringReason
+  - workflow status: isSent, isApproved, isScheduled, isReplied, isDNC, isLegacyDraft, status (label), statusTone, nextAction
+  - draft: subject, body, facebookDraft, observation
+  - history: sentAt, repliedAt, replySnippet, contactAttempts, lastContactedAt, sendAfter, messageId
+  - refs: rowIndex, _qrow, _biz
+
+### Stage 2B — Unified Workspace Panel Header
+
+**`_STATUS_TONE_STYLES`** — shared style map for status badges (replied, sent, scheduled, approved, drafted, new, blocked).
+
+**`_renderLeadWorkspaceHeader(record)`**
+- Shared HTML renderer for both panels.
+- Renders: status badge (toned), score chip, observation tag (if present), city/state/industry, contact channel badges with links, next recommended action.
+- Does not include edit controls — sits above them.
+
+**Wired into fillPanel (Pipeline panel)**
+- `panel-meta` innerHTML now prepends `_renderLeadWorkspaceHeader(_leadRecord(row))`.
+- Existing meta parts (city link, phone, website, scan_note) still rendered below.
+- No other fillPanel behavior changed.
+
+**Wired into _mrpPreview (Discovery map preview modal)**
+- Added `mrp-modal-lws-header` div to modal HTML.
+- `_mrpPreview` now populates it via `_renderLeadWorkspaceHeader(_leadRecord(qrow))`.
+- Existing title/sub/subject-input/textarea/footer unchanged.
+
+### What's still separate (by design)
+
+- Discovery list item rendering (`_mapRenderPanel`) still uses its own qualification logic — unifying that is a future pass.
+- Queue table row rendering (`renderTable`) still uses `statusCellHtml` — unifying that is a future pass.
+- `_mrpResolveRow` still does the fuzzy name+city lookup — `_leadResolve` calls through it, doesn't replace it.
+- All send/approve/schedule/unschedule paths unchanged.
+
+### Verification
+
+- `node --check` on extracted dashboard JS: clean.
+- `python -c "import dashboard_server"` import: clean.
+- All 7 new symbols confirmed at expected line numbers via targeted search.
 
 ---
 

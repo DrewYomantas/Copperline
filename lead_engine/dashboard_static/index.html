@@ -1478,6 +1478,82 @@ async function api(path, body) {
   return r.json();
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V2 Stage 2B — Unified Workspace Header
+// Single renderer for business identity + status + channels + next action.
+// Used by both mrp-modal and the Pipeline panel (fillPanel).
+// ═══════════════════════════════════════════════════════════════════════════
+
+const _STATUS_TONE_STYLES = {
+  replied:   'background:rgba(184,115,51,.18);color:var(--copper);border:1px solid rgba(184,115,51,.3)',
+  sent:      'background:rgba(62,207,114,.12);color:var(--green);border:1px solid rgba(62,207,114,.2)',
+  scheduled: 'background:rgba(245,166,35,.13);color:var(--amber);border:1px solid rgba(245,166,35,.25)',
+  approved:  'background:rgba(79,142,247,.12);color:var(--blue);border:1px solid rgba(79,142,247,.2)',
+  drafted:   'background:var(--surface3);color:var(--muted);border:1px solid var(--border)',
+  new:       'background:var(--surface3);color:var(--muted);border:1px solid var(--border)',
+  blocked:   'background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.2)',
+};
+
+/**
+ * _renderLeadWorkspaceHeader(record) — returns an HTML string.
+ * Renders: name, city/state/industry, status badge, contact channels,
+ * priority score, observation hint, next action.
+ * Compact and scannable. Does not include edit controls.
+ */
+function _renderLeadWorkspaceHeader(record) {
+  if (!record) return '';
+  const r = record;
+  const esc = typeof escHtml === 'function' ? escHtml : v => String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Status badge
+  const toneStyle = _STATUS_TONE_STYLES[r.statusTone] || _STATUS_TONE_STYLES.new;
+  const statusBadge = `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.04em;${toneStyle}">${esc(r.status)}</span>`;
+
+  // Channel badges
+  const chParts = [];
+  if (r.hasEmail)     chParts.push(`<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:var(--surface3);border:1px solid var(--border);color:var(--muted)">✉ Email</span>`);
+  if (r.hasFacebook)  chParts.push(`<a href="${esc(r.facebookUrl)}" target="_blank" style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:rgba(66,103,178,.15);border:1px solid rgba(66,103,178,.25);color:#7b9fd4;text-decoration:none">f FB</a>`);
+  if (r.hasInstagram) chParts.push(`<a href="${esc(r.instagramUrl)}" target="_blank" style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:rgba(188,42,141,.12);border:1px solid rgba(188,42,141,.2);color:#c06;text-decoration:none">◎ IG</a>`);
+  if (r.hasForm)      chParts.push(`<a href="${esc(r.formUrl)}" target="_blank" style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:var(--surface3);border:1px solid var(--border);color:var(--muted);text-decoration:none">⊟ Form</a>`);
+  if (!r.hasContact)  chParts.push(`<span style="font-size:9px;color:var(--dim)">No channel found</span>`);
+  const channels = chParts.join(' ');
+
+  // Score chip
+  const scoreHtml = r.priorityScore
+    ? `<span style="display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700;background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--mono)" title="${esc(r.scoringReason)}">★ ${r.priorityScore}</span>`
+    : '';
+
+  // Industry
+  const industryHtml = r.industry
+    ? `<span style="font-size:10px;color:var(--muted);margin-left:4px">${esc(r.industry)}</span>`
+    : '';
+
+  // Next action
+  const nextHtml = r.nextAction
+    ? `<div style="margin-top:5px;font-size:10px;color:var(--muted)">Next: <strong style="color:var(--text)">${esc(r.nextAction)}</strong></div>`
+    : '';
+
+  // Observation hint (compact — just a tag if present)
+  const obsHtml = r.observation
+    ? `<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:rgba(184,115,51,.1);border:1px solid rgba(184,115,51,.2);color:var(--copper);margin-left:4px" title="${esc(r.observation)}">obs</span>`
+    : '';
+
+  return `<div class="lws-header" style="padding:0 0 8px">
+    <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+      ${statusBadge}
+      ${scoreHtml}
+      ${obsHtml}
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">
+      ${esc(r.city)}${r.state ? ', ' + esc(r.state) : ''}${industryHtml}
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+      ${channels}
+    </div>
+    ${nextHtml}
+  </div>`;
+}
 function _panelMakeKey(row) {
   if (!row) return '';
   return [
@@ -2078,12 +2154,17 @@ async function fillPanel(row, fi, totalRows) {
   document.getElementById('btn-next').disabled = fi === total - 1;
   _panelRenderSessionChrome(rows, fi);
 
-  const parts = [];
-  if (row.city) parts.push(`<span>📍 ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
-  if (row.phone) parts.push(`<span>📞 ${escHtml(row.phone)}</span>`);
-  if (row.website) parts.push(`<span>🌐 <a href="${escHtml(row.website)}" target="_blank">${escHtml(row.website)}</a></span>`);
-  if (row.scan_note) parts.push(`<span style="color:var(--dim);font-style:italic;font-size:11px">🔍 ${escHtml(row.scan_note)}</span>`);
-  document.getElementById('panel-meta').innerHTML = parts.join('');
+  // V2 Stage 2B: build shared workspace header from unified record
+  const _lwsRecord = _leadRecord(row);
+  const _lwsMeta = document.getElementById('panel-meta');
+  if (_lwsMeta) {
+    const parts = [];
+    if (row.city) parts.push(`<span>📍 ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
+    if (row.phone) parts.push(`<span>📞 ${escHtml(row.phone)}</span>`);
+    if (row.website) parts.push(`<span>🌐 <a href="${escHtml(row.website)}" target="_blank">${escHtml(row.website)}</a></span>`);
+    if (row.scan_note) parts.push(`<span style="color:var(--dim);font-style:italic;font-size:11px">🔍 ${escHtml(row.scan_note)}</span>`);
+    _lwsMeta.innerHTML = _renderLeadWorkspaceHeader(_lwsRecord) + parts.join('');
+  }
 
   document.getElementById('panel-email').value = row.to_email || '';
   document.getElementById('panel-email').disabled = !!row.sent_at;
@@ -5687,6 +5768,12 @@ function _mrpPreview(biz, qrow) {
 
   document.getElementById('mrp-modal-title').textContent = bizName;
   document.getElementById('mrp-modal-sub').textContent   = email;
+  // V2 Stage 2B: inject unified workspace header into modal
+  const _mrpHdrEl = document.getElementById('mrp-modal-lws-header');
+  if (_mrpHdrEl) {
+    const _mrpRecord = _leadRecord(qrow || { business_name: bizName, to_email: email });
+    _mrpHdrEl.innerHTML = _renderLeadWorkspaceHeader(_mrpRecord);
+  }
 
   const subInp = document.getElementById('mrp-modal-subject-input');
   const bodyTa = document.getElementById('mrp-modal-email-body');
@@ -6024,6 +6111,181 @@ function _mapBizRunKey(biz) {
   return `fallback:${_mapNormalizeName(biz?.name || '')}|${latKey}|${lngKey}`;
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V2 Stage 2A — Unified Lead Record Backbone
+// Gives Discovery and Pipeline a single canonical record shape for a business.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * _leadKey(input) — stable identity key from either a biz object or a queue row.
+ * Priority: place_id → website → phone → name+city.
+ * Produces the same key regardless of which side the input comes from.
+ */
+function _leadKey(input) {
+  if (!input) return '';
+  // place_id: only on biz objects from map results
+  const placeId = (input.place_id || '').trim();
+  if (placeId) return 'pid:' + placeId.toLowerCase();
+  // website: normalize to bare host+path, present on both biz and queue row
+  const rawSite = input.website || '';
+  const normSite = _mapNormalizeWebsite ? _mapNormalizeWebsite(rawSite) : rawSite.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  if (normSite) return 'web:' + normSite;
+  // phone: normalize to digits
+  const rawPhone = input.phone || '';
+  const normPhone = _mapNormalizePhone ? _mapNormalizePhone(rawPhone) : rawPhone.replace(/\D/g, '');
+  if (normPhone && normPhone.length >= 7) return 'phone:' + normPhone;
+  // name+city fallback
+  const name = (input.name || input.business_name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const city = (input.city || '').trim().toLowerCase();
+  return 'nc:' + name + '|' + city;
+}
+
+/**
+ * _leadResolve(input) — returns { biz, qrow, key } from either a biz object or queue row.
+ * Populates whichever half is missing. Never mutates either object.
+ */
+function _leadResolve(input) {
+  if (!input) return { biz: null, qrow: null, key: '' };
+  const isBiz = !!(input.name || (!input.business_name && input.lat !== undefined));
+  const isRow = !!(input.business_name !== undefined && !isBiz) || !!(input.subject !== undefined);
+
+  let biz  = isBiz  ? input : null;
+  let qrow = !isBiz ? input : null;
+
+  // Resolve biz → qrow via allRows lookup
+  if (biz && !qrow && typeof _mrpResolveRow === 'function') {
+    qrow = _mrpResolveRow(biz);
+  }
+  // Resolve qrow → biz: synthesize a minimal biz shape from the queue row
+  if (!biz && qrow) {
+    biz = {
+      name:           qrow.business_name || '',
+      city:           qrow.city          || '',
+      website:        qrow.website        || '',
+      phone:          qrow.phone          || '',
+      email:          qrow.to_email       || '',
+      facebook_url:   qrow.facebook_url   || '',
+      instagram_url:  qrow.instagram_url  || '',
+      contact_form_url: qrow.contact_form_url || '',
+      industry:       qrow.industry       || '',
+      lat: null, lng: null, place_id: '',
+    };
+  }
+
+  const key = _leadKey(biz || qrow);
+  return { biz, qrow, key };
+}
+
+/**
+ * _leadRecord(input) — canonical normalized record from either input type.
+ * Returns one flat object covering all six concerns:
+ *   identity, contact, qualification, workflow status, draft, history.
+ * Safe to call with null — returns an empty record.
+ */
+function _leadRecord(input) {
+  const { biz, qrow } = _leadResolve(input);
+  const row = qrow || {};
+  const b   = biz  || {};
+
+  // Identity
+  const name     = row.business_name || b.name         || '';
+  const city     = row.city          || b.city          || '';
+  const state    = row.state         || b.state         || '';
+  const website  = row.website       || b.website       || '';
+  const phone    = row.phone         || b.phone         || '';
+  const industry = row.industry      || b.industry      || '';
+
+  // Contact channels
+  const email        = row.to_email         || b.email          || '';
+  const facebookUrl  = row.facebook_url     || b.facebook_url   || '';
+  const instagramUrl = row.instagram_url    || b.instagram_url  || '';
+  const formUrl      = row.contact_form_url || b.contact_form_url || '';
+  const hasEmail     = email.includes('@');
+  const hasFacebook  = !!facebookUrl.trim();
+  const hasInstagram = !!instagramUrl.trim();
+  const hasForm      = !!formUrl.trim();
+  const hasContact   = hasEmail || hasFacebook || hasInstagram || hasForm;
+  const bestChannel  = hasEmail ? 'email' : hasFacebook ? 'facebook' : hasInstagram ? 'instagram' : hasForm ? 'form' : 'none';
+
+  // Qualification
+  const priorityScore  = parseInt(row.final_priority_score  || b.priority_score  || b.score || 0) || 0;
+  const opportunityScore = parseInt(row.opportunity_score   || b.opp_score       || 0) || 0;
+  const scoringReason  = row.scoring_reason || '';
+
+  // Workflow status
+  const isSent       = !!(row.sent_at      || '').trim();
+  const isApproved   = !!(String(row.approved || '').toLowerCase() === 'true') && !isSent;
+  const isScheduled  = !!(row.send_after   || '').trim() && !isSent;
+  const isReplied    = !!(String(row.replied  || '').toLowerCase() === 'true');
+  const isDNC        = !!(String(row.do_not_contact || '').toLowerCase() === 'true');
+  const draftVersion = row.draft_version   || '';
+  const isLegacyDraft = !!draftVersion && draftVersion !== 'v9';
+
+  // Compute primary status label
+  let status, statusTone;
+  if (isDNC)        { status = 'Do Not Contact'; statusTone = 'blocked'; }
+  else if (isSent && isReplied) { status = 'Replied';     statusTone = 'replied'; }
+  else if (isSent)  { status = 'Sent';           statusTone = 'sent'; }
+  else if (isScheduled) { status = 'Scheduled';  statusTone = 'scheduled'; }
+  else if (isApproved)  { status = 'Approved';   statusTone = 'approved'; }
+  else if (row.subject) { status = 'Drafted';    statusTone = 'drafted'; }
+  else              { status = 'Discovered';     statusTone = 'new'; }
+
+  // Next recommended action
+  let nextAction = '';
+  if (isDNC) nextAction = '';
+  else if (isSent && isReplied) nextAction = 'Manage reply';
+  else if (isSent) nextAction = 'Wait for reply';
+  else if (isScheduled) nextAction = 'Sending ' + (row.send_after ? _formatSendAfter(row.send_after) : 'soon');
+  else if (isApproved && hasEmail) nextAction = 'Send email';
+  else if (isApproved) nextAction = 'Send via ' + bestChannel;
+  else if (row.subject && isLegacyDraft) nextAction = 'Add observation + regenerate draft';
+  else if (row.subject && !row.business_specific_observation) nextAction = 'Add observation + regenerate draft';
+  else if (row.subject) nextAction = 'Review + approve';
+  else if (!hasContact) nextAction = 'Find contact info';
+  else nextAction = 'Generate draft';
+
+  // Draft
+  const subject         = row.subject              || '';
+  const body            = row.body                 || '';
+  const facebookDraft   = row.facebook_dm_draft    || row.social_dm_text || '';
+  const observation     = row.business_specific_observation || '';
+
+  // History markers
+  const sentAt            = row.sent_at              || '';
+  const repliedAt         = row.replied_at           || '';
+  const replySnippet      = row.reply_snippet        || '';
+  const contactAttempts   = parseInt(row.contact_attempt_count || 0) || 0;
+  const lastContactedAt   = row.last_contacted_at    || '';
+  const sendAfter         = row.send_after            || '';
+  const messageId         = row.message_id            || '';
+  const conversationNotes = row.conversation_notes    || '';
+  const nextStep          = row.conversation_next_step || '';
+  const rowIndex          = row.index !== undefined ? row.index : (Array.isArray(allRows) ? allRows.indexOf(row) : -1);
+
+  return {
+    // Identity
+    name, city, state, website, phone, industry,
+    // Contact
+    email, facebookUrl, instagramUrl, formUrl,
+    hasEmail, hasFacebook, hasInstagram, hasForm, hasContact, bestChannel,
+    // Qualification
+    priorityScore, opportunityScore, scoringReason,
+    // Workflow status
+    isSent, isApproved, isScheduled, isReplied, isDNC, isLegacyDraft,
+    status, statusTone, draftVersion, nextAction,
+    // Draft
+    subject, body, facebookDraft, observation,
+    // History
+    sentAt, repliedAt, replySnippet, contactAttempts, lastContactedAt,
+    sendAfter, messageId, conversationNotes, nextStep,
+    // Internal refs
+    rowIndex,
+    _qrow: qrow,
+    _biz:  biz,
+  };
+}
 function _mapCurrentResultKeySet() {
   return new Set(_mapResultItems.map(item => _mapBizRunKey(item.biz)));
 }
@@ -6640,6 +6902,7 @@ async function mapSearch() {
       <div>
         <div class="mrp-modal-title" id="mrp-modal-title"></div>
         <div class="mrp-modal-sub" id="mrp-modal-sub"></div>
+        <div id="mrp-modal-lws-header" style="margin-top:6px"></div>
       </div>
       <button class="mrp-modal-close" onclick="_mrpModalClose()">✕</button>
     </div>

@@ -1,4 +1,34 @@
-﻿### 2026-03-17 - Pass 38: Pre-Pass-36 Queue State Cleanup (Bulk Unschedule)
+﻿### 2026-03-17 - Pass 39: V2 Stage 2A+2B — Unified Lead Record + Workspace Panel
+
+**Goal:** Introduce a canonical lead record shape and shared workspace panel header so Discovery and Pipeline read/write through the same data model for a business.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**Stage 2A — new functions:**
+- `_leadKey(input)` — stable identity key from biz or queue row
+- `_leadResolve(input)` — resolves to `{ biz, qrow, key }` from either input
+- `_leadRecord(input)` — canonical normalizer covering identity, contact, qualification, status, draft, observation, history
+
+**Stage 2B — new functions + wiring:**
+- `_STATUS_TONE_STYLES` — shared status badge style map
+- `_renderLeadWorkspaceHeader(record)` — shared HTML for status + channels + score + obs tag + next action
+- Wired into `fillPanel` (Pipeline panel meta section)
+- Wired into `_mrpPreview` (Discovery map modal header)
+- `mrp-modal-lws-header` div added to modal HTML
+
+**No backend changes. No queue schema changes. No protected systems touched.**
+All existing send/approve/schedule/unschedule behavior preserved.
+
+**Commit:** TBD
+
+---
+
+### 2026-03-17 - Pass 38: Pre-Pass-36 Queue State Cleanup (Bulk Unschedule)
 
 **Type:** Operational state management. No product code changed.
 
