@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import random
-from typing import Dict, List, Optional, Tuple
+import re
+from typing import Dict, List, Tuple
 
-DRAFT_VERSION = "v2_signal_templates"
+DRAFT_VERSION = "v8"
 
 # ---------------------------------------------------------------------------
-# Industry detection (unchanged — used by pipeline)
+# Industry detection (kept compatible with the existing pipeline)
 # ---------------------------------------------------------------------------
 
 INDUSTRY_SIGNALS: List[Tuple[str, List[str]]] = [
@@ -21,7 +22,6 @@ INDUSTRY_SIGNALS: List[Tuple[str, List[str]]] = [
     ("pest_control", ["pest", "exterminator", "termite", "rodent", "bug"]),
     ("auto",         ["auto", "mechanic", "car repair", "tire", "collision", "body shop"]),
     ("construction", ["construction", "contractor", "remodel", "renovation", "carpent", "mason"]),
-    # Below are kept for detection only — low fit for this product
     ("dental",       ["dental", "dentist", "orthodont", "oral"]),
     ("medical",      ["medical", "clinic", "doctor", "physician", "urgent care", "chiro"]),
     ("legal",        ["law", "attorney", "lawyer", "legal", "firm"]),
@@ -47,77 +47,23 @@ def detect_industry(business_name: str, provided_industry: str = "") -> str:
     return "general"
 
 
-# ---------------------------------------------------------------------------
-# Email templates — After-Hours Lead Capture (Missed Call Text-Back)
-#
-# Structure:
-#   - Subject randomly selected from _SUBJECTS (3–4 words, no marketing language)
-#   - Greeting: Hi {name},
-#   - Opening question rotates across 3 variants (random selection)
-#   - Body lines 2–3 are fixed across all variants
-#   - Sign-off: – Drew  (full signature appended by email_sender_agent)
-#
-# All three variants share identical body lines after the opening question.
-# Only the first line changes. This makes the email feel personal without
-# requiring city or industry interpolation.
-#
-# Word count target: ≤ 70 words in body text (sign-off excluded).
-# Banned words enforced below in _check_banned.
-# ---------------------------------------------------------------------------
-
-# Opening question variants — only line 1 rotates
-_OPENING_QUESTIONS = [
-    # Variant A — missed call / lead loss angle
-    "quick one — when someone calls and no one picks up, does that lead just go cold, or do you guys have a way to follow up?",
-    # Variant B — after-hours / gap angle
-    "random question — do leads ever fall through after hours or when everyone's tied up on a job?",
-    # Variant C — general operational gap angle
-    "hey — do you find you lose work from calls or follow-ups that just don't happen fast enough?",
-]
-
-# Fixed body, shared by all variants
-_BODY_FIXED = (
-    "I help service businesses capture the work that slips through — "
-    "calls that don't get answered, estimates that go cold, follow-ups that never happen.\n\n"
-    "happy to take a quick look at how things run and point out where the easy fixes are.\n\n"
-    "worth a few minutes if any of that's a real problem for you."
-)
-
-# Subject line pool — short, natural, no marketing language
-_SUBJECTS = [
-    "missed calls?",
-    "quick question",
-    "after-hours calls",
-    None,   # sentinel → generates "quick question for {business_name}" at draft time
-]
-
-# Increment this string whenever the template copy changes.
-# Stored in pending_emails.csv so stale rows can be identified.
-DRAFT_VERSION = "v7"
-
 _TEMPLATES: Dict[str, List[Tuple[str, str]]] = {
-    # Kept for routing compatibility — all keys now produce the same structure.
-    # The opening question is randomised at draft time regardless of key.
-    "missed_after_hours": [("missed calls", "{opening}\n\n{body}")],
-    "unknown":            [("missed calls", "{opening}\n\n{body}")],
+    "missed_after_hours": [("missed calls", "{opening}")],
+    "unknown":            [("missed calls", "{opening}")],
 }
 
-
-# ---------------------------------------------------------------------------
-# Core draft function
-# ---------------------------------------------------------------------------
+_HIGH_FIT_INDUSTRIES = {
+    "plumbing", "hvac", "electrical", "locksmith", "garage_door", "towing",
+}
 
 _BANNED = [
     "optimize", "revolutionize", "leverage", "synergy", "streamline",
     "game-changer", "game changer", "cutting-edge", "cutting edge",
     "robust", "scalable", "seamlessly", "seamless",
-    "ai-powered", "ai powered",
-    "system integration", "platform", "solution", "lead capture",
+    "ai-powered", "ai powered", "system integration", "platform",
+    "solution", "lead capture",
 ]
 
-# Phrase substitutions applied by enforce_human_style.
-# Each entry is (exact_match_string, replacement).
-# Empty replacement means strip the phrase.
 _FORMAL_OPENER_SUBS = [
     ("I noticed that ", ""),
     ("I wanted to reach out ", ""),
@@ -132,158 +78,58 @@ _FORMAL_OPENER_SUBS = [
     ("optimize", "improve"),
     ("solution", "fix"),
     ("platform", "system"),
+    ("random but, ", ""),
+    ("random but ", ""),
+    ("not sure if this happens to you but ", ""),
+    ("was thinking about this earlier, ", ""),
+    ("kinda ", ""),
+    ("probably ", ""),
+    ("guessing ", ""),
 ]
 
-_WORD_TARGET_MAX = 50  # target word ceiling for final body (sign-off excluded)
+_WORD_TARGET_MAX = 42
+_WORD_LIMIT = 70
+_SIGN_OFF = "\n\n- Drew"
+_SUBJECT_OPTIONS = [
+    "quick question",
+    "missed calls",
+    "after-hours follow-up",
+]
+_OPENERS = [
+    "quick question",
+    "curious",
+    "wanted to ask",
+    "checking",
+]
+_SECOND_SENTENCES = [
+    "If that happens more than it should, I can send a quick example.",
+    "If that's a real issue, happy to send a short example.",
+    "If that sounds familiar, I can send over a quick example.",
+    "If that's costing you jobs, I can send a quick example of the fix.",
+]
+_ANGLE_CLAUSE = {
+    "missed_calls":   "when you're {context}, do missed calls ever turn into lost jobs",
+    "response_delay": "when someone reaches out, does follow-up ever lag while you're {context}",
+    "lead_loss":      "do leads ever go cold before anyone can get back to them when you're {context}",
+}
 
-# ── Industry-aware context phrase ─────────────────────────────────────────────
 
 def _industry_phrase(industry: str) -> str:
-    """Return a short situational phrase relevant to the industry."""
     return {
-        "hvac":        "when you're out on jobs",
-        "plumbing":    "when you're out in the field",
-        "garage_door": "when you're on installs",
-        "auto":        "when the shop gets busy",
-        "electrical":  "when you're out on jobs",
-        "locksmith":   "when you're out on calls",
-        "towing":      "when you're out on a run",
-        "roofing":     "when you're on a job site",
-    }.get(industry, "when you're busy during the day")
-
-
-# ── Opener and second-sentence variation pools ────────────────────────────────
-
-OPENERS = [
-    "quick question",
-    "random but",
-    "not sure if this happens to you but",
-    "was thinking about this earlier",
-]
-
-_SECOND_SENTENCES = [
-    "feels like those usually just go to the next company",
-    "guessing most people don't call back",
-    "kinda seems like those get lost",
-    "probably just ends up going to someone else",
-    "seems like those turn into lost jobs pretty quick",
-]
-
-# ── Angle variation pool ──────────────────────────────────────────────────────
-
-ANGLES = [
-    "missed_calls",
-    "response_delay",
-    "lead_loss",
-]
-
-# Per-angle first-sentence clause.
-# {ind} is replaced with _industry_phrase() output.
-# Used inside all three opener formats (A/B/C from 18Y).
-_ANGLE_CLAUSE = {
-    "missed_calls":    "{ind} do calls just get missed sometimes",
-    "response_delay":  "when someone reaches out do you usually get back to them right away or does it lag",
-    "lead_loss":       "ever feel like some leads just disappear before you can even talk to them",
-}
-
-
-def enforce_human_style(body_text: str) -> str:
-    """
-    Post-processing layer applied to body_text (sign-off excluded) after
-    draft generation.
-
-    What it does:
-      1. Strips/replaces residual formal or banned phrases.
-      2. Lowercases the opener on lines starting with "Hey" (not "Hi" —
-         "Hi" is intentional and reads fine capitalised).
-      3. Trims to _WORD_TARGET_MAX words if exceeded by dropping the last
-         paragraph block. Never trims mid-sentence.
-
-    What it does NOT do:
-      - Does not sentence-split across paragraph breaks (\\n\\n). The
-        existing template uses deliberate multi-paragraph structure; naive
-        sentence-splitting corrupts it.
-      - Does not hard-cap to exactly 2 sentences when the output already
-        reads naturally across 3-4 short sentences in 3 paragraphs.
-        The paragraph structure already achieves the human-style target.
-
-    Safe to call on any string. Returns input unchanged if nothing applies.
-    """
-    if not body_text:
-        return body_text
-
-    # 1. Strip/replace formal and banned phrases
-    for pattern, replacement in _FORMAL_OPENER_SUBS:
-        if pattern in body_text:
-            body_text = body_text.replace(pattern, replacement)
-
-    # 2. Lowercase opener — only lines starting with "Hey "
-    lines = body_text.split("\n")
-    if lines and lines[0].startswith("Hey "):
-        lines[0] = lines[0][0].lower() + lines[0][1:]
-        body_text = "\n".join(lines)
-
-    # 3. Collapse all paragraph breaks into single spaces (Step 1A).
-    #    Produces one continuous block — the final required format.
-    body_text = body_text.replace("\n\n", " ").replace("\n", " ")
-
-    # 4. Sentence clamp — keep max 2 sentences (Step 1B).
-    #    Split on sentence-ending punctuation, preserve the delimiter.
-    import re as _re
-    parts = _re.split(r'(?<=[.?!])\s+', body_text.strip())
-    if len(parts) > 2:
-        body_text = " ".join(parts[:2])
-        # Ensure final punctuation
-        if body_text and body_text[-1] not in ".?!":
-            body_text += "."
-
-    # 5. Word trim — enforce hard ~50-word ceiling (Step 1C).
-    words = body_text.split()
-    if len(words) > _WORD_TARGET_MAX:
-        # Walk back to the last sentence boundary within the limit
-        trimmed = " ".join(words[:_WORD_TARGET_MAX])
-        # Find last punctuation and cut there cleanly
-        last_punct = max(trimmed.rfind("."), trimmed.rfind("?"), trimmed.rfind("!"))
-        body_text = trimmed[:last_punct + 1] if last_punct > 0 else trimmed
-
-    # 6. Optional run-on merge — 50% chance (Step 1 from 18Y).
-    #    Replaces ". " between the two sentences with " " to create
-    #    a slight run-on that reads less templated.
-    #    Only applied when exactly one mid-sentence ". " exists.
-    if random.random() < 0.5:
-        # Find the first ". " that is NOT at the end of the string
-        idx = body_text.find(". ")
-        if idx != -1 and idx < len(body_text) - 2:
-            body_text = body_text[:idx] + " " + body_text[idx + 2:]
-
-    return body_text
-
-# High-fit industries always get the missed_after_hours template
-_HIGH_FIT_INDUSTRIES = {
-    "plumbing", "hvac", "electrical", "locksmith",
-    "garage_door", "towing",
-}
-
-_WORD_LIMIT = 70
+        "hvac": "out on jobs",
+        "plumbing": "out in the field",
+        "garage_door": "on installs",
+        "auto": "in the shop",
+        "electrical": "out on jobs",
+        "locksmith": "out on calls",
+        "towing": "out on a run",
+        "roofing": "on a job site",
+    }.get(industry, "busy during the day")
 
 
 def _variant(business_name: str, n: int = 3) -> int:
-    """Deterministic variant index — kept for internal use and testing."""
     digest = hashlib.sha256(business_name.strip().lower().encode()).hexdigest()
     return int(digest[:8], 16) % n
-
-
-_SIGN_OFF = "\n\n– Drew"
-
-
-def _fill(template: str, name: str, city: str, industry: str) -> str:
-    industry_display = industry.replace("_", " ")
-    return (
-        template
-        .replace("{name}", name)
-        .replace("{city}", city)
-        .replace("{industry}", industry_display)
-    )
 
 
 def _word_count(text: str) -> int:
@@ -292,24 +138,58 @@ def _word_count(text: str) -> int:
 
 def _check_banned(text: str) -> None:
     text_lower = text.lower()
-    hits = [w for w in _BANNED if w in text_lower]
+    hits = [word for word in _BANNED if word in text_lower]
     if hits:
         raise ValueError(f"Banned word(s) in generated email: {hits}")
 
 
+def _pick_subject(business_name: str) -> str:
+    if business_name and len(business_name) <= 24 and random.random() < 0.2:
+        return business_name
+    return random.choice(_SUBJECT_OPTIONS)
+
+
+def enforce_human_style(body_text: str) -> str:
+    if not body_text:
+        return body_text
+
+    for pattern, replacement in _FORMAL_OPENER_SUBS:
+        if pattern in body_text:
+            body_text = body_text.replace(pattern, replacement)
+
+    body_text = body_text.replace("\n\n", " ").replace("\n", " ")
+    body_text = re.sub(r"\s+", " ", body_text).strip()
+    body_text = re.sub(r"\s+([,.?!])", r"\1", body_text)
+    body_text = re.sub(r"([?!.,]){2,}", r"\1", body_text)
+    body_text = re.sub(r"(?i)^hey\s+", "hey ", body_text)
+
+    parts = re.split(r"(?<=[.?!])\s+", body_text)
+    cleaned_parts = [part.strip() for part in parts if part.strip()]
+    if len(cleaned_parts) > 2:
+        cleaned_parts = cleaned_parts[:2]
+    body_text = " ".join(cleaned_parts)
+
+    words = body_text.split()
+    if len(words) > _WORD_TARGET_MAX:
+        trimmed = " ".join(words[:_WORD_TARGET_MAX]).rstrip(",;:-")
+        last_punct = max(trimmed.rfind("."), trimmed.rfind("?"), trimmed.rfind("!"))
+        body_text = trimmed[: last_punct + 1] if last_punct > 0 else trimmed
+
+    body_text = body_text.rstrip(" ,;-")
+    if body_text and body_text[-1] not in ".?!":
+        body_text += "."
+    return body_text
+
+
 def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[str, str]:
     """
-    Generate a product-focused cold email for After-Hours Lead Capture.
+    Generate a short human outreach email.
 
-    Routing:
-    - High-fit industries (plumbing, hvac, electrical, locksmith, garage_door,
-      towing) → always use "missed_after_hours" template.
-    - All others → use automation_opportunity field, fall back to "unknown".
-
-    Returns (subject, body) — pipeline-compatible.
+    Routing scaffold is kept intact for pipeline compatibility, but copy is
+    guarded to stay concise, natural, and less awkward.
     """
     business_name = (prospect.get("business_name") or "").strip()
-    city          = (prospect.get("city") or "").strip()
+    city = (prospect.get("city") or "").strip()
 
     if not business_name:
         raise ValueError("Cannot draft email without business_name.")
@@ -317,8 +197,6 @@ def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[st
         raise ValueError(f"Cannot draft email for {business_name} without city.")
 
     industry = detect_industry(business_name, prospect.get("industry", ""))
-
-    # High-fit trades always get the missed_after_hours pitch
     if industry in _HIGH_FIT_INDUSTRIES:
         opportunity = "missed_after_hours"
     else:
@@ -326,64 +204,27 @@ def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[st
         if opportunity not in _TEMPLATES:
             opportunity = "unknown"
 
-    # Step 6 — Subject selection from updated pool
-    subject = random.choice([
-        "quick question",
-        "random thought",
-        business_name,
-        "hey",
-    ])
+    opener = random.choice(_OPENERS)
+    second = random.choice(_SECOND_SENTENCES)
+    angle = random.choice(list(_ANGLE_CLAUSE.keys()))
+    first = _ANGLE_CLAUSE[angle].replace("{context}", _industry_phrase(industry))
+    if opportunity == "unknown":
+        first = first.replace("missed calls", "calls or follow-up gaps")
 
-    # Steps 4+5 — Build 2-sentence body with angle + opener format variation
-    opener     = random.choice(OPENERS)
-    ind_phrase = _industry_phrase(industry)
-    second     = random.choice(_SECOND_SENTENCES)
-    angle      = random.choice(ANGLES)
+    subject = _pick_subject(business_name)
+    body_text = f"hey {business_name} - {opener}, {first}? {second}"
 
-    # Resolve angle clause — {ind} replaced with industry phrase
-    angle_clause = _ANGLE_CLAUSE[angle].replace("{ind}", ind_phrase)
-
-    # Three opener formats — randomly chosen (Step 2 from 18Y)
-    fmt = random.randint(0, 2)
-    if fmt == 0:
-        # Format A: hey {name} — {opener}, {angle clause}
-        sentence_one = f"hey {business_name} — {opener}, {angle_clause}"
-    elif fmt == 1:
-        # Format B: hey {name} — {opener} {angle clause} (no comma)
-        sentence_one = f"hey {business_name} — {opener} {angle_clause}"
-    else:
-        # Format C: hey {name} — {angle clause} (opener omitted)
-        sentence_one = f"hey {business_name} — {angle_clause}"
-
-    body_text = f"{sentence_one}. {second}."
-
-    # Legacy word-count guard (kept for safety; enforce_human_style trims harder below)
-    wc = _word_count(body_text)
-    if wc > _WORD_LIMIT:
+    if _word_count(body_text) > _WORD_LIMIT:
         words = body_text.split()
         body_text = " ".join(words[:_WORD_LIMIT]).rstrip(",;") + "."
 
-    # Enforce human style BEFORE appending sign-off
     body_text = enforce_human_style(body_text)
-
     body = body_text + _SIGN_OFF
-
-    # Guard: banned words
     _check_banned(body)
-
     return subject, body
 
 
 def draft_email_json(prospect: Dict[str, str], final_priority_score: int) -> Dict:
-    """
-    Same as draft_email but returns the full JSON payload.
-
-    {
-        "subject": "...",
-        "email_body": "...",
-        "tone": "casual"
-    }
-    """
     subject, body = draft_email(prospect, final_priority_score)
     return {
         "subject": subject,
@@ -392,26 +233,19 @@ def draft_email_json(prospect: Dict[str, str], final_priority_score: int) -> Dic
     }
 
 
-# ── Legacy helpers ────────────────────────────────────────────────────────────
-
 def pick_best_pitch_angle(likely_opportunity: str) -> str:
-    """Kept for backward compatibility."""
     return (likely_opportunity or "booking automation").strip() or "booking automation"
 
 
-
 def draft_social_messages(prospect: Dict[str, str], email_body: str) -> Tuple[str, str, str]:
-    """Return basic social/contact-form drafts derived from the email body."""
+    """Return short companion drafts for social/contact-form use."""
     business_name = (prospect.get("business_name") or "there").strip()
-    base = (email_body or "").replace("\n\nBest,\nDrew", "").strip()
+    base = re.sub(r"\n\n[-–—]\s*Drew\s*$", "", (email_body or "").strip(), flags=re.IGNORECASE)
     if not base:
         base = (
-            f"Hi {business_name} — quick note. "
-            "I can help with missed-call follow-up and lead capture. "
-            "Open to a quick chat?"
+            f"hey {business_name} - quick question, "
+            "do missed calls or slow follow-up ever turn into lost jobs? "
+            "Happy to send a quick example if useful."
         )
-
-    fb = base
-    ig = base
-    form = base
-    return fb, ig, form
+    base = enforce_human_style(base)
+    return base, base, base

@@ -21,9 +21,10 @@ import os
 import re
 import sys
 import time
+from html import unescape
 from pathlib import Path
 from typing import Dict, List, Optional
-from urllib.parse import urljoin, urlparse, quote
+from urllib.parse import urljoin, urlparse, quote, unquote
 from urllib.request import Request, urlopen
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +46,25 @@ PROSPECTS_COLUMNS = [
 
 TIMEOUT = 8
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,6}")
+EMAIL_FULL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,24}$")
+OBFUSCATED_EMAIL_RE = re.compile(
+    r"[a-zA-Z0-9._%+\-]{1,64}\s*"
+    r"(?:@|\(at\)|\[at\]|\{at\}|\sat\s)\s*"
+    r"(?:[a-zA-Z0-9\-]+\s*(?:\.|\(dot\)|\[dot\]|\{dot\}|\sdot\s)\s*)+[a-zA-Z]{2,24}",
+    re.IGNORECASE,
+)
+LIKELY_EMAIL_ATTR_RE = re.compile(
+    r'(?:href|onclick|data-[\w-]*(?:email|mail|contact)|aria-label|title|content|value)=["\']([^"\']+)["\']',
+    re.IGNORECASE,
+)
+USER_DOMAIN_ATTR_RE = re.compile(
+    r"<[^>]*data-user=['\"]([^'\"]+)['\"][^>]*data-domain=['\"]([^'\"]+)['\"][^>]*>",
+    re.IGNORECASE,
+)
+CF_EMAIL_RE = re.compile(
+    r"(?:data-cfemail=['\"]|email-protection#)([0-9a-fA-F]{6,})",
+    re.IGNORECASE,
+)
 
 # File extensions that disqualify a regex match (image / frontend assets)
 _ASSET_EXTENSIONS = (
@@ -62,6 +82,27 @@ JUNK_EMAIL_DOMAINS = {
     "google.com","facebook.com","twitter.com","example.com","yourdomain.com",
     "w3.org","schema.org","bootstrapcdn.com","cloudfront.net","amazonaws.com",
 } | _BLOCKED_DOMAINS
+
+_PLACEHOLDER_EMAIL_LOCALS = {
+    "email", "name", "example", "yourname", "firstname", "lastname",
+    "first.last", "test", "mail", "your-email",
+}
+_PREFERRED_ROLE_LOCALS = (
+    "info", "contact", "office", "service", "support",
+    "hello", "dispatch", "sales", "team",
+)
+_TOP_ROLE_LOCALS = ("info", "contact", "office", "service", "support", "hello")
+_ROLE_LOCAL_ORDER = {
+    "info": 0,
+    "contact": 1,
+    "service": 2,
+    "support": 3,
+    "hello": 4,
+    "office": 5,
+    "dispatch": 6,
+    "sales": 7,
+    "team": 8,
+}
 
 _DIRECTORY_DOMAINS = {
     "yelp.com", "yellowpages.com", "whitepages.com",
@@ -457,68 +498,203 @@ def _is_asset_email(candidate: str) -> bool:
 
 
 def _clean_email(email: str) -> Optional[str]:
-    e = email.strip().lower()
+    e = (email or "").strip().lower()
+    e = e.strip(".,;:'\"<>[]{}()")
+    e = re.sub(r"\s+", "", e)
     domain = e.split("@")[-1] if "@" in e else ""
+    local = e.split("@")[0] if "@" in e else ""
+    if e.count("@") != 1 or not EMAIL_FULL_RE.match(e):
+        return None
     if _is_asset_email(e):
         return None
     if domain in JUNK_EMAIL_DOMAINS or domain in _BLOCKED_DOMAINS:
         return None
+    if local in _PLACEHOLDER_EMAIL_LOCALS:
+        return None
     if any(e.startswith(p) for p in [
         "noreply", "no-reply", "donotreply", "postmaster",
-        "bounce", "admin@", "test@", "info@example",
+        "bounce", "admin@", "test@",
     ]):
         return None
-    if len(e) > 80 or "." not in domain:
+    if e in {"info@example.com", "contact@example.com", "name@example.com"}:
+        return None
+    if len(e) > 80 or "." not in domain or ".." in e:
         return None
     if any(c in e for c in ["=", "{", "}", "//", "\\", "(", ")", "<", ">"]):
         return None
     return e
 
 
+def _decode_cfemail(encoded: str) -> Optional[str]:
+    try:
+        raw = bytes.fromhex((encoded or "").strip())
+    except ValueError:
+        return None
+    if len(raw) < 2:
+        return None
+    key = raw[0]
+    decoded = "".join(chr(b ^ key) for b in raw[1:])
+    return _clean_email(decoded)
+
+
+def _normalise_email_candidate(raw: str) -> Optional[str]:
+    if not raw:
+        return None
+    candidate = unescape(unquote(str(raw)))
+    candidate = candidate.replace("\u200b", "").replace("\u2060", "").replace("\xa0", " ")
+    candidate = re.sub(r"(?i)^mailto:\s*", "", candidate)
+    candidate = re.sub(r"(?i)\s*(?:\(|\[|\{)?at(?:\)|\]|\})\s*", "@", candidate)
+    candidate = re.sub(r"(?i)\s+at\s+", "@", candidate)
+    candidate = re.sub(r"(?i)\s*(?:\(|\[|\{)?dot(?:\)|\]|\})\s*", ".", candidate)
+    candidate = re.sub(r"(?i)\s+dot\s+", ".", candidate)
+    candidate = re.split(r"[?&#]", candidate, maxsplit=1)[0]
+    candidate = candidate.strip(" \t\r\n'\"<>[]{}(),;:")
+    candidate = re.sub(r"\s+", "", candidate)
+    return _clean_email(candidate)
+
+
+def _score_email_candidate(email: str, site_domain: str) -> tuple[int, int, str]:
+    local, domain = email.split("@", 1)
+    score = 0
+    if site_domain:
+        if domain == site_domain or domain.endswith("." + site_domain):
+            score -= 50
+        elif site_domain.split(".")[0] and site_domain.split(".")[0] in domain:
+            score -= 15
+        else:
+            score += 20
+    if local in _TOP_ROLE_LOCALS:
+        score -= 12
+    elif local in _PREFERRED_ROLE_LOCALS:
+        score -= 8
+    elif any(local.startswith(prefix) for prefix in _PREFERRED_ROLE_LOCALS):
+        score -= 5
+    if domain in {"gmail.com", "yahoo.com", "outlook.com", "hotmail.com"}:
+        score += 8
+    score += max(len(local) - 24, 0)
+    return (score, _ROLE_LOCAL_ORDER.get(local, 99), len(email), email)
+
+
+def _contact_like_urls(base_url: str, html: str) -> List[str]:
+    urls: List[str] = []
+    if not base_url or not html:
+        return urls
+    base = f"{urlparse(base_url).scheme}://{urlparse(base_url).netloc}"
+    seen: set[str] = set()
+    for href in re.findall(r'href=["\']([^"\']+)["\']', html, flags=re.IGNORECASE):
+        absolute = urljoin(base, href.strip())
+        parsed = urlparse(absolute)
+        if parsed.scheme not in {"http", "https"}:
+            continue
+        if f"{parsed.scheme}://{parsed.netloc}" != base:
+            continue
+        path = (parsed.path or "").lower()
+        if not any(token in path for token in ("contact", "about", "quote", "estimate", "request", "book", "schedule", "appointment")):
+            continue
+        clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/")
+        if clean and clean not in seen:
+            seen.add(clean)
+            urls.append(clean)
+    return urls
+
+
+def _extract_email_candidates_from_html(html: str) -> List[str]:
+    if not html:
+        return []
+    seen: set[str] = set()
+    emails: List[str] = []
+
+    def add(candidate: Optional[str]) -> None:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            emails.append(candidate)
+
+    variants = []
+    for variant in (html, unescape(html), unquote(html)):
+        if variant and variant not in variants:
+            variants.append(variant)
+
+    for encoded in CF_EMAIL_RE.findall(html):
+        add(_decode_cfemail(encoded))
+
+    for user, domain in USER_DOMAIN_ATTR_RE.findall(html):
+        add(_normalise_email_candidate(f"{user}@{domain}"))
+
+    for variant in variants:
+        for raw in re.findall(r"mailto:([^\"'>\s]+)", variant, re.IGNORECASE):
+            add(_normalise_email_candidate(raw))
+        for raw in LIKELY_EMAIL_ATTR_RE.findall(variant):
+            if any(token in raw.lower() for token in ("@", "mailto", " at ", "(at)", "[at]", "{at}", "%40")):
+                add(_normalise_email_candidate(raw))
+        for raw in EMAIL_RE.findall(variant):
+            add(_clean_email(raw))
+        for raw in OBFUSCATED_EMAIL_RE.findall(variant):
+            add(_normalise_email_candidate(raw))
+
+    return emails
+
+
+def extract_contact_details_from_website(website: str) -> Dict[str, object]:
+    result: Dict[str, object] = {
+        "email": "",
+        "site_reachable": False,
+        "facebook_url": "",
+        "instagram_url": "",
+        "contact_form_url": "",
+    }
+    if not website or not website.startswith(("http://", "https://")):
+        return result
+
+    parsed = urlparse(website)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    site_domain = parsed.netloc.lower().replace("www.", "")
+    static_paths = ["/contact", "/contact-us", "/about", "/about-us", "/reach-us", "/request-quote"]
+    pages_to_try = [website]
+    emails: List[str] = []
+    seen_urls: set[str] = set()
+
+    homepage_html = _fetch(website)
+    if isinstance(homepage_html, str) and homepage_html:
+        result["site_reachable"] = True
+        result.update(_scrape_social_links(website, homepage_html))
+        emails.extend(_extract_email_candidates_from_html(homepage_html))
+        for discovered in _contact_like_urls(website, homepage_html):
+            if discovered not in pages_to_try:
+                pages_to_try.append(discovered)
+
+    for path in static_paths:
+        url = base + path
+        if url not in pages_to_try:
+            pages_to_try.append(url)
+
+    for url in pages_to_try[:6]:
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        html = homepage_html if url == website and isinstance(homepage_html, str) else _fetch(url)
+        if not html or not isinstance(html, str):
+            continue
+        result["site_reachable"] = True
+        if not result["contact_form_url"] or not result["facebook_url"] or not result["instagram_url"]:
+            scraped = _scrape_social_links(website, html)
+            for key, value in scraped.items():
+                if value and not result.get(key):
+                    result[key] = value
+        emails.extend(_extract_email_candidates_from_html(html))
+        time.sleep(0.15)
+
+    cleaned = sorted(set(filter(None, emails)), key=lambda e: _score_email_candidate(e, site_domain))
+    if cleaned:
+        result["email"] = cleaned[0]
+    return result
+
+
 def _scrape_email_from_website(website: str) -> tuple[Optional[str], bool]:
     """Try homepage then /contact pages for email addresses.
     Returns (email_or_None, site_was_reachable)."""
-    if not website or not website.startswith(("http://", "https://")):
-        return None, False
-
-    seen: set[str] = set()
-    emails: List[str] = []
-    base = f"{urlparse(website).scheme}://{urlparse(website).netloc}"
-    pages_to_try = [website]
-    for path in ["/contact", "/contact-us", "/about", "/reach-us"]:
-        pages_to_try.append(base + path)
-
-    site_domain = urlparse(website).netloc.replace("www.", "")
-    site_reachable = False
-
-    for url in pages_to_try[:4]:
-        html = _fetch(url)
-        if not html or not isinstance(html, str):
-            continue
-        site_reachable = True
-        for m in re.findall(r'mailto:([^"\'>\s?&]+)', html, re.IGNORECASE):
-            raw = re.split(r'[?&]', m)[0]
-            cleaned = _clean_email(raw)
-            if cleaned and cleaned not in seen:
-                seen.add(cleaned)
-                emails.append(cleaned)
-        for raw in EMAIL_RE.findall(html):
-            cleaned = _clean_email(raw)
-            if cleaned and cleaned not in seen:
-                seen.add(cleaned)
-                emails.append(cleaned)
-        if emails:
-            break
-        time.sleep(0.2)
-
-    if not emails:
-        return None, site_reachable
-
-    def score(e: str) -> int:
-        return 0 if site_domain and site_domain in e else 1
-
-    emails.sort(key=score)
-    return emails[0], site_reachable
+    details = extract_contact_details_from_website(website)
+    email = (details.get("email") or "").strip()
+    return email or None, bool(details.get("site_reachable"))
 
 
 def search_places(query: str, city: str, state: str, api_key: str,
@@ -727,20 +903,14 @@ def discover_prospects(industry: str, city: str, state: str,
         if is_directory or is_ambiguous:
             site_reachable = None
         elif scrape_emails and website:
-            from urllib.request import urlopen, Request as _Req
-            _homepage_html = ""
-            try:
-                _req = _Req(website, headers={"User-Agent": "Mozilla/5.0 (compatible; LeadBot/1.0)"})
-                with urlopen(_req, timeout=TIMEOUT) as _r:
-                    _homepage_html = _r.read().decode("utf-8", errors="ignore")
-                site_reachable = True
-            except Exception:
-                site_reachable = False
-
-            if _homepage_html:
-                email, _ = _scrape_email_from_website(website)
-                email = email or ""
-                social = _scrape_social_links(website, _homepage_html)
+            contact_details = extract_contact_details_from_website(website)
+            email = (contact_details.get("email") or "").strip()
+            site_reachable = contact_details.get("site_reachable")
+            social = {
+                "facebook_url": contact_details.get("facebook_url", ""),
+                "instagram_url": contact_details.get("instagram_url", ""),
+                "contact_form_url": contact_details.get("contact_form_url", ""),
+            }
         elif website:
             site_reachable = _probe_reachable(website)
 
@@ -935,19 +1105,14 @@ def discover_prospects_area(
         if is_directory or is_ambiguous:
             site_reachable = None
         elif scrape_emails and website:
-            from urllib.request import urlopen, Request as _Req
-            _homepage_html = ""
-            try:
-                _req = _Req(website, headers={"User-Agent": "Mozilla/5.0 (compatible; LeadBot/1.0)"})
-                with urlopen(_req, timeout=TIMEOUT) as _r:
-                    _homepage_html = _r.read().decode("utf-8", errors="ignore")
-                site_reachable = True
-            except Exception:
-                site_reachable = False
-            if _homepage_html:
-                email, _ = _scrape_email_from_website(website)
-                email = email or ""
-                social = _scrape_social_links(website, _homepage_html)
+            contact_details = extract_contact_details_from_website(website)
+            email = (contact_details.get("email") or "").strip()
+            site_reachable = contact_details.get("site_reachable")
+            social = {
+                "facebook_url": contact_details.get("facebook_url", ""),
+                "instagram_url": contact_details.get("instagram_url", ""),
+                "contact_form_url": contact_details.get("contact_form_url", ""),
+            }
         elif website:
             site_reachable = _probe_reachable(website)
 

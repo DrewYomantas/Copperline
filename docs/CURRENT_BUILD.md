@@ -1,10 +1,46 @@
 # Current Build Pass
 
 ## Active System
-Discovery Panel Organization + Edit Stability
+Contact Quality Upgrade
 
 ## Status
-Pass 30 complete.
+Pass 31 complete.
+
+---
+
+## Completed: Pass 31 - Contact Quality Upgrade - `pending`
+
+Product changes stayed in three backend/support files:
+- `lead_engine/discovery/auto_prospect_agent.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+
+No protected systems touched.
+
+### Hidden email extraction
+
+- Expanded website email scraping beyond visible text to include `mailto:` actions with query strings, likely email-bearing attributes, simple `[at]` / `[dot]` obfuscation, paired `data-user` + `data-domain` attributes, and Cloudflare email-protection tokens.
+- Added bounded contact-page discovery so the scraper can follow obvious internal contact/quote/schedule pages instead of only checking a tiny fixed path list.
+- Centralized website contact extraction into one helper so discovery and enrichment use the same capture logic.
+
+### Contact normalization and enrichment
+
+- Strengthened cleanup of extracted emails with safer placeholder/junk suppression and better candidate ranking for domain-matching role accounts.
+- Restored `email_extractor_agent.py` from a stub to a working enrichment utility for `prospects.csv`.
+- Enrichment now fills missing emails conservatively, updates contactability/contact-channel fields, and preserves existing emails unless overwrite is explicitly requested.
+
+### Message quality guardrails
+
+- Reworked the outreach copy pools toward cleaner, shorter, more natural phrasing without changing the high-level product direction.
+- Removed the old intentional sloppy phrasing and random run-on merge from the post-processing guardrails.
+- Social/contact-form companion drafts now strip the real sign-off format correctly and reuse the cleaner human-style guardrail.
+
+### Verification
+
+- Ran `python -m py_compile` on all touched code files.
+- Ran a targeted Python verification script covering hidden email extraction patterns, candidate ranking, enrichment writes on a temporary prospects CSV, and multiple draft/social output samples.
+- Reconfirmed the live dashboard still loads at `http://127.0.0.1:5000` after the backend changes.
+- Left protected systems untouched: no `run_lead_engine.py`, sender core, scheduler core, follow-up system, or queue schema changes.
 
 ---
 

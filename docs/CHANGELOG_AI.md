@@ -641,6 +641,36 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 - `lead_engine/dashboard_static/index.html`
 
 **Commit:** `d31d720`
+### 2026-03-17 - Pass 31: Contact Quality Upgrade
+
+**Goal:** Increase the number of outreach-ready leads by extracting more usable contacts and cleaning message outputs without redesigning the broader system.
+
+**Files changed:**
+- `lead_engine/discovery/auto_prospect_agent.py`
+- `lead_engine/intelligence/email_extractor_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+- Expanded website email extraction to handle `mailto:` links with query strings, email-bearing attributes, simple `[at]` / `[dot]` obfuscation, paired `data-user` + `data-domain` attributes, and Cloudflare protected email tokens.
+- Added bounded contact-page discovery and centralized website contact extraction so discovery and enrichment use the same logic.
+- Strengthened extracted-email cleanup and candidate ranking so junk/placeholder values are suppressed more safely and stronger role/domain matches are preferred.
+- Replaced the `email_extractor_agent.py` compatibility stub with a working enrichment pass for `prospects.csv`.
+- Cleaned up outreach copy pools and guardrails to remove intentional sloppy phrasing, reduce awkward/run-on outputs, and keep social/contact-form companion drafts aligned with the shorter human style.
+- Kept the pass off the protected systems: no queue schema, sender core, scheduler core, follow-up system, or `run_lead_engine.py` changes.
+
+**Verification:**
+- Ran `python -m py_compile` on all touched product files.
+- Ran a targeted Python verification script that exercised representative hidden-email patterns, candidate ranking, enrichment updates on a temporary prospects CSV, and multiple email/social draft outputs.
+- Reconfirmed the live dashboard still loads at `http://127.0.0.1:5000` after the backend changes.
+
+**Commit:** pending
+
+---
+
 ### 2026-03-17 - Pass 30: Discovery Panel Organization + Edit Stability
 
 **Goal:** Make large discovery result sets manageable inside the dashboard without redesigning the rest of the workflow.

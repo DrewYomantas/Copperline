@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Panel Organization + Edit Stability
+Contact Quality Upgrade
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,20 +21,19 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 30 - Discovery Panel Organization + Edit Stability
+Pass 31 - Contact Quality Upgrade
 
-- Reorganized the discovery results panel into practical grouped sections so larger map result sets are easier to scan.
-- Added grouping controls for workflow, city, email status, and flat mode, with score-first ordering as the default.
-- Added clearer active-result highlighting and an explicit `Edit` action from discovery results into the review panel.
-- Stabilized the review panel by anchoring it to a snapshot of the visible lead set instead of the live filtered table only.
-- Prevented accidental dismissal from overlay clicks and blocked close while debounced panel saves are still pending.
-- Smoke-verified dashboard load, grouped result rendering, marker/result interaction, stable edit state across queue filter changes, and basic Pass 29 discovery controls.
-- Kept the pass frontend-only. No scheduler core, queue schema, sender, follow-up, or other protected systems changed.
+- Expanded website contact extraction to capture more hidden-but-valid email patterns, including `mailto:` actions, attribute-based email values, simple `[at]` / `[dot]` obfuscation, paired `data-user` + `data-domain` attributes, and Cloudflare-style protected email tokens.
+- Strengthened email normalization and candidate ranking so duplicate/junk candidates are filtered more safely and stronger role/domain matches are preferred.
+- Replaced the no-op enrichment helper with a working prospect email-enrichment pass that can upgrade stored discovery rows using the same extraction logic.
+- Tightened outreach draft guardrails so generated email and social/contact-form messages stay shorter, cleaner, and less awkward while preserving the existing short local-business tone.
+- Verified extraction behavior on representative hidden-email patterns, enrichment updates on a temp prospects CSV, and cleaned draft outputs through targeted Python smoke checks.
+- Reconfirmed the live dashboard still loads after the backend changes and did not touch protected systems.
 
-Commit: `5d11595`
+Commit: pending
 
 ## Previous Completed Pass
-Pass 29 - Discovery Coverage Expansion + Bulk Unschedule
+Pass 30 - Discovery Panel Organization + Edit Stability
 
 ## Next Pass
 TBD

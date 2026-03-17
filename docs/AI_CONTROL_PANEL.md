@@ -9,15 +9,15 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Panel Organization + Edit Stability
+Contact Quality Upgrade
 
 ## Current Build Pass
-Pass 30 - Discovery Panel Organization + Edit Stability (complete)
+Pass 31 - Contact Quality Upgrade (complete)
 
 ## Last Completed Pass
-Pass 30 - Discovery Panel Organization + Edit Stability
+Pass 31 - Contact Quality Upgrade
 
-Commit: `5d11595`
+Commit: `pending`
 
 ## Next Pass
 TBD
@@ -41,9 +41,9 @@ Passes use bounded cohesive blocks, not artificially tiny micro-changes.
 - No redesigns or protected-system drift without explicit operator approval
 
 Examples:
-- Correct: grouped discovery results + stable edit state + active selection because all three improve one discovery-review workflow
+- Correct: hidden email extraction + contact cleanup + message guardrails because all three improve one outreach-readiness workflow
 - Incorrect: discovery + scheduler UX + message quality in one pass
-- Previous completed example: Pass 29 combined circle-grid sweep, multi-industry selection, dedupe, history summary, cancel support, and bulk unschedule because all of them served one bounded operator workflow
+- Previous completed example: Pass 30 grouped discovery results and stabilized edit state because both changes improved one discovery-review workflow
 
 ---
 
