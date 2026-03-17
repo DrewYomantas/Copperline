@@ -9,15 +9,15 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Coverage Expansion + Bulk Unschedule
+Discovery Panel Organization + Edit Stability
 
 ## Current Build Pass
-Pass 29 - Discovery Coverage Expansion + Bulk Unschedule (complete)
+Pass 30 - Discovery Panel Organization + Edit Stability (complete)
 
 ## Last Completed Pass
-Pass 29 - Discovery Coverage Expansion + Bulk Unschedule
+Pass 30 - Discovery Panel Organization + Edit Stability
 
-Commit: `aaa3276`
+Commit: `pending`
 
 ## Next Pass
 TBD
@@ -41,9 +41,9 @@ Passes use bounded cohesive blocks, not artificially tiny micro-changes.
 - No redesigns or protected-system drift without explicit operator approval
 
 Examples:
-- Correct: grid search + dedupe + history + cancel
+- Correct: grouped discovery results + stable edit state + active selection because all three improve one discovery-review workflow
 - Incorrect: discovery + scheduler UX + message quality in one pass
-- Latest completed example: Pass 29 combined circle-grid sweep, multi-industry selection, dedupe, history summary, cancel support, and bulk unschedule because all of them served one bounded operator workflow
+- Previous completed example: Pass 29 combined circle-grid sweep, multi-industry selection, dedupe, history summary, cancel support, and bulk unschedule because all of them served one bounded operator workflow
 
 ---
 

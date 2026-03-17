@@ -522,15 +522,22 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 /* Map Search tab */
 #map-layout{display:flex;gap:0;align-items:stretch;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
 #map-container{flex:1;height:480px;min-width:0;overflow:hidden}
-#map-results-panel{width:260px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:none;flex-direction:column;height:480px}
+#map-results-panel{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:none;flex-direction:column;height:480px}
 #map-results-panel.visible{display:flex}
 .mrp-hdr{padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
 .mrp-list{flex:1;overflow-y:auto;}
-.mrp-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.mrp-section{border-bottom:1px solid var(--border)}
+.mrp-section:last-child{border-bottom:none}
+.mrp-section-hdr{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:linear-gradient(180deg,rgba(22,24,29,.98),rgba(22,24,29,.94));border-bottom:1px solid var(--border)}
+.mrp-section-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.mrp-section-meta{font-size:10px;color:var(--dim);white-space:nowrap}
+.mrp-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s,border-color .12s,box-shadow .12s;border-left:2px solid transparent}
 .mrp-item:last-child{border-bottom:none}
 .mrp-item:hover{background:var(--surface2)}
+.mrp-item.active{background:var(--blue-glow);border-left-color:var(--blue);box-shadow:inset 0 0 0 1px rgba(79,142,247,.14)}
 .mrp-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrp-meta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px}
+.mrp-detail{font-size:10px;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .mrp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .mrp-dot.has-email{background:var(--green)}
 .mrp-dot.no-email{background:var(--copper)}
@@ -539,6 +546,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-ctrl-select option{background:var(--surface2)}
 .mrp-ctrl-chk{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .mrp-ctrl-chk input{cursor:pointer;accent-color:var(--green)}
+.mrp-empty{padding:18px 12px;font-size:12px;color:var(--muted)}
 /* Pass 23 — map panel command center */
 .mrp-bulk-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
 .mrp-bulk-lbl{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
@@ -1241,9 +1249,15 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
           <div class="mrp-hdr">Results <span id="mrp-count"></span></div>
           <div class="mrp-controls" id="mrp-controls">
             <select id="mrp-sort" class="mrp-ctrl-select" onchange="_mapRenderPanel()">
-              <option value="">Order: default</option>
+              <option value="score">Sort: Score first</option>
               <option value="name">Sort: Name A–Z</option>
               <option value="city">Sort: City A–Z</option>
+            </select>
+            <select id="mrp-group" class="mrp-ctrl-select" onchange="_mapRenderPanel()">
+              <option value="workflow">Group: Workflow</option>
+              <option value="city">Group: City</option>
+              <option value="email">Group: Email status</option>
+              <option value="flat">Group: None</option>
             </select>
             <label class="mrp-ctrl-chk"><input type="checkbox" id="mrp-email-only" onchange="_mapRenderPanel()"> Email only</label>
           </div>
@@ -1353,6 +1367,9 @@ let filteredRows = [];
 let currentFilter = 'active';
 let panelIdx = -1;
 let panelSaveTimer = null;
+let panelSaveInFlight = false;
+let panelRowsKeys = [];
+let panelRowKey = '';
 let status_draft_version = '';
 
 async function api(path, body) {
@@ -1365,6 +1382,63 @@ async function api(path, body) {
     throw new Error(`API ${path} returned ${r.status}: ${text.slice(0, 120)}`);
   }
   return r.json();
+}
+
+function _panelMakeKey(row) {
+  if (!row) return '';
+  return [
+    row.business_name || '',
+    row.city || '',
+    row.state || '',
+    row.website || '',
+    row.to_email || '',
+    row.subject || '',
+  ].map(v => String(v).trim().toLowerCase()).join('|');
+}
+
+function _panelFindRowByKey(key) {
+  if (!key || !Array.isArray(allRows) || !allRows.length) return null;
+  return allRows.find(row => _panelMakeKey(row) === key) || null;
+}
+
+function _panelSnapshotKeys(rows) {
+  return (Array.isArray(rows) ? rows : []).map(_panelMakeKey).filter(Boolean);
+}
+
+function _panelCurrentRows() {
+  const rows = panelRowsKeys.map(_panelFindRowByKey).filter(Boolean);
+  return rows.length ? rows : filteredRows;
+}
+
+function _panelCurrentRow() {
+  const rows = _panelCurrentRows();
+  if (panelIdx < 0 || panelIdx >= rows.length) return null;
+  const row = rows[panelIdx];
+  panelRowKey = _panelMakeKey(row);
+  return row;
+}
+
+function _panelHasPendingSave() {
+  return !!panelSaveTimer || panelSaveInFlight;
+}
+
+function _panelSyncOpenState() {
+  const overlay = document.getElementById('panel-overlay');
+  if (!overlay || !overlay.classList.contains('open') || panelIdx < 0) return;
+  const rows = _panelCurrentRows();
+  if (!rows.length) {
+    closePanel(true);
+    return;
+  }
+  if (panelRowKey) {
+    const foundIdx = rows.findIndex(row => _panelMakeKey(row) === panelRowKey);
+    if (foundIdx >= 0) panelIdx = foundIdx;
+    else if (panelIdx >= rows.length) panelIdx = rows.length - 1;
+  } else if (panelIdx >= rows.length) {
+    panelIdx = rows.length - 1;
+  }
+  const row = rows[panelIdx];
+  if (row) fillPanel(row, panelIdx, rows.length);
 }
 
 async function loadAll() {
@@ -1384,10 +1458,7 @@ async function loadAll() {
     allRows = Array.isArray(queue) ? queue : [];
     if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
     renderTable();
-    if (panelIdx >= 0 && document.getElementById('panel-overlay').classList.contains('open')) {
-      const row = filteredRows[panelIdx];
-      if (row) fillPanel(row, panelIdx);
-    }
+    _panelSyncOpenState();
   } catch(err) {
     console.error('loadAll failed:', err);
     toast('Failed to load queue — check server is running', 'err');
@@ -1607,19 +1678,27 @@ function toggleExtraFilters(btn) {
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
-function openPanel(fi) {
-  panelIdx = fi;
-  const row = filteredRows[fi];
+function openPanel(fi, rowsCtx) {
+  const rows = Array.isArray(rowsCtx) && rowsCtx.length ? rowsCtx : filteredRows;
+  panelRowsKeys = _panelSnapshotKeys(rows);
+  const panelRows = _panelCurrentRows();
+  if (!panelRows.length) return;
+  panelIdx = Math.max(0, Math.min(fi, panelRows.length - 1));
+  const row = panelRows[panelIdx];
   if (!row) return;
-  fillPanel(row, fi);
+  panelRowKey = _panelMakeKey(row);
+  const activeKey = _mapPanelActiveKeyForRow(row);
+  if (activeKey) _mapPanelActiveKey = activeKey;
+  fillPanel(row, panelIdx, panelRows.length);
   document.getElementById('panel-overlay').classList.add('open');
 }
 
-async function fillPanel(row, fi) {
+async function fillPanel(row, fi, totalRows) {
+  const total = totalRows || _panelCurrentRows().length || filteredRows.length;
   document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
-  document.getElementById('panel-pos').textContent = `${fi+1} / ${filteredRows.length}`;
+  document.getElementById('panel-pos').textContent = `${fi+1} / ${total}`;
   document.getElementById('btn-prev').disabled = fi === 0;
-  document.getElementById('btn-next').disabled = fi === filteredRows.length - 1;
+  document.getElementById('btn-next').disabled = fi === total - 1;
 
   const parts = [];
   if (row.city) parts.push(`<span>📍 ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
@@ -1782,9 +1861,28 @@ function panelCopyText(btn, text) {
   }).catch(() => toast('Copy failed — select text manually', 'err'));
 }
 
-function closePanel() { document.getElementById('panel-overlay').classList.remove('open'); panelIdx = -1; }
-function closePanelOnOverlay(e) { if (e.target===document.getElementById('panel-overlay')) closePanel(); }
-function navigatePanel(dir) { const n=panelIdx+dir; if(n>=0&&n<filteredRows.length) openPanel(n); }
+function closePanel(force) {
+  if (!force && _panelHasPendingSave()) {
+    toast('Finishing your edit save. Use Close again in a moment.', 'info');
+    return;
+  }
+  document.getElementById('panel-overlay').classList.remove('open');
+  panelIdx = -1;
+  panelRowsKeys = [];
+  panelRowKey = '';
+}
+
+function closePanelOnOverlay(e) {
+  if (e.target === document.getElementById('panel-overlay')) {
+    toast('Review stays open until you use Close.', 'info');
+  }
+}
+
+function navigatePanel(dir) {
+  const rows = _panelCurrentRows();
+  const n = panelIdx + dir;
+  if (n >= 0 && n < rows.length) openPanel(n, rows);
+}
 
 // ── Social channel badge helpers ──────────────────────────────────────────────
 function channelBadgesHtml(row) {
@@ -1829,17 +1927,21 @@ function panelCopyDm(btn) {
 }
 
 function panelFieldChanged(field, value) {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row) return;
   const gi = allRows.indexOf(row);
   row[field] = value;
+  panelRowKey = _panelMakeKey(row);
   // Show saving indicator on body edits
   if (field === 'body') {
     const ind = document.getElementById('panel-save-state');
     if (ind) { ind.textContent = 'Saving…'; ind.className = 'panel-save-state saving'; }
   }
   clearTimeout(panelSaveTimer);
+  panelSaveInFlight = false;
   panelSaveTimer = setTimeout(() => {
+    panelSaveTimer = null;
+    panelSaveInFlight = true;
     api('/api/update_row', {index: gi, updates: {[field]: value}})
       .then(() => {
         if (field === 'body') {
@@ -1853,7 +1955,8 @@ function panelFieldChanged(field, value) {
           const ind = document.getElementById('panel-save-state');
           if (ind) { ind.textContent = 'Error saving'; ind.className = 'panel-save-state save-err'; }
         }
-      });
+      })
+      .finally(() => { panelSaveInFlight = false; });
   }, 500);
 }
 
@@ -1869,7 +1972,7 @@ const SEND_WINDOWS = {
 };
 
 async function panelScheduleTomorrow() {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot schedule', 'err'); return; }
   const gi = allRows.indexOf(row);
@@ -1882,7 +1985,7 @@ async function panelScheduleTomorrow() {
     if (!res.ok) { toast('Schedule error: ' + (res.error || 'unknown'), 'err'); return; }
     row.send_after = res.send_after;
     renderTable();
-    fillPanel(row, panelIdx);
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
     toast('Scheduled for tomorrow', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
@@ -1891,7 +1994,7 @@ async function panelScheduleTomorrow() {
 
 // Pass 10 — clear existing schedule
 async function panelUnschedule() {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row) return;
   const gi = allRows.indexOf(row);
   try {
@@ -1903,7 +2006,7 @@ async function panelUnschedule() {
     if (!res.ok) { toast('Clear error: ' + (res.error || 'unknown'), 'err'); return; }
     row.send_after = '';
     renderTable();
-    fillPanel(row, panelIdx);
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
     await loadStats();
     toast('Unscheduled', 'ok');
   } catch(e) {
@@ -1913,7 +2016,7 @@ async function panelUnschedule() {
 
 // Pass 10 / Pass 20a — reschedule to today + N days via backend industry window
 async function panelReschedule(days) {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot reschedule', 'err'); return; }
   const gi = allRows.indexOf(row);
@@ -1926,31 +2029,31 @@ async function panelReschedule(days) {
     if (!res.ok) { toast('Reschedule error: ' + (res.error || 'unknown'), 'err'); return; }
     row.send_after = res.send_after;
     renderTable();
-    fillPanel(row, panelIdx);
-    toast('Rescheduled for ' + _formatSendAfter(send_after), 'ok');
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
+    toast('Rescheduled for ' + _formatSendAfter(row.send_after), 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
 }
 
 async function panelApprove() {
-  const row = filteredRows[panelIdx]; if (!row) return;
+  const row = _panelCurrentRow(); if (!row) return;
   if (!row.to_email) { toast('Add a To Email first','err'); return; }
   const gi = allRows.indexOf(row);
   await api('/api/approve_row',{index:gi});
-  row.approved='true'; fillPanel(row,panelIdx); renderTable(); loadStats();
+  row.approved='true'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); loadStats();
   toast('Approved ✓','ok');
 }
 
 async function panelUnapprove() {
-  const row = filteredRows[panelIdx]; if (!row) return;
+  const row = _panelCurrentRow(); if (!row) return;
   const gi = allRows.indexOf(row);
   await api('/api/unapprove_row',{index:gi});
-  row.approved='false'; fillPanel(row,panelIdx); renderTable(); loadStats();
+  row.approved='false'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); loadStats();
 }
 
 async function panelDelete() {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row||!confirm('Remove this lead?')) return;
   const gi = allRows.indexOf(row);
   const res = await api('/api/delete_row',{index:gi});
@@ -1958,11 +2061,11 @@ async function panelDelete() {
 }
 
 async function panelOptOut() {
-  const row = filteredRows[panelIdx];
+  const row = _panelCurrentRow();
   if (!row||!confirm('Mark as do not contact? This blocks all future sends to this lead.')) return;
   const gi = allRows.indexOf(row);
   const res = await api('/api/opt_out_row',{index:gi});
-  if (res.ok) { row.do_not_contact='true'; row.approved='false'; fillPanel(row,panelIdx); renderTable(); toast('Marked as do not contact','info'); }
+  if (res.ok) { row.do_not_contact='true'; row.approved='false'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); toast('Marked as do not contact','info'); }
 }
 
 async function resetProspectStatus(businessName) {
@@ -3123,7 +3226,7 @@ function _panelCampaignHtml(row) {
 }
 
 function panelCampaignChanged(key) {
-  const row = filteredRows[panelIdx]; if (!row) return;
+  const row = _panelCurrentRow(); if (!row) return;
   row.campaign_key = key;
   api('/api/update_row', {index: allRows.indexOf(row), updates:{campaign_key:key}});
 }
@@ -3141,7 +3244,7 @@ async function panelLogContact(gi, channel, result) {
         next_followup_at: res.row.next_followup_at || '',
       });
       if (result === 'sent' && res.row.sent_at) row.sent_at = res.row.sent_at;
-      fillPanel(row, panelIdx);
+      fillPanel(row, panelIdx, _panelCurrentRows().length);
     }
     toast('Logged: ' + result, 'ok');
     renderTable();
@@ -4270,6 +4373,7 @@ let _mapResultMarkers = [];
 let _mapResultItems  = [];    // [{biz, marker}] — ties list panel to map markers
 let _mapInstance    = null;   // Leaflet map object
 let _mapClusterGroup = null;  // MarkerClusterGroup for result markers
+let _mapPanelActiveKey = '';
 
 function _mapClearResultMarkers() {
   if (_mapClusterGroup) _mapClusterGroup.clearLayers();
@@ -4413,6 +4517,280 @@ function _mapRenderPanel() {
 
 // Pass 24 — stable row lookup: place_id primary, name|city fallback
 // Returns the allRows entry for a biz object from the map results panel.
+function _mapClearResultMarkers() {
+  if (_mapClusterGroup) _mapClusterGroup.clearLayers();
+  _mapResultMarkers = [];
+  _mapResultItems = [];
+  _mapPanelActiveKey = '';
+  window._mrpVisibleNames = [];
+  window._mrpVisibleQueueRows = [];
+  const panel = document.getElementById('map-results-panel');
+  const list = document.getElementById('mrp-list');
+  const count = document.getElementById('mrp-count');
+  const sortEl = document.getElementById('mrp-sort');
+  const groupEl = document.getElementById('mrp-group');
+  const filterEl = document.getElementById('mrp-email-only');
+  if (panel) panel.classList.remove('visible');
+  if (list) list.innerHTML = '';
+  if (count) count.textContent = '';
+  if (sortEl) sortEl.value = 'score';
+  if (groupEl) groupEl.value = 'workflow';
+  if (filterEl) filterEl.checked = false;
+}
+
+function _mapPanelItemKey(biz) {
+  return biz ? _mapBizRunKey(biz) : '';
+}
+
+function _mapPanelActiveKeyForRow(row) {
+  if (!row) return '';
+  const rowKey = _panelMakeKey(row);
+  const hit = _mapResultItems.find(item => {
+    const qrow = _mrpResolveRow(item.biz);
+    return qrow && _panelMakeKey(qrow) === rowKey;
+  });
+  return hit ? _mapPanelItemKey(hit.biz) : '';
+}
+
+function _mapPanelSetActive(biz, skipRender) {
+  _mapPanelActiveKey = _mapPanelItemKey(biz);
+  if (!skipRender) _mapRenderPanel();
+}
+
+function _mapPanelItemScore(item, qrow) {
+  const score = parseInt((qrow && qrow.final_priority_score) || item.biz.final_priority_score || item.biz.score || 0, 10);
+  return Number.isFinite(score) ? score : 0;
+}
+
+function _mapPanelSortItems(items, sortKey) {
+  const sorted = items.slice();
+  sorted.sort((a, b) => {
+    const aRow = _mrpResolveRow(a.biz);
+    const bRow = _mrpResolveRow(b.biz);
+    if (sortKey === 'name') {
+      return (a.biz.name || '').localeCompare(b.biz.name || '');
+    }
+    if (sortKey === 'city') {
+      const cityCompare = (a.biz.city || '').localeCompare(b.biz.city || '');
+      return cityCompare || (a.biz.name || '').localeCompare(b.biz.name || '');
+    }
+    const scoreCompare = _mapPanelItemScore(b, bRow) - _mapPanelItemScore(a, aRow);
+    if (scoreCompare !== 0) return scoreCompare;
+    const aHasEmail = !!((a.biz.email || (aRow && aRow.to_email) || '').trim());
+    const bHasEmail = !!((b.biz.email || (bRow && bRow.to_email) || '').trim());
+    if (aHasEmail !== bHasEmail) return aHasEmail ? -1 : 1;
+    return (a.biz.name || '').localeCompare(b.biz.name || '');
+  });
+  return sorted;
+}
+
+function _mapPanelGroupInfo(item, qrow, groupKey) {
+  const hasEmail = !!((item.biz.email || (qrow && qrow.to_email) || '').trim());
+  if (groupKey === 'flat') return { id: 'all', label: 'All results', order: 0 };
+  if (groupKey === 'city') {
+    const cityLabel = item.biz.city || (qrow && qrow.city) || 'No city';
+    return { id: 'city:' + cityLabel.toLowerCase(), label: cityLabel, order: 0 };
+  }
+  if (groupKey === 'email') {
+    return hasEmail
+      ? { id: 'has-email', label: 'Has email', order: 0 }
+      : { id: 'no-email', label: 'Needs email', order: 1 };
+  }
+  const isSent = !!(qrow && (qrow.sent_at || '').trim());
+  const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
+  const isApproved = !!(qrow && (qrow.approved || '').toLowerCase() === 'true');
+  if (qrow && isSent) return { id: 'sent', label: 'Sent / closed', order: 4 };
+  if (qrow && isScheduled) return { id: 'scheduled', label: 'Scheduled', order: 2 };
+  if (!hasEmail) return { id: 'needs-email', label: 'Needs email', order: 3 };
+  if (qrow && isApproved) return { id: 'approved', label: 'Approved and ready', order: 0 };
+  if (qrow) return { id: 'review', label: 'Review next', order: 1 };
+  return { id: 'other', label: 'Other', order: 5 };
+}
+
+function _mapPanelSectionSort(a, b, groupKey) {
+  if (groupKey === 'city') return a.label.localeCompare(b.label);
+  return (a.order || 0) - (b.order || 0) || a.label.localeCompare(b.label);
+}
+
+function _mrpOpenEdit(qrow) {
+  if (!qrow) return;
+  const rows = Array.isArray(window._mrpVisibleQueueRows) && window._mrpVisibleQueueRows.length
+    ? window._mrpVisibleQueueRows
+    : [qrow];
+  let fi = rows.findIndex(row => _panelMakeKey(row) === _panelMakeKey(qrow));
+  if (fi < 0) fi = 0;
+  const activeKey = _mapPanelActiveKeyForRow(qrow);
+  if (activeKey) _mapPanelActiveKey = activeKey;
+  openPanel(fi, rows);
+  _mapRenderPanel();
+}
+
+function _mapRenderPanel() {
+  const panel = document.getElementById('map-results-panel');
+  const list = document.getElementById('mrp-list');
+  const count = document.getElementById('mrp-count');
+  const bulkBar = document.getElementById('mrp-bulk-bar');
+  const sortEl = document.getElementById('mrp-sort');
+  const groupEl = document.getElementById('mrp-group');
+  const filterEl = document.getElementById('mrp-email-only');
+  if (!panel || !list || !count) return;
+  if (_mapResultItems.length === 0) return;
+
+  const emailOnly = filterEl ? filterEl.checked : false;
+  const sortKey = sortEl ? (sortEl.value || 'score') : 'score';
+  const groupKey = groupEl ? (groupEl.value || 'workflow') : 'workflow';
+
+  let items = emailOnly
+    ? _mapResultItems.filter(({ biz }) => !!(biz.email || '').trim())
+    : _mapResultItems.slice();
+
+  window._mrpVisibleNames = items.map(({ biz }) => biz.name);
+  window._mrpVisibleQueueRows = items.map(({ biz }) => _mrpResolveRow(biz)).filter(Boolean);
+  if (bulkBar) bulkBar.style.display = items.length ? '' : 'none';
+
+  if (!items.length) {
+    count.textContent = `(0 of ${_mapResultItems.length})`;
+    list.innerHTML = '<div class="mrp-empty">No results match the current discovery filters.</div>';
+    panel.classList.add('visible');
+    return;
+  }
+
+  items = _mapPanelSortItems(items, sortKey);
+
+  const sectionsById = new Map();
+  items.forEach(item => {
+    const qrow = _mrpResolveRow(item.biz);
+    const group = _mapPanelGroupInfo(item, qrow, groupKey);
+    if (!sectionsById.has(group.id)) {
+      sectionsById.set(group.id, { id: group.id, label: group.label, order: group.order, items: [] });
+    }
+    sectionsById.get(group.id).items.push({ item, qrow });
+  });
+
+  const activeRow = panelRowKey ? _panelFindRowByKey(panelRowKey) : null;
+  const panelActiveKey = activeRow ? _mapPanelActiveKeyForRow(activeRow) : '';
+  if (panelActiveKey) _mapPanelActiveKey = panelActiveKey;
+
+  const sections = Array.from(sectionsById.values()).sort((a, b) => _mapPanelSectionSort(a, b, groupKey));
+  list.innerHTML = '';
+
+  sections.forEach(section => {
+    const sectionEl = document.createElement('div');
+    sectionEl.className = 'mrp-section';
+
+    if (groupKey !== 'flat') {
+      const hdr = document.createElement('div');
+      hdr.className = 'mrp-section-hdr';
+      hdr.innerHTML =
+        `<span class="mrp-section-title">${escHtml(section.label)}</span>` +
+        `<span class="mrp-section-meta">${section.items.length} lead${section.items.length === 1 ? '' : 's'}</span>`;
+      sectionEl.appendChild(hdr);
+    }
+
+    section.items.forEach(({ item, qrow }) => {
+      const { biz, marker } = item;
+      const hasEmail = !!((biz.email || (qrow && qrow.to_email) || '').trim());
+      const hasWebsite = !!((biz.website || (qrow && qrow.website) || '').trim());
+      const itemEl = document.createElement('div');
+      itemEl.className = 'mrp-item' + (_mapPanelActiveKey === _mapPanelItemKey(biz) ? ' active' : '');
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'mrp-name';
+      nameDiv.title = biz.name || '';
+      nameDiv.textContent = biz.name || '';
+
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'mrp-meta';
+      metaDiv.innerHTML =
+        `<span class="mrp-dot ${hasEmail ? 'has-email' : 'no-email'}"></span>` +
+        `<span>${escHtml(biz.city || '')}${hasEmail ? ' - email' : ' - no email'}</span>`;
+
+      const detailDiv = document.createElement('div');
+      detailDiv.className = 'mrp-detail';
+      detailDiv.innerHTML =
+        `<span>${hasWebsite ? 'Website' : 'No website'}</span>` +
+        `<span>${qrow ? 'In queue' : 'Discovery only'}</span>`;
+
+      itemEl.appendChild(nameDiv);
+      itemEl.appendChild(metaDiv);
+      itemEl.appendChild(detailDiv);
+
+      if (qrow) {
+        const pillsDiv = document.createElement('div');
+        pillsDiv.className = 'mrp-status-pills';
+        const isSent = !!(qrow.sent_at || '').trim();
+        const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+        const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+        const score = _mapPanelItemScore(item, qrow);
+        if (isSent) pillsDiv.innerHTML += `<span class="mrp-pill sent">Sent</span>`;
+        else if (isScheduled) pillsDiv.innerHTML += `<span class="mrp-pill scheduled">Scheduled</span>`;
+        else if (isApproved) pillsDiv.innerHTML += `<span class="mrp-pill approved">Approved</span>`;
+        else pillsDiv.innerHTML += `<span class="mrp-pill drafted">Drafted</span>`;
+        if (score) pillsDiv.innerHTML += `<span class="mrp-pill score">Score ${score}</span>`;
+        itemEl.appendChild(pillsDiv);
+
+        const actsDiv = document.createElement('div');
+        actsDiv.className = 'mrp-item-acts';
+        actsDiv.addEventListener('click', e => e.stopPropagation());
+
+        if (!isSent && !isApproved) {
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'mrp-act';
+          btnApprove.textContent = 'Approve';
+          btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
+          actsDiv.appendChild(btnApprove);
+        }
+        if (!isSent && !isScheduled) {
+          const btnSched = document.createElement('button');
+          btnSched.className = 'mrp-act';
+          btnSched.textContent = 'Schedule';
+          btnSched.onclick = () => _mrpSchedule(biz, qrow.index);
+          actsDiv.appendChild(btnSched);
+        }
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'mrp-act approved';
+        btnEdit.textContent = 'Edit';
+        btnEdit.onclick = () => _mrpOpenEdit(qrow);
+        actsDiv.appendChild(btnEdit);
+
+        const btnPreview = document.createElement('button');
+        btnPreview.className = 'mrp-act';
+        btnPreview.textContent = 'Preview';
+        btnPreview.onclick = () => _mrpPreview(biz, qrow);
+        actsDiv.appendChild(btnPreview);
+
+        if (!isSent) {
+          const btnDel = document.createElement('button');
+          btnDel.className = 'mrp-act danger';
+          btnDel.textContent = 'Delete';
+          btnDel.onclick = () => _mrpDelete(biz, qrow.index);
+          actsDiv.appendChild(btnDel);
+        }
+
+        itemEl.appendChild(actsDiv);
+      }
+
+      itemEl.addEventListener('click', () => {
+        _mapPanelSetActive(biz, true);
+        if (_mapClusterGroup) _mapClusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
+        else marker.openPopup();
+        _mapRenderPanel();
+      });
+
+      sectionEl.appendChild(itemEl);
+    });
+
+    list.appendChild(sectionEl);
+  });
+
+  count.textContent = emailOnly
+    ? `(${items.length} of ${_mapResultItems.length})`
+    : `(${items.length})`;
+  panel.classList.add('visible');
+  setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+}
+
 function _mrpResolveRow(biz) {
   if (!biz || !allRows || !allRows.length) return null;
   // 1. place_id match (stable, from backend Pass 24)

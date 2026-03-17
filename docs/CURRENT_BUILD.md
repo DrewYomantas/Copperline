@@ -1,10 +1,40 @@
 # Current Build Pass
 
 ## Active System
-Discovery Coverage Expansion + Bulk Unschedule
+Discovery Panel Organization + Edit Stability
 
 ## Status
-Pass 29 complete.
+Pass 30 complete.
+
+---
+
+## Completed: Pass 30 - Discovery Panel Organization + Edit Stability - `pending`
+
+Product changes stayed in `lead_engine/dashboard_static/index.html`.
+No backend changes. No protected systems touched.
+
+### Discovery panel organization
+
+- Widened the discovery results rail and replaced the flat scroll list with grouped sections.
+- Added `Group` controls for workflow, city, email status, or a flat list without redesigning the discovery page.
+- Default ordering is now score-first, which pushes higher-priority rows to the top inside each section.
+- Added lightweight detail metadata plus a clear active-result state so the operator can keep track of the lead they are working.
+- Added an explicit `Edit` action from discovery results into the review panel.
+
+### Edit stability
+
+- Review panel navigation now anchors to a snapshot of the visible lead set instead of depending only on the live `filteredRows` table state.
+- Queue-side panel actions now use the anchored row context, so approve, schedule, unschedule, campaign, and contact-log updates keep the same lead open.
+- Overlay clicks no longer dismiss the review panel.
+- Panel close is blocked while debounced text edits are still saving, which reduces accidental loss of place while reviewing many leads.
+- Small fix: panel reschedule toast now uses the actual updated `row.send_after` value.
+
+### Verification
+
+- Extracted inline dashboard JavaScript and ran `node --check` successfully.
+- Ran a live headless-browser smoke pass against the local dashboard server using a synthetic client-side discovery dataset to verify grouped sections, group switching, active selection, edit-panel stability, close-guard behavior, and basic Pass 29 control availability without mutating real queue data.
+- Confirmed only `lead_engine/dashboard_static/index.html` changed in product code.
+- Reconfirmed no protected systems were modified.
 
 ---
 

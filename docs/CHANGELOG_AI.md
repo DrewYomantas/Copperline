@@ -641,6 +641,36 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 - `lead_engine/dashboard_static/index.html`
 
 **Commit:** `d31d720`
+### 2026-03-17 - Pass 30: Discovery Panel Organization + Edit Stability
+
+**Goal:** Make large discovery result sets manageable inside the dashboard without redesigning the rest of the workflow.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+- Reorganized the discovery results rail into grouped sections with workflow, city, email-status, and flat grouping modes.
+- Switched the panel to score-first ordering by default and added clearer metadata density for faster scanning.
+- Added active-result highlighting and an explicit `Edit` action from discovery results into the existing review panel.
+- Stabilized review-panel navigation by anchoring it to a snapshot of the visible lead set instead of only the live filtered table.
+- Updated panel actions to use the anchored row context so edit, approve, schedule, unschedule, campaign, and contact-log interactions keep the same lead open.
+- Prevented accidental review-panel dismissal from overlay clicks and blocked close while debounced saves are still pending.
+- Kept the pass frontend-only. No scheduler core, queue schema, sender, follow-up, or protected pipeline systems changed.
+
+**Verification:**
+- Extracted inline dashboard JavaScript and ran `node --check` successfully.
+- Ran a live headless-browser smoke pass against the local dashboard server using a synthetic client-side discovery dataset to verify grouped result rendering, group switching, active selection, edit stability, close-guard behavior, and basic Pass 29 control availability without writing real queue edits.
+- Confirmed only `lead_engine/dashboard_static/index.html` changed in product code.
+- Reconfirmed protected systems were untouched.
+
+**Commit:** pending
+
+---
+
 ### 2026-03-17 - Pass 29: Discovery Coverage Expansion + Bulk Unschedule
 
 **Goal:** Expand neighborhood discovery coverage from the existing map circle and let operators unschedule batches of scheduled outreach safely.
@@ -667,6 +697,6 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 - Confirmed only `lead_engine/dashboard_static/index.html` changed in product code.
 - Confirmed protected files (`run_lead_engine.py`, queue schema/pipeline, scheduler core) were untouched.
 
-**Commit:** pending
+**Commit:** `aaa3276`
 
 ---

@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Discovery Coverage Expansion + Bulk Unschedule
+Discovery Panel Organization + Edit Stability
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,20 +21,20 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 29 - Discovery Coverage Expansion + Bulk Unschedule
+Pass 30 - Discovery Panel Organization + Edit Stability
 
-- Restored the dashboard after a failed transfer left `lead_engine/dashboard_static/index.html` as a broken 63-byte stub.
-- Added circle-based grid sweep controls using the existing map circle as the boundary.
-- Added multi-industry grid selection, capped grid/call planning, sequential execution, current-run dedupe, compact progress text, cancel support, and one summarized history entry per grid run.
-- Added bulk unschedule for scheduled outreach rows and allowed scheduled rows to be selected in the Scheduled filter.
-- Smoke-verified the dashboard load, grid run/cancel/history behavior, scheduled-row selection, bulk unschedule UI state, and existing single/visible/exhaust discovery actions.
-- Fixed a small stabilization bug so bulk `Unschedule` becomes visibly available when scheduled rows are selected.
-- Kept the pass frontend-only. No scheduler core, queue schema, or protected pipeline logic changed.
+- Reorganized the discovery results panel into practical grouped sections so larger map result sets are easier to scan.
+- Added grouping controls for workflow, city, email status, and flat mode, with score-first ordering as the default.
+- Added clearer active-result highlighting and an explicit `Edit` action from discovery results into the review panel.
+- Stabilized the review panel by anchoring it to a snapshot of the visible lead set instead of the live filtered table only.
+- Prevented accidental dismissal from overlay clicks and blocked close while debounced panel saves are still pending.
+- Smoke-verified dashboard load, grouped result rendering, marker/result interaction, stable edit state across queue filter changes, and basic Pass 29 discovery controls.
+- Kept the pass frontend-only. No scheduler core, queue schema, sender, follow-up, or other protected systems changed.
 
-Commit: `aaa3276`
+Commit: pending
 
 ## Previous Completed Pass
-Pass 18b - Human Draft Enforcement Layer
+Pass 29 - Discovery Coverage Expansion + Bulk Unschedule
 
 ## Next Pass
 TBD
