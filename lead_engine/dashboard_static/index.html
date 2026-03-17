@@ -556,9 +556,12 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 /* Pass 23 — map panel command center */
 .mrp-bulk-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
 .mrp-bulk-lbl{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.mrp-bulk-meta{font-size:10px;color:var(--dim);margin-right:4px}
 .mrp-bulk-btn{padding:3px 8px;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
 .mrp-bulk-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
 .mrp-bulk-btn.danger:hover{background:#c0392b;color:#fff;border-color:#c0392b}
+.mrp-bulk-btn.primary{background:var(--blue-glow);color:var(--blue);border-color:rgba(79,142,247,.32)}
+.mrp-bulk-btn.primary:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
 .mrp-item-acts{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
 .mrp-act{padding:2px 7px;font-size:10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;line-height:1.5;transition:background .12s,color .12s}
 .mrp-act:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -1278,6 +1281,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
           <div class="mrp-triage-bar" id="mrp-triage-bar"></div>
           <div class="mrp-bulk-bar" id="mrp-bulk-bar" style="display:none">
             <span class="mrp-bulk-lbl">Visible:</span>
+            <span class="mrp-bulk-meta" id="mrp-bulk-meta"></span>
+            <button class="mrp-bulk-btn primary" id="mrp-bulk-prep" onclick="_mrpBulkPrepOutreach()" title="Approve outreach-ready visible leads and open them in review">Prep Outreach</button>
+            <button class="mrp-bulk-btn" id="mrp-bulk-review" onclick="_mrpOpenVisibleReview()" title="Open the current visible discovery subset in the outreach review panel">Review Visible</button>
             <button class="mrp-bulk-btn" style="background:var(--green-bg);color:var(--green);border-color:rgba(62,207,114,.35)" onclick="_mrpBulkApprove()" title="Approve all visible results that are in queue">✓ Approve</button>
             <button class="mrp-bulk-btn" onclick="_mrpBulkSchedule()" title="Schedule all visible approved results for tomorrow">🕐 Schedule</button>
             <button class="mrp-bulk-btn danger" onclick="_mrpBulkDelete()" title="Delete all visible results from queue">✕ Delete</button>
@@ -4814,7 +4820,8 @@ function _mapRenderPanel() {
 
   window._mrpVisibleNames = items.map(({ biz }) => biz.name);
   window._mrpVisibleQueueRows = items.map(({ biz }) => _mrpResolveRow(biz)).filter(Boolean);
-  if (bulkBar) bulkBar.style.display = items.length ? '' : 'none';
+  if (bulkBar) bulkBar.style.display = _mrpVisibleQueueRowsDeduped().length ? '' : 'none';
+  _mrpRefreshBulkBarMeta();
 
   if (!items.length) {
     count.textContent = `(0 of ${_mapResultItems.length})`;
@@ -5000,6 +5007,59 @@ function _mrpFindQueueRow(bizName) {
 
 // Pass 23 — map panel per-item and bulk actions (Pass 24: use _mrpResolveRow)
 
+function _mrpVisibleQueueRowsDeduped() {
+  const rows = Array.isArray(window._mrpVisibleQueueRows) ? window._mrpVisibleQueueRows : [];
+  const seen = new Set();
+  return rows.filter(row => {
+    const key = _panelMakeKey(row);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function _mrpVisibleReviewRows() {
+  return _mrpVisibleQueueRowsDeduped().filter(row => !(row.sent_at || '').trim());
+}
+
+function _mrpVisibleReadyRows() {
+  return _mrpVisibleReviewRows().filter(row => !!((row.to_email || '').trim().includes('@')));
+}
+
+function _mrpRefreshBulkBarMeta() {
+  const metaEl = document.getElementById('mrp-bulk-meta');
+  const prepBtn = document.getElementById('mrp-bulk-prep');
+  const reviewBtn = document.getElementById('mrp-bulk-review');
+  const reviewRows = _mrpVisibleReviewRows();
+  const readyRows = _mrpVisibleReadyRows();
+  const needsApproval = readyRows.filter(row => String(row.approved || '').toLowerCase() !== 'true').length;
+  if (metaEl) {
+    metaEl.textContent = reviewRows.length
+      ? `${reviewRows.length} reviewable • ${readyRows.length} ready • ${needsApproval} need approval`
+      : 'No reviewable queue rows in view';
+  }
+  if (prepBtn) prepBtn.style.display = readyRows.length ? 'inline-flex' : 'none';
+  if (reviewBtn) reviewBtn.style.display = reviewRows.length ? 'inline-flex' : 'none';
+}
+
+function _mrpOpenRowsInOutreach(rows) {
+  const keys = (rows || []).map(_panelMakeKey).filter(Boolean);
+  if (!keys.length) { toast('No visible review rows available', 'err'); return; }
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  setTimeout(() => {
+    const freshRows = keys.map(_panelFindRowByKey).filter(Boolean);
+    if (!freshRows.length) { toast('Visible review set is no longer available', 'err'); return; }
+    renderTable();
+    openPanel(0, freshRows);
+  }, 180);
+}
+
+function _mrpOpenVisibleReview() {
+  const reviewRows = _mrpVisibleReviewRows();
+  if (!reviewRows.length) { toast('No visible review rows available', 'err'); return; }
+  _mrpOpenRowsInOutreach(reviewRows);
+}
+
 async function _mrpApprove(biz, idx) {
   try {
     await api('/api/approve_row', { index: idx });
@@ -5107,8 +5167,7 @@ async function _mrpDelete(biz, idx) {
 }
 
 async function _mrpBulkApprove() {
-  const names = window._mrpVisibleNames || [];
-  const toApprove = names.map(n => _mrpFindQueueRow(n)).filter(r => r && (r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
+  const toApprove = _mrpVisibleQueueRowsDeduped().filter(r => String(r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
   if (!toApprove.length) { toast('No unapproved rows in visible set', 'err'); return; }
   if (!confirm('Approve ' + toApprove.length + ' visible lead(s)?')) return;
   let ok = 0, fail = 0;
@@ -5122,8 +5181,7 @@ async function _mrpBulkApprove() {
 }
 
 async function _mrpBulkSchedule() {
-  const names = window._mrpVisibleNames || [];
-  const toSched = names.map(n => _mrpFindQueueRow(n)).filter(r => r && (r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
+  const toSched = _mrpVisibleQueueRowsDeduped().filter(r => String(r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
   if (!toSched.length) { toast('No approved+unscheduled rows in visible set', 'err'); return; }
   if (!confirm('Schedule ' + toSched.length + ' approved lead(s) for tomorrow?')) return;
   let ok = 0, fail = 0;
@@ -5138,9 +5196,47 @@ async function _mrpBulkSchedule() {
   toast(`Scheduled ${ok} lead(s)${fail ? ' — ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
 }
 
+async function _mrpBulkPrepOutreach() {
+  const readyRows = _mrpVisibleReadyRows();
+  if (!readyRows.length) { toast('No outreach-ready visible leads in this view', 'err'); return; }
+  const readyKeys = readyRows.map(_panelMakeKey);
+  const toApprove = readyRows.filter(row => String(row.approved || '').toLowerCase() !== 'true');
+  const prompt = toApprove.length
+    ? `Approve ${toApprove.length} visible outreach-ready lead(s) and open review for ${readyRows.length}?`
+    : `Open outreach review for ${readyRows.length} visible outreach-ready lead(s)?`;
+  if (!confirm(prompt)) return;
+
+  let ok = 0, fail = 0;
+  for (const row of toApprove) {
+    try {
+      const res = await api('/api/approve_row', { index: row.index });
+      if (res.ok) ok++;
+      else fail++;
+    } catch(e) { fail++; }
+  }
+
+  await loadAll();
+  _mapRenderPanel();
+
+  const freshRows = readyKeys.map(_panelFindRowByKey).filter(row =>
+    row && !(row.sent_at || '').trim() && !!((row.to_email || '').trim().includes('@'))
+  );
+  if (!freshRows.length) {
+    toast(`Prepared ${ok} lead(s) but the visible review set is no longer available`, ok > 0 ? 'ok' : 'err');
+    return;
+  }
+
+  _mrpOpenRowsInOutreach(freshRows);
+  toast(
+    toApprove.length
+      ? `Prepared ${ok}/${toApprove.length} lead(s) for outreach${fail ? ' — ' + fail + ' failed' : ''}`
+      : `Opened ${freshRows.length} outreach-ready lead(s) in review`,
+    ok > 0 || !toApprove.length ? 'ok' : 'err'
+  );
+}
+
 async function _mrpBulkDelete() {
-  const names = window._mrpVisibleNames || [];
-  const toDel = names.map(n => _mrpFindQueueRow(n)).filter(r => r && !(r.sent_at || '').trim());
+  const toDel = _mrpVisibleQueueRowsDeduped().filter(r => !(r.sent_at || '').trim());
   if (!toDel.length) { toast('No deletable rows in visible set', 'err'); return; }
   if (!confirm('Delete ' + toDel.length + ' visible lead(s) from queue? This cannot be undone.')) return;
   const sorted = toDel.slice().sort((a, b) => b.index - a.index);
