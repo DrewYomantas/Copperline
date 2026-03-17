@@ -86,6 +86,149 @@ _AMBIGUOUS_NAME_TOKENS = {
     "services llc", "services inc",
 }
 
+# ── Pass 26: Chain/franchise detection + lead quality scoring ────────────────
+
+# Name fragments that reliably indicate a chain or franchise.
+# Checked case-insensitively against the full business name.
+_CHAIN_NAME_FRAGMENTS = {
+    # Fast food / national brands
+    "mcdonalds", "mcdonald's", "subway", "starbucks", "dunkin", "dominos",
+    "domino's", "taco bell", "wendys", "wendy's", "burger king", "chick-fil-a",
+    "chick fil a", "kfc", "pizza hut", "little caesars", "jimmy john",
+    "jersey mike", "panera",
+    # National service chains that appear in our target industries
+    "roto-rooter", "roto rooter", "one hour heating", "one hour air",
+    "mr. rooter", "mr rooter", "mr. sparky", "mr sparky", "mr. handyman",
+    "ace hardware", "home depot", "lowes", "lowe's",
+    "midas", "jiffy lube", "firestone", "pep boys", "mavis",
+    "service experts", "aire serv", "coolray", "griffith energy",
+    "hiller", "american residential services", "ars/rescue rooter",
+    "andy's sprinkler",
+    # Franchise structure signals in name
+    "franchise", "franchisee",
+}
+
+# Corporate entity suffixes that, combined with review-count signals,
+# suggest a chain. Used as secondary evidence, not sole criterion.
+_CORPORATE_SUFFIXES = (
+    " llc", " inc", " corp", " corporation", " holdings",
+    " group", " enterprises", " partners", " national",
+)
+
+
+def is_chain_name(name: str) -> bool:
+    """
+    Return True if the business name matches a known chain pattern.
+
+    Uses two tiers:
+    1. Direct fragment match against known chain names (high confidence).
+    2. Corporate suffix pattern (weaker signal — used for flagging only,
+       not automatic exclusion).
+
+    Only tier-1 matches trigger exclusion; tier-2 is surfaced in scan_notes.
+    """
+    name_lc = name.strip().lower()
+    # Tier 1: direct known-chain match
+    for fragment in _CHAIN_NAME_FRAGMENTS:
+        if fragment in name_lc:
+            return True
+    return False
+
+
+def score_lead_quality(
+    email: str,
+    website: str,
+    is_chain: bool,
+    rating: Optional[float],
+    review_count: Optional[int],
+) -> int:
+    """
+    Lightweight lead quality score from 0–100.
+
+    Components:
+      +35  email address found
+      +20  has own website (non-directory)
+      +20  not a chain/franchise
+      +15  rating 3.5–4.7 (sweet spot: real business, not inflated)
+      +10  review count >= 10 (established, not brand new or fake)
+
+    Returns integer 0–100. Higher = higher priority.
+    """
+    score = 0
+    if email:
+        score += 35
+    if website:
+        score += 20
+    if not is_chain:
+        score += 20
+    if rating is not None:
+        try:
+            r = float(rating)
+            if 3.5 <= r <= 4.7:
+                score += 15
+        except (TypeError, ValueError):
+            pass
+    if review_count is not None:
+        try:
+            if int(review_count) >= 10:
+                score += 10
+        except (TypeError, ValueError):
+            pass
+    return min(score, 100)
+
+
+def filter_and_score_rows(
+    rows: List[Dict],
+    strict_chain_filter: bool = True,
+) -> List[Dict]:
+    """
+    Apply chain filtering and attach lead_quality_score to each row.
+
+    Safe fallback rule (Part 6 of spec):
+      If strict filtering would remove >= 70% of rows, disable chain
+      exclusion and include all rows with flags.
+
+    Returns the filtered (or unfiltered) row list with scores attached.
+    """
+    if not rows:
+        return rows
+
+    # Attach scores and chain flags first
+    for row in rows:
+        chain_flag = is_chain_name(row.get("business_name", ""))
+        row["_is_chain"] = chain_flag
+        row["lead_quality_score"] = score_lead_quality(
+            email=row.get("to_email", ""),
+            website=row.get("website", ""),
+            is_chain=chain_flag,
+            rating=row.get("_rating"),
+            review_count=row.get("_review_count"),
+        )
+        # Append chain note to scan_notes
+        if chain_flag:
+            notes = row.get("scan_notes", "")
+            chain_note = "likely chain/franchise"
+            row["scan_notes"] = (notes + "; " + chain_note).lstrip("; ")
+
+    if not strict_chain_filter:
+        return rows
+
+    # Count how many would survive strict filtering
+    surviving = [r for r in rows if not r.get("_is_chain")]
+    survival_rate = len(surviving) / len(rows)
+
+    if survival_rate < 0.30:
+        # Fallback: area is full of chains — include everything with flags
+        print(f"  [filter] Strict chain filter would remove {len(rows)-len(surviving)}/{len(rows)} "
+              f"rows (< 30% survival) — relaxing filter to avoid empty results")
+        return rows
+
+    if surviving:
+        print(f"  [filter] Chain filter: kept {len(surviving)}/{len(rows)} rows "
+              f"({len(rows)-len(surviving)} chain(s) excluded)")
+    return surviving
+
+
 INDUSTRY_QUERIES = {
     "plumbing":      "plumber",
     "hvac":          "HVAC heating cooling",
@@ -387,7 +530,8 @@ def search_places(query: str, city: str, state: str, api_key: str,
         "X-Goog-Api-Key": api_key,
         "X-Goog-FieldMask": (
             "places.id,places.displayName,places.formattedAddress,"
-            "places.nationalPhoneNumber,places.websiteUri"
+            "places.nationalPhoneNumber,places.websiteUri,"
+            "places.rating,places.userRatingCount"
         ),
     }
     payload = json.dumps({
@@ -537,6 +681,10 @@ def discover_prospects(industry: str, city: str, state: str,
             print(f"  skip (duplicate): {name}")
             continue
 
+        # Pass 26: extract rating/review signals while still in the Places response
+        _rating = place.get("rating")
+        _review_count = place.get("userRatingCount")
+
         print(f"  Processing: {name} ...", end=" ", flush=True)
 
         phone = (place.get("nationalPhoneNumber") or "").replace(" ","").replace("-","").replace("(","").replace(")","").replace("+1","")
@@ -645,11 +793,16 @@ def discover_prospects(industry: str, city: str, state: str,
             "contact_form_url":   social.get("contact_form_url", ""),
             "social_channels":    social_channels,
             "social_dm_text":     social_dm_text,
+            # Temporary scoring fields (stripped before CSV write via extrasaction=ignore)
+            "_rating":            _rating,
+            "_review_count":      _review_count,
         }
         new_rows.append(row)
         existing.add(name.lower())
         time.sleep(0.3)
 
+    # Pass 26: filter chains and attach quality scores before writing to CSV
+    new_rows = filter_and_score_rows(new_rows, strict_chain_filter=True)
     _append_to_prospects(PROSPECTS_CSV, new_rows)
     return new_rows
 
@@ -673,7 +826,8 @@ def search_places_area(
         "X-Goog-Api-Key": api_key,
         "X-Goog-FieldMask": (
             "places.id,places.displayName,places.formattedAddress,"
-            "places.nationalPhoneNumber,places.websiteUri,places.location"
+            "places.nationalPhoneNumber,places.websiteUri,places.location,"
+            "places.rating,places.userRatingCount"
         ),
     }
     payload = json.dumps({
@@ -818,6 +972,10 @@ def discover_prospects_area(
 
         print(f"contactability={contactability}")
 
+        # Pass 26: extract rating/review signals from Places response
+        _rating = place.get("rating")
+        _review_count = place.get("userRatingCount")
+
         # Extract exact coordinates from Places location field
         _loc     = place.get("location") or {}
         place_lat = str(_loc.get("latitude",  ""))
@@ -847,11 +1005,16 @@ def discover_prospects_area(
             "social_dm_text":     social_dm_text,
             "lat":                place_lat,
             "lng":                place_lng,
+            # Temporary scoring fields (stripped before CSV write via extrasaction=ignore)
+            "_rating":            _rating,
+            "_review_count":      _review_count,
         }
         new_rows.append(row)
         existing.add(name.lower())
         time.sleep(0.3)
 
+    # Pass 26: filter chains and attach quality scores before writing to CSV
+    new_rows = filter_and_score_rows(new_rows, strict_chain_filter=True)
     _append_to_prospects(PROSPECTS_CSV, new_rows)
     return new_rows
 
