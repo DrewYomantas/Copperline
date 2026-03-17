@@ -1,10 +1,73 @@
 # Current Build Pass
 
 ## Active System
-Scheduling Clarity + Queue Timeline UX
+Observation-Led Outreach Rewrite
 
 ## Status
-Pass 35 complete.
+Pass 36 complete.
+
+---
+
+## Completed: Pass 36 - Observation-Led Outreach Rewrite - TBD
+
+Product changes across three files:
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+
+No protected systems touched. Queue schema column addition is additive and non-send-path only.
+
+### Core rule change
+
+First-touch outreach generation is now blocked without a `business_specific_observation`.
+This is a product rule change, not copy polish. A draft without a specific observation cannot be created or regenerated.
+
+### email_draft_agent.py — full rewrite to v9
+
+- Removed all previous industry-angle templates (`_ANGLE_CLAUSE`, `_OPENERS`, `_SECOND_SENTENCES`).
+- Added `ObservationMissingError` and `DraftInvalidError` exception types for clear failure signaling.
+- Added `_require_observation()` — blocks if observation absent or under 15 chars.
+- Added `_is_generic_observation()` — blocks observations that are category labels rather than business-specific details.
+- Added `validate_draft()` — deterministic validation layer that blocks banned buzzwords, hard CTAs, links, pricing, sender-centered filler openers, and drafts that don't materially reflect the observation.
+- Added three controlled variation families (A/B/C) only — no open-ended variation:
+  - Family A: observation → grounded sentence → soft open
+  - Family B: observation → operational implication → soft open
+  - Family C: observation → soft grounded note → soft open
+- `draft_email()` now requires `observation` arg or `prospect["business_specific_observation"]` field. Fails clearly if absent or invalid.
+- `draft_social_messages()` now requires observation. Same failure path.
+- Added prefix normalization so observations starting with "saw"/"noticed" don't stack with the variant prefix.
+- `DRAFT_VERSION` bumped v8 → v9.
+
+### dashboard_server.py — additive changes only
+
+- Added `business_specific_observation` to `PENDING_COLUMNS` as the final column. Additive, non-send-path, DictReader-safe for existing rows.
+- Added `/api/update_observation` — persists observation to queue row. Rejects absent, short, or generic observations.
+- Added `/api/regenerate_draft` — requires observation (stored or override). Returns structured `blocked_reason` on failure. On success, writes new subject/body/DM drafts back to queue and returns all fields to frontend.
+
+### index.html — observation field + regenerate controls
+
+- Added observation CSS block (`.obs-section`, `.obs-input`, `.btn-regen`, `.obs-regen-status`, `.obs-blocked-banner`).
+- Added observation HTML panel section between insight and social sections: textarea, hint, required tag, regenerate button, status line.
+- Added `_panelPopulateObs(row)` — hydrates observation field when panel opens; shows blocked state + hint when observation absent; enables regen button when observation present.
+- Added `panelObsChanged(value)` — live input handler; enables/disables regen button; updates hint text in real time.
+- Added `panelRegenerateDraft()` — calls `/api/regenerate_draft`; on success updates subject, body, DM draft fields in panel and in-memory row; on `observation_missing` shows blocked banner; on `draft_invalid` shows specific reason.
+- Wired `_panelPopulateObs(row)` call into `fillPanel()` after the insight section.
+
+### Verification
+
+- `python -m py_compile` clean on `email_draft_agent.py` and `dashboard_server.py`.
+- `node --check` clean on extracted dashboard JS.
+- 23/23 targeted verification checks passed:
+  - `draft_email` blocks when observation missing
+  - `draft_social_messages` blocks when observation missing
+  - Generic observation detected and rejected
+  - Short observation rejected
+  - Valid observation produces clean draft, observation token appears in body
+  - No banned words in output
+  - DM observation token appears, no links in DM
+  - `validate_draft` rejects banned words, links, pricing
+  - Controlled variations produce distinct openings across 3 businesses
+  - Observation from `prospect` field works (not only from arg)
 
 ---
 

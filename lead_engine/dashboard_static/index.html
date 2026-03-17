@@ -340,6 +340,24 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .btn-copy:hover{color:var(--text);border-color:var(--border-hi)}
 .btn-copy.copied{color:var(--green);border-color:rgba(62,207,114,.4)}
 
+/* ── Observation field (Pass 36) ─────────────────────────────────────────── */
+.obs-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-top:4px}
+.obs-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.obs-label-required{color:var(--amber);font-size:9px;font-weight:600}
+.obs-input{width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:12px;font-family:var(--mono);padding:7px 10px;line-height:1.55;resize:vertical;min-height:56px;transition:.12s}
+.obs-input:focus{outline:none;border-color:var(--copper)}
+.obs-input.obs-blocked{border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.06)}
+.obs-hint{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5}
+.obs-hint.obs-hint-blocked{color:var(--amber)}
+.obs-regen-row{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.btn-regen{background:var(--copper);color:#fff;border:none;border-radius:var(--rs);padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:.12s;font-family:var(--sans)}
+.btn-regen:hover{opacity:.88}
+.btn-regen:disabled{opacity:.4;cursor:not-allowed}
+.obs-regen-status{font-size:10px;color:var(--muted);flex:1}
+.obs-regen-status.obs-err{color:var(--red,#e05)}
+.obs-regen-status.obs-ok{color:var(--green)}
+.obs-blocked-banner{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:var(--rs);padding:7px 10px;font-size:11px;color:var(--amber);line-height:1.45;margin-top:6px}
+
 /* ══════════════════════════════════════════════════════
    TERRITORY PLANNER — City cards + industry coverage
    ══════════════════════════════════════════════════════ */
@@ -1101,6 +1119,25 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
         <div class="panel-label">💡 AI Insight</div>
         <div id="panel-insight-signals" style="font-size:10px;color:var(--muted);margin-bottom:4px"></div>
         <div id="panel-insight-text" class="sq-insight"></div>
+      </div>
+      <!-- Observation field (Pass 36) — required for first-touch regeneration -->
+      <div class="panel-section" id="panel-obs-section">
+        <div class="obs-section">
+          <div class="obs-label">
+            <span>🔍 Business Observation</span>
+            <span class="obs-label-required" id="panel-obs-required-tag">required for draft</span>
+          </div>
+          <textarea class="obs-input" id="panel-obs-input" rows="2"
+            placeholder="e.g. saw they're juggling snow work and regular contracting on the same page — mixed seasonal vs steady-work lineup"
+            oninput="panelObsChanged(this.value)"></textarea>
+          <div class="obs-hint" id="panel-obs-hint">
+            Specific detail about this business — not a category label. Must be specific enough it wouldn't fit most businesses in the same trade.
+          </div>
+          <div class="obs-regen-row">
+            <button class="btn-regen" id="panel-regen-btn" onclick="panelRegenerateDraft()" disabled>↻ Regenerate Draft</button>
+            <span class="obs-regen-status" id="panel-regen-status"></span>
+          </div>
+        </div>
       </div>
       <!-- Social channels section — shown when social data exists -->
       <div class="panel-section" id="panel-social-section" style="display:none">
@@ -2098,6 +2135,9 @@ async function fillPanel(row, fi, totalRows) {
     }
   }
 
+  // ── Observation field (Pass 36) ───────────────────────────────────────────
+  _panelPopulateObs(row);
+
   // ── Schedule info block ───────────────────────────────────────────────────
   const schedEl = document.getElementById('panel-schedule-info');
   if (schedEl) {
@@ -2275,6 +2315,172 @@ function channelBadgesInline(row) {
     parts.push(`<a class="ch-badge ch-form" href="${escHtml(row.contact_form_url)}" target="_blank"
       onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px" title="Contact form">⊟</a>`);
   return parts.length ? `<div class="ch-wrap" style="margin-top:2px">${parts.join('')}</div>` : '';
+}
+
+// ── Observation field helpers (Pass 36) ──────────────────────────────────────
+
+function _panelPopulateObs(row) {
+  const obsInput   = document.getElementById('panel-obs-input');
+  const regenBtn   = document.getElementById('panel-regen-btn');
+  const regenStat  = document.getElementById('panel-regen-status');
+  const obsHint    = document.getElementById('panel-obs-hint');
+  const obsReqTag  = document.getElementById('panel-obs-required-tag');
+  if (!obsInput) return;
+
+  const obs     = (row.business_specific_observation || '').trim();
+  const isSent  = !!row.sent_at;
+
+  obsInput.value    = obs;
+  obsInput.disabled = isSent;
+  regenStat.textContent = '';
+  regenStat.className   = 'obs-regen-status';
+
+  if (isSent) {
+    // Already sent — observation is read-only reference only
+    obsInput.classList.remove('obs-blocked');
+    if (regenBtn) regenBtn.disabled = true;
+    if (obsReqTag) obsReqTag.style.display = 'none';
+    obsHint.textContent = 'Draft already sent — observation is read-only.';
+    obsHint.className   = 'obs-hint';
+  } else if (!obs) {
+    // Missing — block regeneration clearly
+    obsInput.classList.add('obs-blocked');
+    if (regenBtn) regenBtn.disabled = true;
+    if (obsReqTag) { obsReqTag.style.display = ''; obsReqTag.textContent = 'required for draft'; }
+    obsHint.textContent = 'Add a specific detail about this business before regenerating. Must not be a generic category label — write something that would not fit most businesses in the same trade.';
+    obsHint.className   = 'obs-hint obs-hint-blocked';
+  } else {
+    // Has observation — ready to regenerate
+    obsInput.classList.remove('obs-blocked');
+    if (regenBtn) regenBtn.disabled = false;
+    if (obsReqTag) { obsReqTag.style.display = ''; obsReqTag.textContent = 'observation on file'; }
+    obsHint.textContent = 'Observation saved. Use ↻ Regenerate Draft to rebuild email + DM copy from this observation.';
+    obsHint.className   = 'obs-hint';
+  }
+}
+
+function panelObsChanged(value) {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  const obs      = value.trim();
+  const regenBtn = document.getElementById('panel-regen-btn');
+  const obsInput = document.getElementById('panel-obs-input');
+  const obsHint  = document.getElementById('panel-obs-hint');
+  const obsReqTag = document.getElementById('panel-obs-required-tag');
+
+  // Update in-memory row so navigation preserves unsaved text
+  row.business_specific_observation = obs;
+
+  if (!obs) {
+    if (regenBtn) regenBtn.disabled = true;
+    obsInput.classList.add('obs-blocked');
+    if (obsReqTag) obsReqTag.textContent = 'required for draft';
+    obsHint.textContent = 'Add a specific detail about this business before regenerating.';
+    obsHint.className = 'obs-hint obs-hint-blocked';
+    return;
+  }
+
+  if (regenBtn) regenBtn.disabled = false;
+  obsInput.classList.remove('obs-blocked');
+  if (obsReqTag) obsReqTag.textContent = 'unsaved — will save on regenerate';
+  obsHint.textContent = 'Click ↻ Regenerate Draft to save this observation and rebuild copy from it.';
+  obsHint.className = 'obs-hint';
+}
+
+async function panelRegenerateDraft() {
+  const row = _panelCurrentRow();
+  if (!row) return;
+
+  const obsInput  = document.getElementById('panel-obs-input');
+  const regenBtn  = document.getElementById('panel-regen-btn');
+  const regenStat = document.getElementById('panel-regen-status');
+  const obsHint   = document.getElementById('panel-obs-hint');
+  const obsReqTag = document.getElementById('panel-obs-required-tag');
+  const obs       = (obsInput?.value || '').trim();
+
+  if (!obs) {
+    regenStat.textContent = 'Observation required — add a specific business detail first.';
+    regenStat.className   = 'obs-regen-status obs-err';
+    obsInput.classList.add('obs-blocked');
+    return;
+  }
+
+  const gi = allRows.indexOf(row);
+  if (gi < 0) { toast('Cannot locate row — refresh queue', 'err'); return; }
+
+  regenBtn.disabled     = true;
+  regenStat.textContent = 'Regenerating…';
+  regenStat.className   = 'obs-regen-status';
+
+  try {
+    const res = await api('/api/regenerate_draft', 'POST', {
+      index:         gi,
+      business_name: row.business_name,
+      observation:   obs,
+    });
+
+    if (!res.ok) {
+      const reason = res.blocked_reason || '';
+      if (reason === 'observation_missing') {
+        regenStat.textContent = 'Blocked: ' + (res.error || 'Observation missing or invalid.');
+        regenStat.className   = 'obs-regen-status obs-err';
+        obsInput.classList.add('obs-blocked');
+        if (obsReqTag) obsReqTag.textContent = 'required for draft';
+        obsHint.textContent = res.error || 'Observation is required to generate a draft.';
+        obsHint.className   = 'obs-hint obs-hint-blocked';
+      } else {
+        regenStat.textContent = 'Draft invalid: ' + (res.error || 'Unknown error.');
+        regenStat.className   = 'obs-regen-status obs-err';
+      }
+      regenBtn.disabled = false;
+      return;
+    }
+
+    // Success — update in-memory row and panel fields
+    row.subject                     = res.subject;
+    row.body                        = res.body;
+    row.facebook_dm_draft           = res.dm_draft;
+    row.instagram_dm_draft          = res.dm_draft;
+    row.contact_form_message        = res.dm_draft;
+    row.social_dm_text              = res.dm_draft;
+    row.business_specific_observation = obs;
+    row.draft_version               = 'v9';
+    panelRowKey = _panelMakeKey(row);
+
+    document.getElementById('panel-subject').value = res.subject || '';
+    document.getElementById('panel-body').value    = res.body    || '';
+
+    // Refresh social drafts section if visible
+    const draftsWrap = document.getElementById('panel-social-drafts');
+    if (draftsWrap && res.dm_draft) {
+      const safeText = escHtml(res.dm_draft);
+      const safeJs   = JSON.stringify(res.dm_draft);
+      draftsWrap.innerHTML =
+        `<div class="panel-dm-box" style="margin-top:6px">
+          <div class="panel-dm-label">
+            <span>f Facebook DM</span>
+            <button class="btn-copy" onclick="panelCopyText(this,${safeJs})">Copy</button>
+          </div>
+          <div class="panel-dm-text">${safeText}</div>
+        </div>`;
+    }
+
+    obsInput.classList.remove('obs-blocked');
+    if (obsReqTag) obsReqTag.textContent = 'observation saved';
+    obsHint.textContent = 'Draft rebuilt from observation. Review subject + body above before approving.';
+    obsHint.className   = 'obs-hint';
+
+    regenStat.textContent = '✓ Draft regenerated';
+    regenStat.className   = 'obs-regen-status obs-ok';
+
+    renderTable();
+    toast('Draft rebuilt from observation', 'ok');
+  } catch (err) {
+    regenStat.textContent = 'Error: ' + err.message;
+    regenStat.className   = 'obs-regen-status obs-err';
+  }
+
+  regenBtn.disabled = false;
 }
 
 function panelCopyDm(btn) {

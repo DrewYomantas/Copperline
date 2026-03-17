@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Scheduling Clarity + Queue Timeline UX
+Observation-Led Outreach Rewrite
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,19 +21,21 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 35 - Scheduling Clarity + Queue Timeline UX
+Pass 36 - Observation-Led Outreach Rewrite
 
-- Added a queue timeline explainer bar under the outreach filters so operators can tell how `Actionable`, `Approved`, `Scheduled`, and `All` relate to future send windows.
-- Added clearer status-cell messaging for outreach rows, distinguishing `Approved` and ready-now work from future `Scheduled` rows and schedule-window-reached rows.
-- Added exact plus relative schedule timing helpers in the dashboard UI so scheduled rows show both when they are due and whether they are still waiting or already eligible to send now.
-- Upgraded the review panel schedule block so it explains whether a row is waiting for a future morning window, already ready from a reached schedule, or simply approved and ready to send immediately.
-- Tightened schedule/unschedule feedback copy across review/table/discovery bridge actions so the UI clearly says whether a row is waiting for later or back in a ready-now queue.
-- Verified dashboard load, queue status clarity, scheduled vs ready-now distinction, panel schedule explanations, schedule/unschedule actions, and basic Pass 29-34 control availability with a focused live headless smoke pass using a synthetic queue subset and stubbed API writes.
+- Rewrote `email_draft_agent.py` (DRAFT_VERSION v9) so first-touch email and DM generation requires a `business_specific_observation` field.
+- First-touch generation fails with a clear `ObservationMissingError` if observation is absent or too generic.
+- Validation layer (`validate_draft`) deterministically blocks banned buzzwords, hard CTAs, links, pricing, and drafts that don't materially reflect the observation.
+- Three controlled variation families (A/B/C) are the only allowed output patterns — no open-ended variation that can drift back into sales copy.
+- Added `business_specific_observation` as an additive non-send-path column to `PENDING_COLUMNS` in `dashboard_server.py`.
+- Added `/api/update_observation` and `/api/regenerate_draft` endpoints — both block clearly when observation is missing or invalid.
+- Added observation input field + regenerate button to the review panel in `index.html`, with blocked state messaging when observation is absent.
+- Verified 23/23 checks pass: blocking, validation, output quality, variation, field-vs-arg observation routing.
 
-Commit: `4e18c3c`
+Commit: TBD
 
 ## Previous Completed Pass
-Pass 34 - Outreach Review Throughput + Queue Control
+Pass 35 - Scheduling Clarity + Queue Timeline UX
 
 ## Next Pass
 TBD
@@ -49,9 +51,10 @@ TBD
 ## Core Operator Workflow
 
 1. Discover businesses via map
-2. System generates outreach drafts
-3. Operator reviews, approves, or schedules for tomorrow morning
-4. Scheduled queue sorted by send time - open it in the morning, send in order
-5. Emails sent manually via Gmail
-6. Follow-ups tracked automatically
-7. Clients onboarded to missed-call texting service
+2. Add a business_specific_observation for each strong lead
+3. System generates observation-led outreach drafts
+4. Operator reviews, approves, or schedules for tomorrow morning
+5. Scheduled queue sorted by send time - open it in the morning, send in order
+6. Emails sent manually via Gmail
+7. Follow-ups tracked automatically
+8. Clients onboarded to missed-call texting service

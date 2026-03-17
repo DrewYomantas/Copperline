@@ -9,15 +9,15 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Scheduling Clarity + Queue Timeline UX
+Observation-Led Outreach Rewrite
 
 ## Current Build Pass
-Pass 35 - Scheduling Clarity + Queue Timeline UX (complete)
+Pass 36 - Observation-Led Outreach Rewrite (complete)
 
 ## Last Completed Pass
-Pass 35 - Scheduling Clarity + Queue Timeline UX
+Pass 36 - Observation-Led Outreach Rewrite
 
-Commit: `4e18c3c`
+Commit: TBD
 
 ## Next Pass
 TBD

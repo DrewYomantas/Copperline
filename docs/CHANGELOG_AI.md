@@ -1,3 +1,51 @@
+### 2026-03-17 - Pass 36: Observation-Led Outreach Rewrite
+
+**Goal:** Rewrite first-touch email and DM generation so every draft is observation-led, business-specific, and invalid when generic. This is a product rule change — not copy polish.
+
+**Files changed:**
+- `lead_engine/outreach/email_draft_agent.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`email_draft_agent.py` (v8 → v9):
+- Removed all previous industry-angle templates. Generation is now entirely observation-driven.
+- Added `ObservationMissingError` and `DraftInvalidError` for structured failure signaling.
+- Added `_require_observation()` — fails if observation is absent or under 15 chars.
+- Added `_is_generic_observation()` — rejects category labels ("noticed you do roofing") that would fit most businesses in the category.
+- Added `validate_draft()` — deterministic validation blocking banned buzzwords, hard CTAs, links, pricing, sender-centered filler openers, and observation-absent drafts.
+- Added three controlled variation families (A/B/C). No open-ended variation allowed.
+- `draft_email()` and `draft_social_messages()` both require observation. Both fail clearly with `ObservationMissingError` if absent.
+- Added prefix normalization so observations starting with "saw"/"noticed" don't double-stack with the variant prefix.
+
+`dashboard_server.py`:
+- Added `business_specific_observation` as final column in `PENDING_COLUMNS`. Additive, non-send-path, safe for existing rows via DictReader `.get()`.
+- Added `/api/update_observation` — persists observation, rejects absent/short/generic values.
+- Added `/api/regenerate_draft` — requires observation (stored or inline override). Returns structured `blocked_reason` field. On success writes new subject/body/DM drafts to queue row.
+
+`index.html`:
+- Added observation CSS block.
+- Added observation panel section (textarea, hint, required/status tag, regen button, status line).
+- Added `_panelPopulateObs(row)` wired into `fillPanel()` — hydrates field, shows blocked state when observation absent.
+- Added `panelObsChanged(value)` — live handler that enables/disables regen button and updates hint text.
+- Added `panelRegenerateDraft()` — calls `/api/regenerate_draft`, updates panel fields on success, shows structured blocked/invalid reason on failure.
+
+**Verification:**
+- `python -m py_compile` clean on both Python files.
+- `node --check` clean on extracted dashboard JS.
+- 23/23 targeted checks passed: blocking, generic rejection, validation layer, observation-in-body requirement, variation distinctness, field-vs-arg routing.
+
+**No protected systems touched:** `run_lead_engine.py`, sender core, scheduler core, follow-up system, and queue pipeline behavior are all unchanged.
+
+**Commit:** TBD
+
+---
+
 ### 2026-03-17 — Docs Governance Pass: Bounded Cohesive Pass Model
 
 **Goal:** Update AI repo instructions to replace ultra-small surgical pass model with bounded cohesive pass model.

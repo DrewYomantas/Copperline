@@ -114,6 +114,7 @@ PENDING_COLUMNS = [
     "message_id", "replied", "replied_at", "reply_snippet",
     "conversation_notes", "conversation_next_step",
     "send_after",
+    "business_specific_observation",
 ]
 
 _ACTIVE_RESULTS   = {"draft_ready", "sent", "submitted", "dm_sent", "no_reply"}
@@ -1265,6 +1266,146 @@ def mc_api_health():
         with _ur.urlopen(f"http://localhost:{mc_port}/health",timeout=3) as r: body=json.loads(r.read().decode())
         return jsonify({"ok":True,"service":{**body,"clients_loaded":body.get("clients_loaded",len(_mc_load_clients()))}})
     except Exception as exc: return jsonify({"ok":False,"error":str(exc)})
+
+# ── Observation-led draft generation (Pass 36) ───────────────────────────────
+
+@app.route("/api/update_observation", methods=["POST"])
+def api_update_observation():
+    """
+    Persist a business_specific_observation for a queue row.
+
+    Input:  { index, business_name, observation }
+    Output: { ok, observation }
+
+    Does not alter subject/body/send state — observation-only write.
+    """
+    from outreach.email_draft_agent import ObservationMissingError, _is_generic_observation
+
+    d             = request.json or {}
+    idx           = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+    observation   = (d.get("observation") or "").strip()
+
+    if idx is None or not isinstance(idx, int):
+        return jsonify({"ok": False, "error": "index required (int)"}), 400
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name required"}), 400
+    if not observation:
+        return jsonify({"ok": False, "error": "observation required"}), 400
+    if len(observation) < 15:
+        return jsonify({"ok": False, "error": "Observation too short — write a specific business detail."}), 400
+    if _is_generic_observation(observation):
+        return jsonify({"ok": False, "error": "Observation is too generic. Write something specific to this business."}), 400
+
+    rows = _read_pending()
+    if not (0 <= idx < len(rows)):
+        return jsonify({"ok": False, "error": "Invalid index"}), 400
+
+    row = rows[idx]
+    if row.get("business_name", "").strip().lower() != business_name.lower():
+        return jsonify({"ok": False, "error": "Row index/name mismatch — queue may have changed"}), 409
+
+    row["business_specific_observation"] = observation
+    _write_pending(rows)
+    log.info("update_observation: idx=%d biz=%s", idx, business_name)
+    return jsonify({"ok": True, "observation": observation})
+
+
+@app.route("/api/regenerate_draft", methods=["POST"])
+def api_regenerate_draft():
+    """
+    Regenerate first-touch email + social drafts for a queue row using the stored observation.
+
+    Input:  { index, business_name }
+            Optionally: { observation } to set-and-regenerate in one step.
+    Output: { ok, subject, body, dm_draft, observation }
+
+    Generation is blocked if observation is missing or invalid.
+    Returns a structured error with reason if blocked.
+    """
+    from outreach.email_draft_agent import (
+        draft_email,
+        draft_social_messages,
+        ObservationMissingError,
+        DraftInvalidError,
+    )
+
+    d             = request.json or {}
+    idx           = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+    obs_override  = (d.get("observation") or "").strip() or None
+
+    if idx is None or not isinstance(idx, int):
+        return jsonify({"ok": False, "error": "index required (int)", "blocked": True}), 400
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name required", "blocked": True}), 400
+
+    rows = _read_pending()
+    if not (0 <= idx < len(rows)):
+        return jsonify({"ok": False, "error": "Invalid index", "blocked": True}), 400
+
+    row = rows[idx]
+    if row.get("business_name", "").strip().lower() != business_name.lower():
+        return jsonify({"ok": False, "error": "Row index/name mismatch", "blocked": True}), 409
+
+    # Resolve observation: override > stored field
+    observation = obs_override or row.get("business_specific_observation", "").strip() or None
+
+    if not observation:
+        return jsonify({
+            "ok": False,
+            "blocked": True,
+            "blocked_reason": "observation_missing",
+            "error": (
+                "Draft generation blocked: no observation on file for this business. "
+                "Add a specific business observation first."
+            ),
+        }), 400
+
+    # Persist override immediately if one was passed
+    if obs_override:
+        row["business_specific_observation"] = obs_override
+
+    try:
+        subject, body = draft_email(row, int(row.get("final_priority_score") or 0), observation=observation)
+        dm, _, _ = draft_social_messages(row, body, observation=observation)
+    except ObservationMissingError as exc:
+        return jsonify({
+            "ok": False,
+            "blocked": True,
+            "blocked_reason": "observation_missing",
+            "error": str(exc),
+        }), 400
+    except DraftInvalidError as exc:
+        return jsonify({
+            "ok": False,
+            "blocked": False,
+            "blocked_reason": "draft_invalid",
+            "error": str(exc),
+        }), 422
+    except Exception as exc:
+        log.error("regenerate_draft error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+    # Write regenerated drafts back to queue
+    row["subject"]              = subject
+    row["body"]                 = body
+    row["facebook_dm_draft"]    = dm
+    row["instagram_dm_draft"]   = dm
+    row["contact_form_message"] = dm
+    row["social_dm_text"]       = dm
+    row["draft_version"]        = "v9"
+    _write_pending(rows)
+
+    log.info("regenerate_draft: idx=%d biz=%s", idx, business_name)
+    return jsonify({
+        "ok":          True,
+        "subject":     subject,
+        "body":        body,
+        "dm_draft":    dm,
+        "observation": observation,
+    })
+
 
 # ── Automated scheduler ───────────────────────────────────────────────────────
 import threading as _threading_ds
