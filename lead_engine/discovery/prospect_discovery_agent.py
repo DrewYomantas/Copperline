@@ -13,10 +13,10 @@ Key design rules:
 from __future__ import annotations
 
 import csv
+import re
 from urllib.parse import urlparse
 from pathlib import Path
 from typing import Dict, List, Tuple
-from urllib.parse import urlparse
 
 REQUIRED_INPUT_COLUMNS = ["business_name", "city", "state"]
 ALL_COLUMNS = [
