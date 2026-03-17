@@ -546,6 +546,12 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-ctrl-select option{background:var(--surface2)}
 .mrp-ctrl-chk{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .mrp-ctrl-chk input{cursor:pointer;accent-color:var(--green)}
+.mrp-triage-bar{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.01);flex-shrink:0}
+.mrp-triage-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:border-color .12s,background .12s,color .12s}
+.mrp-triage-chip:hover{color:var(--text);border-color:var(--border-hi)}
+.mrp-triage-chip.active{background:var(--blue-glow);border-color:rgba(79,142,247,.35);color:var(--blue)}
+.mrp-triage-chip:disabled{opacity:.45;cursor:not-allowed}
+.mrp-triage-count{font-size:10px;color:var(--dim)}
 .mrp-empty{padding:18px 12px;font-size:12px;color:var(--muted)}
 /* Pass 23 — map panel command center */
 .mrp-bulk-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
@@ -565,6 +571,13 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-pill.scheduled{background:rgba(245,166,35,.18);color:var(--amber)}
 .mrp-pill.sent{background:rgba(100,100,120,.15);color:var(--muted)}
 .mrp-pill.score{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.mrp-qpill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;border:1px solid var(--border);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.mrp-qpill.ready{background:rgba(62,207,114,.14);border-color:rgba(62,207,114,.35);color:var(--green)}
+.mrp-qpill.maybe{background:rgba(79,142,247,.14);border-color:rgba(79,142,247,.32);color:var(--blue)}
+.mrp-qpill.needs-contact{background:rgba(245,166,35,.14);border-color:rgba(245,166,35,.34);color:var(--amber)}
+.mrp-qpill.weak{background:rgba(231,76,60,.12);border-color:rgba(231,76,60,.3);color:#ff8f84}
+.mrp-qpill.closed{background:rgba(100,100,120,.14);border-color:rgba(100,100,120,.3);color:var(--muted)}
+.mrp-why{display:inline-flex;align-items:center;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:9px;color:var(--dim);line-height:1.45}
 /* Pass 24 — inline preview modal */
 #mrp-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:center;justify-content:center}
 #mrp-modal.open{display:flex}
@@ -1255,12 +1268,14 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
             </select>
             <select id="mrp-group" class="mrp-ctrl-select" onchange="_mapRenderPanel()">
               <option value="workflow">Group: Workflow</option>
+              <option value="qualification">Group: Qualification</option>
               <option value="city">Group: City</option>
               <option value="email">Group: Email status</option>
               <option value="flat">Group: None</option>
             </select>
             <label class="mrp-ctrl-chk"><input type="checkbox" id="mrp-email-only" onchange="_mapRenderPanel()"> Email only</label>
           </div>
+          <div class="mrp-triage-bar" id="mrp-triage-bar"></div>
           <div class="mrp-bulk-bar" id="mrp-bulk-bar" style="display:none">
             <span class="mrp-bulk-lbl">Visible:</span>
             <button class="mrp-bulk-btn" style="background:var(--green-bg);color:var(--green);border-color:rgba(62,207,114,.35)" onclick="_mrpBulkApprove()" title="Approve all visible results that are in queue">✓ Approve</button>
@@ -4374,6 +4389,7 @@ let _mapResultItems  = [];    // [{biz, marker}] — ties list panel to map mark
 let _mapInstance    = null;   // Leaflet map object
 let _mapClusterGroup = null;  // MarkerClusterGroup for result markers
 let _mapPanelActiveKey = '';
+let _mapPanelTriageFilter = 'all';
 
 function _mapClearResultMarkers() {
   if (_mapClusterGroup) _mapClusterGroup.clearLayers();
@@ -4522,6 +4538,7 @@ function _mapClearResultMarkers() {
   _mapResultMarkers = [];
   _mapResultItems = [];
   _mapPanelActiveKey = '';
+  _mapPanelTriageFilter = 'all';
   window._mrpVisibleNames = [];
   window._mrpVisibleQueueRows = [];
   const panel = document.getElementById('map-results-panel');
@@ -4530,12 +4547,14 @@ function _mapClearResultMarkers() {
   const sortEl = document.getElementById('mrp-sort');
   const groupEl = document.getElementById('mrp-group');
   const filterEl = document.getElementById('mrp-email-only');
+  const triageBar = document.getElementById('mrp-triage-bar');
   if (panel) panel.classList.remove('visible');
   if (list) list.innerHTML = '';
   if (count) count.textContent = '';
   if (sortEl) sortEl.value = 'score';
   if (groupEl) groupEl.value = 'workflow';
   if (filterEl) filterEl.checked = false;
+  if (triageBar) triageBar.innerHTML = '';
 }
 
 function _mapPanelItemKey(biz) {
@@ -4562,6 +4581,101 @@ function _mapPanelItemScore(item, qrow) {
   return Number.isFinite(score) ? score : 0;
 }
 
+function _mapPanelNumber(...values) {
+  for (const value of values) {
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return 0;
+}
+
+function _mapPanelQualification(item, qrow) {
+  const hasEmail = !!((item.biz.email || (qrow && qrow.to_email) || '').trim());
+  const hasWebsite = !!((item.biz.website || (qrow && qrow.website) || '').trim());
+  const hasPhone = !!((item.biz.phone || (qrow && qrow.phone) || '').trim());
+  const score = _mapPanelItemScore(item, qrow);
+  const oppScore = _mapPanelNumber(
+    qrow && (qrow.opp_score ?? qrow.opportunity_score),
+    item.biz.opp_score ?? item.biz.opportunity_score
+  );
+  const rating = _mapPanelNumber(qrow && qrow.rating, item.biz.rating);
+  const reviewCount = _mapPanelNumber(
+    qrow && (qrow.review_count ?? qrow.reviews),
+    item.biz.review_count ?? item.biz.reviews
+  );
+  const contactability = String((qrow && qrow.contactability) || item.biz.contactability || '').trim().toLowerCase();
+  const isSent = !!(qrow && (qrow.sent_at || '').trim());
+  const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
+  const isApproved = !!(qrow && String(qrow.approved || '').toLowerCase() === 'true');
+  const strongSignals = score >= 4 || oppScore >= 60 || (rating >= 4.5 && reviewCount >= 20);
+  const usableSignals = score >= 3 || oppScore >= 35 || (rating >= 4.1 && reviewCount >= 8);
+  const highContactability = contactability.includes('high');
+  const mediumContactability = highContactability || contactability.includes('medium');
+  const lowScore = score > 0 && score <= 2;
+
+  let key = 'weak';
+  let label = 'Weak / skip';
+  let order = 3;
+  let tone = 'weak';
+
+  if (isSent) {
+    key = 'closed';
+    label = 'Sent / closed';
+    order = 4;
+    tone = 'closed';
+  } else if (hasEmail && (isApproved || isScheduled || strongSignals || highContactability || (hasWebsite && hasPhone))) {
+    key = 'ready';
+    label = 'Ready now';
+    order = 0;
+    tone = 'ready';
+  } else if (!hasEmail && (hasWebsite || hasPhone) && (strongSignals || usableSignals || mediumContactability)) {
+    key = 'needs-contact';
+    label = 'Needs contact info';
+    order = 2;
+    tone = 'needs-contact';
+  } else if (hasEmail || ((hasWebsite || hasPhone) && (usableSignals || mediumContactability))) {
+    key = 'maybe';
+    label = 'Maybe later';
+    order = 1;
+    tone = 'maybe';
+  }
+
+  const reasons = [];
+  if (hasEmail) reasons.push('Email ready');
+  else if (hasWebsite && hasPhone) reasons.push('Web + phone only');
+  else if (hasPhone) reasons.push('Phone only');
+  else if (hasWebsite) reasons.push('Website only');
+  else reasons.push('No contact path');
+
+  if (score >= 4) reasons.push(`Score ${score}`);
+  else if (lowScore) reasons.push(score ? `Low score ${score}` : 'Low score');
+  else if (score === 3) reasons.push('Mid score');
+
+  if (!hasEmail) reasons.push('Needs email');
+  if (!hasWebsite) reasons.push('No website');
+  if (!hasPhone && !hasEmail) reasons.push('No direct contact');
+  if ((rating >= 4.5 && reviewCount >= 20) || (rating >= 4.1 && reviewCount >= 8)) {
+    reasons.push(`${rating.toFixed(1)}★/${Math.round(reviewCount)}`);
+  }
+  if (highContactability) reasons.push('High contactability');
+
+  return {
+    key,
+    label,
+    order,
+    tone,
+    hasEmail,
+    hasWebsite,
+    hasPhone,
+    score,
+    lowScore,
+    isSent,
+    isApproved,
+    isScheduled,
+    reasons: Array.from(new Set(reasons)).slice(0, 3),
+  };
+}
+
 function _mapPanelSortItems(items, sortKey) {
   const sorted = items.slice();
   sorted.sort((a, b) => {
@@ -4585,8 +4699,12 @@ function _mapPanelSortItems(items, sortKey) {
 }
 
 function _mapPanelGroupInfo(item, qrow, groupKey) {
-  const hasEmail = !!((item.biz.email || (qrow && qrow.to_email) || '').trim());
+  const qualification = _mapPanelQualification(item, qrow);
+  const hasEmail = qualification.hasEmail;
   if (groupKey === 'flat') return { id: 'all', label: 'All results', order: 0 };
+  if (groupKey === 'qualification') {
+    return { id: qualification.key, label: qualification.label, order: qualification.order };
+  }
   if (groupKey === 'city') {
     const cityLabel = item.biz.city || (qrow && qrow.city) || 'No city';
     return { id: 'city:' + cityLabel.toLowerCase(), label: cityLabel, order: 0 };
@@ -4598,7 +4716,7 @@ function _mapPanelGroupInfo(item, qrow, groupKey) {
   }
   const isSent = !!(qrow && (qrow.sent_at || '').trim());
   const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
-  const isApproved = !!(qrow && (qrow.approved || '').toLowerCase() === 'true');
+  const isApproved = !!(qrow && String(qrow.approved || '').toLowerCase() === 'true');
   if (qrow && isSent) return { id: 'sent', label: 'Sent / closed', order: 4 };
   if (qrow && isScheduled) return { id: 'scheduled', label: 'Scheduled', order: 2 };
   if (!hasEmail) return { id: 'needs-email', label: 'Needs email', order: 3 };
@@ -4610,6 +4728,51 @@ function _mapPanelGroupInfo(item, qrow, groupKey) {
 function _mapPanelSectionSort(a, b, groupKey) {
   if (groupKey === 'city') return a.label.localeCompare(b.label);
   return (a.order || 0) - (b.order || 0) || a.label.localeCompare(b.label);
+}
+
+function _mapPanelMatchesTriage(item, qrow, triageKey) {
+  const qualification = _mapPanelQualification(item, qrow);
+  if (triageKey === 'ready') return qualification.key === 'ready';
+  if (triageKey === 'maybe') return qualification.key === 'maybe';
+  if (triageKey === 'needs-contact') return qualification.key === 'needs-contact';
+  if (triageKey === 'weak') return qualification.key === 'weak';
+  if (triageKey === 'no-email') return !qualification.hasEmail;
+  return true;
+}
+
+function _mapRenderTriageBar(sourceItems) {
+  const bar = document.getElementById('mrp-triage-bar');
+  if (!bar) return;
+  const defs = [
+    { key: 'all', label: 'All' },
+    { key: 'ready', label: 'Ready' },
+    { key: 'maybe', label: 'Maybe' },
+    { key: 'needs-contact', label: 'Needs Contact' },
+    { key: 'weak', label: 'Weak' },
+    { key: 'no-email', label: 'No Email' },
+  ];
+
+  const counts = new Map();
+  defs.forEach(def => {
+    if (def.key === 'all') counts.set(def.key, sourceItems.length);
+    else counts.set(def.key, sourceItems.filter(({ item, qrow }) => _mapPanelMatchesTriage(item, qrow, def.key)).length);
+  });
+
+  bar.innerHTML = '';
+  defs.forEach(def => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mrp-triage-chip' + (_mapPanelTriageFilter === def.key ? ' active' : '');
+    btn.disabled = def.key !== 'all' && counts.get(def.key) === 0;
+    btn.innerHTML =
+      `<span>${escHtml(def.label)}</span>` +
+      `<span class="mrp-triage-count">${counts.get(def.key)}</span>`;
+    btn.onclick = () => {
+      _mapPanelTriageFilter = def.key;
+      _mapRenderPanel();
+    };
+    bar.appendChild(btn);
+  });
 }
 
 function _mrpOpenEdit(qrow) {
@@ -4640,9 +4803,14 @@ function _mapRenderPanel() {
   const sortKey = sortEl ? (sortEl.value || 'score') : 'score';
   const groupKey = groupEl ? (groupEl.value || 'workflow') : 'workflow';
 
-  let items = emailOnly
-    ? _mapResultItems.filter(({ biz }) => !!(biz.email || '').trim())
-    : _mapResultItems.slice();
+  let sourceItems = _mapResultItems.map(item => ({ item, qrow: _mrpResolveRow(item.biz) }));
+  if (emailOnly) {
+    sourceItems = sourceItems.filter(({ item, qrow }) => !!((item.biz.email || (qrow && qrow.to_email) || '').trim()));
+  }
+  _mapRenderTriageBar(sourceItems);
+
+  const triageKey = _mapPanelTriageFilter || 'all';
+  let items = sourceItems.filter(({ item, qrow }) => _mapPanelMatchesTriage(item, qrow, triageKey)).map(({ item }) => item);
 
   window._mrpVisibleNames = items.map(({ biz }) => biz.name);
   window._mrpVisibleQueueRows = items.map(({ biz }) => _mrpResolveRow(biz)).filter(Boolean);
@@ -4650,7 +4818,7 @@ function _mapRenderPanel() {
 
   if (!items.length) {
     count.textContent = `(0 of ${_mapResultItems.length})`;
-    list.innerHTML = '<div class="mrp-empty">No results match the current discovery filters.</div>';
+    list.innerHTML = `<div class="mrp-empty">No results match the current discovery filters${triageKey !== 'all' ? ' and triage bucket' : ''}.</div>`;
     panel.classList.add('visible');
     return;
   }
@@ -4689,8 +4857,10 @@ function _mapRenderPanel() {
 
     section.items.forEach(({ item, qrow }) => {
       const { biz, marker } = item;
-      const hasEmail = !!((biz.email || (qrow && qrow.to_email) || '').trim());
-      const hasWebsite = !!((biz.website || (qrow && qrow.website) || '').trim());
+      const qualification = _mapPanelQualification(item, qrow);
+      const hasEmail = qualification.hasEmail;
+      const hasWebsite = qualification.hasWebsite;
+      const hasPhone = qualification.hasPhone;
       const itemEl = document.createElement('div');
       itemEl.className = 'mrp-item' + (_mapPanelActiveKey === _mapPanelItemKey(biz) ? ' active' : '');
 
@@ -4705,21 +4875,29 @@ function _mapRenderPanel() {
         `<span class="mrp-dot ${hasEmail ? 'has-email' : 'no-email'}"></span>` +
         `<span>${escHtml(biz.city || '')}${hasEmail ? ' - email' : ' - no email'}</span>`;
 
+      const triageDiv = document.createElement('div');
+      triageDiv.className = 'mrp-detail';
+      triageDiv.innerHTML =
+        `<span class="mrp-qpill ${qualification.tone}">${escHtml(qualification.label)}</span>` +
+        qualification.reasons.map(reason => `<span class="mrp-why">${escHtml(reason)}</span>`).join('');
+
       const detailDiv = document.createElement('div');
       detailDiv.className = 'mrp-detail';
       detailDiv.innerHTML =
         `<span>${hasWebsite ? 'Website' : 'No website'}</span>` +
+        `<span>${hasPhone ? 'Phone' : 'No phone'}</span>` +
         `<span>${qrow ? 'In queue' : 'Discovery only'}</span>`;
 
       itemEl.appendChild(nameDiv);
       itemEl.appendChild(metaDiv);
+      itemEl.appendChild(triageDiv);
       itemEl.appendChild(detailDiv);
 
       if (qrow) {
         const pillsDiv = document.createElement('div');
         pillsDiv.className = 'mrp-status-pills';
         const isSent = !!(qrow.sent_at || '').trim();
-        const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+        const isApproved = String(qrow.approved || '').toLowerCase() === 'true';
         const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
         const score = _mapPanelItemScore(item, qrow);
         if (isSent) pillsDiv.innerHTML += `<span class="mrp-pill sent">Sent</span>`;
@@ -4784,7 +4962,7 @@ function _mapRenderPanel() {
     list.appendChild(sectionEl);
   });
 
-  count.textContent = emailOnly
+  count.textContent = (emailOnly || triageKey !== 'all')
     ? `(${items.length} of ${_mapResultItems.length})`
     : `(${items.length})`;
   panel.classList.add('visible');
