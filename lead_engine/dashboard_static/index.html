@@ -1188,7 +1188,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     Use <strong>↺ Reset Session</strong> to clear all pins and start fresh.
   </div>
   <div class="map-toolbar">
-    <select id="map-industry" class="d-input" style="min-width:160px" onchange="(function(v){var b=document.getElementById('btnSearchVisible');if(b)b.disabled=!v;})(this.value)"><option value="">Loading…</option></select>
+    <select id="map-industry" class="d-input" style="min-width:160px" onchange="(function(v){var b=document.getElementById('btnSearchVisible');if(b)b.disabled=!v; var ex=document.getElementById('btnExhaust');if(ex&&_mapCenter)ex.disabled=!v;})(this.value)"><option value="">Loading…</option></select>
     <input id="map-limit" class="d-input d-num" type="number" value="20" min="1" max="20" title="Max results (1–20)">
     <button id="btnMapSearch" class="btn btn-primary" onclick="mapSearch()" disabled>
       <span class="spin"></span>⚡ Search This Area
@@ -4602,11 +4602,20 @@ async function mapSearchVisible() {
   if (_mapVisibleSearchActive) { toast('Visible-area search already running', 'err'); return; }
 
   const { tiles, tooLarge } = _mapVisibleTiles();
+
+  // Pass 25: when area is too large, fall through to exhaust instead of erroring
   if (tooLarge) {
-    toast('Zoom in — visible area would require more than 30 tile requests', 'err'); return;
+    if (_mapCenter) {
+      const statusEl = document.getElementById('map-status');
+      if (statusEl) statusEl.textContent = 'Area too large — scanning in segments…';
+      return mapSearchExhaust();
+    }
+    toast('Zoom in or place a circle to search a smaller area', 'err');
+    return;
   }
   if (!tiles.length) {
-    toast('No tiles in current viewport', 'err'); return;
+    toast('Place a circle or zoom to a specific area first', 'err');
+    return;
   }
 
   _mapVisibleSearchActive = true;
@@ -4694,20 +4703,42 @@ function _mapCancelVisible() {
 }
 
 // Pass 21 — Run Until Exhausted: single batch call to /api/discover_area_batch
+// Pass 25 — improved progress feedback, fixed history push, operator-friendly status
+let _exhaustSearchActive = false;
+
 async function mapSearchExhaust() {
   const industry = document.getElementById('map-industry').value;
   if (!industry) { toast('Select an industry first', 'err'); return; }
   if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+  if (_exhaustSearchActive) { toast('Scan already running', 'err'); return; }
+
+  _exhaustSearchActive = true;
 
   const btn      = document.getElementById('btnExhaust');
+  const btnMap   = document.getElementById('btnMapSearch');
+  const btnSV    = document.getElementById('btnSearchVisible');
+  const btnCanc  = document.getElementById('btnCancelVisible');
   const statusEl = document.getElementById('map-status');
   const limit    = parseInt(document.getElementById('map-limit').value) || 20;
 
-  btn.classList.add('loading');
-  btn.disabled = true;
-  document.getElementById('btnMapSearch').disabled = true;
-  document.getElementById('btnSearchVisible').disabled = true;
-  if (statusEl) statusEl.textContent = 'Batch scan running — do not close this tab...';
+  btn.classList.add('loading'); btn.disabled = true;
+  if (btnMap) btnMap.disabled = true;
+  if (btnSV)  btnSV.disabled  = true;
+  if (btnCanc) { btnCanc.style.display = ''; btnCanc.title = 'Cancel after current scan batch finishes'; }
+
+  // Animated progress text — updates every 4s since the HTTP is one blocking call
+  const statusMessages = [
+    `Scanning ${industry} near this area…`,
+    `Still scanning — checking for more leads…`,
+    `Working through the area — almost there…`,
+    `Finalizing results…`,
+  ];
+  let msgIdx = 0;
+  if (statusEl) statusEl.textContent = statusMessages[0];
+  const progressTimer = setInterval(() => {
+    msgIdx = Math.min(msgIdx + 1, statusMessages.length - 1);
+    if (statusEl) statusEl.textContent = statusMessages[msgIdx];
+  }, 4000);
 
   try {
     const res = await api('/api/discover_area_batch', {
@@ -4718,42 +4749,50 @@ async function mapSearchExhaust() {
       limit,
     });
 
+    clearInterval(progressTimer);
+
     if (res.ok) {
       const reasonLabels = {
-        no_results:         'no new results',
-        diminishing_returns:'diminishing returns (<5 found)',
-        max_iterations:     '25 iterations reached',
-        error:              'an error occurred',
+        no_results:          'area exhausted',
+        diminishing_returns: 'area nearly exhausted',
+        max_iterations:      'safety cap reached',
+        error:               'an error occurred',
       };
       const reason = reasonLabels[res.stopped_reason] || res.stopped_reason;
-      toast(`Done — ${res.total_new} new leads in ${res.iterations_run} scan(s), stopped: ${reason}`, 'ok');
+      const summary = `✓ ${res.total_new} new leads found across ${res.iterations_run} scan(s)`;
+      if (statusEl) statusEl.textContent = `${summary} — ${reason}`;
+      toast(`${summary}`, 'ok');
 
       if (res.markers && res.markers.length) {
         _mapAppendResultMarkers(res.markers);
       }
 
-      _mapRenderHistory([{
-        label:    `Exhausted: ${industry} (${res.total_new} new)`,
-        lat:      _mapCenter.lat,
-        lng:      _mapCenter.lng,
-        radiusM:  _mapRadiusM,
-        found:    res.total_new,
-      }]);
+      // Fix: push to _mapSearchHistory then render, don't pass history as argument
+      _mapSearchHistory.unshift({
+        lat:     _mapCenter.lat,
+        lng:     _mapCenter.lng,
+        radiusM: _mapRadiusM,
+        found:   res.total_new,
+        label:   `Exhausted: ${industry} (${res.total_new} new)`,
+      });
+      if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+      _mapRenderHistory();
 
-      // Single queue reload at end
       loadAll();
     } else {
-      toast('Batch scan error: ' + (res.error || 'unknown'), 'err');
+      if (statusEl) statusEl.textContent = 'Scan stopped.';
+      toast('Scan error: ' + (res.error || 'unknown'), 'err');
     }
   } catch(e) {
-    toast('Connection error during batch scan', 'err');
+    clearInterval(progressTimer);
+    if (statusEl) statusEl.textContent = 'Connection error.';
+    toast('Connection error during scan', 'err');
   } finally {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    document.getElementById('btnMapSearch').disabled = false;
-    const svBtn = document.getElementById('btnSearchVisible');
-    if (svBtn && industry) svBtn.disabled = false;
-    if (statusEl) statusEl.textContent = 'Batch scan complete.';
+    _exhaustSearchActive = false;
+    btn.classList.remove('loading'); btn.disabled = false;
+    if (btnMap) btnMap.disabled = !_mapCenter;
+    if (btnSV)  btnSV.disabled  = !industry;
+    if (btnCanc) btnCanc.style.display = 'none';
   }
 }
 
