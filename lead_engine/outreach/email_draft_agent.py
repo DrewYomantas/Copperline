@@ -115,6 +115,74 @@ _BANNED = [
     "system integration", "platform", "solution", "lead capture",
 ]
 
+# Phrase substitutions applied by enforce_human_style.
+# Each entry is (exact_match_string, replacement).
+# Empty replacement means strip the phrase.
+_FORMAL_OPENER_SUBS = [
+    ("I noticed that ", ""),
+    ("I wanted to reach out ", ""),
+    ("I wanted to reach out", ""),
+    ("I help businesses ", "I help service businesses "),
+    ("I help businesses", "I help service businesses"),
+    ("We offer ", ""),
+    ("We offer", ""),
+    ("AI-powered", "simple"),
+    ("ai-powered", "simple"),
+    ("streamline", "speed up"),
+    ("optimize", "improve"),
+    ("solution", "fix"),
+    ("platform", "system"),
+]
+
+_WORD_TARGET_MAX = 65  # soft word ceiling for body_text (sign-off excluded)
+
+
+def enforce_human_style(body_text: str) -> str:
+    """
+    Post-processing layer applied to body_text (sign-off excluded) after
+    draft generation.
+
+    What it does:
+      1. Strips/replaces residual formal or banned phrases.
+      2. Lowercases the opener on lines starting with "Hey" (not "Hi" —
+         "Hi" is intentional and reads fine capitalised).
+      3. Trims to _WORD_TARGET_MAX words if exceeded by dropping the last
+         paragraph block. Never trims mid-sentence.
+
+    What it does NOT do:
+      - Does not sentence-split across paragraph breaks (\\n\\n). The
+        existing template uses deliberate multi-paragraph structure; naive
+        sentence-splitting corrupts it.
+      - Does not hard-cap to exactly 2 sentences when the output already
+        reads naturally across 3-4 short sentences in 3 paragraphs.
+        The paragraph structure already achieves the human-style target.
+
+    Safe to call on any string. Returns input unchanged if nothing applies.
+    """
+    if not body_text:
+        return body_text
+
+    # 1. Strip/replace formal and banned phrases
+    for pattern, replacement in _FORMAL_OPENER_SUBS:
+        if pattern in body_text:
+            body_text = body_text.replace(pattern, replacement)
+
+    # 2. Lowercase opener — only lines starting with "Hey "
+    lines = body_text.split("\n")
+    if lines and lines[0].startswith("Hey "):
+        lines[0] = lines[0][0].lower() + lines[0][1:]
+        body_text = "\n".join(lines)
+
+    # 3. Trim to word target by dropping last paragraph if over limit.
+    #    Last paragraph is always the softest CTA — safe to drop first.
+    if len(body_text.split()) > _WORD_TARGET_MAX:
+        paragraphs = body_text.split("\n\n")
+        while len(paragraphs) > 2 and len("\n\n".join(paragraphs).split()) > _WORD_TARGET_MAX:
+            paragraphs.pop()
+        body_text = "\n\n".join(paragraphs)
+
+    return body_text
+
 # High-fit industries always get the missed_after_hours template
 _HIGH_FIT_INDUSTRIES = {
     "plumbing", "hvac", "electrical", "locksmith",
@@ -203,6 +271,9 @@ def draft_email(prospect: Dict[str, str], final_priority_score: int) -> Tuple[st
             trimmed.append(s)
             running += words
         body_text = ". ".join(trimmed).strip() + "."
+
+    # Enforce human style BEFORE appending sign-off
+    body_text = enforce_human_style(body_text)
 
     body = body_text + _SIGN_OFF
 
