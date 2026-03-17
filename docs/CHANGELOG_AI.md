@@ -24,7 +24,7 @@
 **No backend changes. No queue schema changes. No protected systems touched.**
 All existing send/approve/schedule/unschedule behavior preserved.
 
-**Commit:** TBD
+**Commit:** `40f7db2`
 
 ---
 

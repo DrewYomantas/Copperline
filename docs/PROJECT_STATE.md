@@ -32,7 +32,7 @@ Pass 39 - V2 Stage 2A+2B — Unified Lead Record + Workspace Panel
 - Added `mrp-modal-lws-header` div to modal HTML.
 - Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: TBD
+Commit: `40f7db2`
 
 
 ## Queue State Management Note — Pass 38
