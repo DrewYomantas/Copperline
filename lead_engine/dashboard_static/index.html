@@ -721,6 +721,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <strong id="bulk-count">0</strong> selected —
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkApprove()">Approve</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkUnapprove()">Unapprove</button>
+  <span style="display:inline-flex;align-items:center;gap:0;margin:0 1px">
+    <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;border-right:none;border-radius:3px 0 0 3px" onclick="bulkSchedule(document.getElementById('bulk-sched-mode').value)">🕐 Schedule</button><select id="bulk-sched-mode" style="font-size:11px;padding:3px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:0 3px 3px 0;color:var(--muted);cursor:pointer;height:26px;outline:none"><option value="1">Tomorrow</option><option value="best">Best Time</option><option value="clear">Clear Schedule</option></select>
+  </span>
   <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="bulkDelete()">Delete</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;margin-left:4px" onclick="clearSelection()">✕ Clear</button>
 </div>
@@ -1517,6 +1520,8 @@ function renderTable() {
         <div class="row-acts">
           ${approveBtn}
           <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
+          ${actionable && !row.send_after ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowSchedule(${gi},${JSON.stringify(row.business_name)})" title="Schedule for tomorrow">🕐</button>` : ''}
+          ${actionable && row.send_after ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowUnschedule(${gi},${JSON.stringify(row.business_name)})" title="Clear schedule">✕Sched</button>` : ''}
           ${actionable ? `<button class="act act-del" onclick="deleteRow(${gi})">Del</button>` : ''}
         </div>
       </td>
@@ -2009,6 +2014,53 @@ async function bulkDelete() {
   if (!confirm(`Delete ${idxs.length} lead(s)?`)) return;
   for (const i of [...idxs].sort((a,b)=>b-a)) await api('/api/delete_row',{index:i});
   clearSelection(); await loadAll(); toast(`Deleted ${idxs.length}`,'info');
+}
+
+// Pass 23a — bulk + per-row scheduling
+async function bulkSchedule(mode) {
+  const idxs = getSelectedGIs();
+  if (!idxs.length) { toast('No rows selected', 'err'); return; }
+  const isClear = mode === 'clear';
+  const label   = isClear ? 'Clear schedule' : (mode === 'best' ? 'Best Time schedule' : 'Tomorrow schedule');
+  if (!confirm(`${label} for ${idxs.length} row(s)?`)) return;
+  let ok = 0, fail = 0;
+  for (const i of idxs) {
+    const row = allRows[i];
+    if (!row) continue;
+    try {
+      const payload = { index: i, business_name: row.business_name };
+      if (isClear)        payload.send_after = '';
+      else                payload.days_ahead  = 1;   // both Tomorrow and Best Time use days_ahead=1;
+                                                      // backend picks industry-window time automatically
+      const res = await api('/api/schedule_email', payload);
+      if (res.ok) { row.send_after = res.send_after ?? ''; ok++; }
+      else fail++;
+    } catch(e) { fail++; }
+  }
+  renderTable();
+  clearSelection();
+  await loadStats();
+  toast(isClear ? `Cleared ${ok} schedule(s)` : `Scheduled ${ok} row(s)`, ok > 0 ? 'ok' : 'err');
+}
+
+async function rowSchedule(gi, businessName) {
+  const row = allRows[gi];
+  if (!row) return;
+  try {
+    const res = await api('/api/schedule_email', { index: gi, business_name: businessName, days_ahead: 1 });
+    if (res.ok) { row.send_after = res.send_after; renderTable(); toast('Scheduled: ' + businessName, 'ok'); }
+    else toast('Schedule failed: ' + (res.error || ''), 'err');
+  } catch(e) { toast('Connection error', 'err'); }
+}
+
+async function rowUnschedule(gi, businessName) {
+  const row = allRows[gi];
+  if (!row) return;
+  try {
+    const res = await api('/api/schedule_email', { index: gi, business_name: businessName, send_after: '' });
+    if (res.ok) { row.send_after = ''; renderTable(); toast('Schedule cleared', 'ok'); }
+    else toast('Clear failed: ' + (res.error || ''), 'err');
+  } catch(e) { toast('Connection error', 'err'); }
 }
 
 // ── Send ──────────────────────────────────────────────────────────────────────
