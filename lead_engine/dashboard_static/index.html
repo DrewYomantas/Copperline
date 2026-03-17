@@ -1780,24 +1780,17 @@ async function panelScheduleTomorrow() {
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot schedule', 'err'); return; }
   const gi = allRows.indexOf(row);
-  const window_time = SEND_WINDOWS[row.industry] || SEND_WINDOWS.default;
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const yyyy = tomorrow.getFullYear();
-  const mm   = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const dd   = String(tomorrow.getDate()).padStart(2, '0');
-  const send_after = `${yyyy}-${mm}-${dd}T${window_time}:00`;
   try {
     const res = await api('/api/schedule_email', {
       index: gi,
       business_name: row.business_name,
-      send_after,
+      days_ahead: 1,
     });
     if (!res.ok) { toast('Schedule error: ' + (res.error || 'unknown'), 'err'); return; }
-    row.send_after = send_after;
+    row.send_after = res.send_after;
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Scheduled for tomorrow ' + window_time, 'ok');
+    toast('Scheduled for tomorrow', 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -1824,27 +1817,20 @@ async function panelUnschedule() {
   }
 }
 
-// Pass 10 — reschedule to today + N days at the industry window time
+// Pass 10 / Pass 20a — reschedule to today + N days via backend industry window
 async function panelReschedule(days) {
   const row = filteredRows[panelIdx];
   if (!row) return;
   if (row.sent_at) { toast('Already sent — cannot reschedule', 'err'); return; }
   const gi = allRows.indexOf(row);
-  const window_time = SEND_WINDOWS[row.industry] || SEND_WINDOWS.default;
-  const target = new Date();
-  target.setDate(target.getDate() + days);
-  const yyyy = target.getFullYear();
-  const mm   = String(target.getMonth() + 1).padStart(2, '0');
-  const dd   = String(target.getDate()).padStart(2, '0');
-  const send_after = `${yyyy}-${mm}-${dd}T${window_time}:00`;
   try {
     const res = await api('/api/schedule_email', {
       index: gi,
       business_name: row.business_name,
-      send_after,
+      days_ahead: days,
     });
     if (!res.ok) { toast('Reschedule error: ' + (res.error || 'unknown'), 'err'); return; }
-    row.send_after = send_after;
+    row.send_after = res.send_after;
     renderTable();
     fillPanel(row, panelIdx);
     toast('Rescheduled for ' + _formatSendAfter(send_after), 'ok');
