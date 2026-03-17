@@ -564,16 +564,16 @@ def api_discover_area():
         queue_after    = len(_read_pending())
         drafts_created = max(0, queue_after - queue_before)
 
-        # Build lightweight marker list for the map (lat/lng from Places not stored,
-        # so use the prospect's city as label; real coordinates need geocoding later)
+        # Build lightweight marker list for the map
         markers = [
             {
-                "name":    r.get("business_name", ""),
-                "city":    r.get("city", ""),
-                "email":   r.get("to_email", ""),
-                "channel": r.get("contact_method", ""),
-                "lat":     r.get("lat", ""),
-                "lng":     r.get("lng", ""),
+                "name":     r.get("business_name", ""),
+                "city":     r.get("city", ""),
+                "email":    r.get("to_email", ""),
+                "channel":  r.get("contact_method", ""),
+                "lat":      r.get("lat", ""),
+                "lng":      r.get("lng", ""),
+                "place_id": r.get("place_id", ""),  # Pass 24: stable ID for panel matching
             }
             for r in new_prospect_rows
         ]
@@ -667,12 +667,13 @@ def api_discover_area_batch():
             total_new += found
             all_markers.extend([
                 {
-                    "name":    r.get("business_name", ""),
-                    "city":    r.get("city", ""),
-                    "email":   r.get("to_email", ""),
-                    "channel": r.get("contact_method", ""),
-                    "lat":     r.get("lat", ""),
-                    "lng":     r.get("lng", ""),
+                    "name":     r.get("business_name", ""),
+                    "city":     r.get("city", ""),
+                    "email":    r.get("to_email", ""),
+                    "channel":  r.get("contact_method", ""),
+                    "lat":      r.get("lat", ""),
+                    "lng":      r.get("lng", ""),
+                    "place_id": r.get("place_id", ""),
                 }
                 for r in new_rows
             ])

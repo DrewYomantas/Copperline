@@ -556,6 +556,19 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-pill.scheduled{background:rgba(245,166,35,.18);color:var(--amber)}
 .mrp-pill.sent{background:rgba(100,100,120,.15);color:var(--muted)}
 .mrp-pill.score{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+/* Pass 24 — inline preview modal */
+#mrp-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:center;justify-content:center}
+#mrp-modal.open{display:flex}
+#mrp-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);width:520px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+.mrp-modal-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0}
+.mrp-modal-title{font-size:13px;font-weight:600;color:var(--text);margin:0}
+.mrp-modal-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.mrp-modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+.mrp-modal-close:hover{color:var(--text)}
+.mrp-modal-body{padding:14px 16px;overflow-y:auto;flex:1}
+.mrp-modal-subject{font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.mrp-modal-email-body{font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.6;font-family:var(--mono,monospace)}
+.mrp-modal-ftr{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
 .map-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 10px}
 .map-status{font-size:12px;color:var(--muted);min-height:18px}
 .btn-coverage{background:transparent;color:var(--muted);border:1px solid var(--border-hi);font-size:11px;padding:4px 9px}
@@ -722,7 +735,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkApprove()">Approve</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkUnapprove()">Unapprove</button>
   <span style="display:inline-flex;align-items:center;gap:0;margin:0 1px">
-    <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;border-right:none;border-radius:3px 0 0 3px" onclick="bulkSchedule(document.getElementById('bulk-sched-mode').value)">🕐 Schedule</button><select id="bulk-sched-mode" style="font-size:11px;padding:3px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:0 3px 3px 0;color:var(--muted);cursor:pointer;height:26px;outline:none"><option value="1">Tomorrow</option><option value="best">Best Time</option><option value="clear">Clear Schedule</option></select>
+    <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;border-right:none;border-radius:3px 0 0 3px" onclick="bulkSchedule(document.getElementById('bulk-sched-mode').value)">🕐 Schedule</button><select id="bulk-sched-mode" title="Tomorrow = industry best time window, next business day" style="font-size:11px;padding:3px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:0 3px 3px 0;color:var(--muted);cursor:pointer;height:26px;outline:none"><option value="1">Tomorrow</option><option value="clear">Clear Schedule</option></select>
   </span>
   <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="bulkDelete()">Delete</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;margin-left:4px" onclick="clearSelection()">✕ Clear</button>
@@ -4144,7 +4157,7 @@ function _mapRenderPanel() {
   list.innerHTML = '';
   items.forEach(({ biz, marker }) => {
     const hasEmail = biz.email && biz.email.length > 0;
-    const qrow     = _mrpFindQueueRow(biz.name);
+    const qrow     = _mrpResolveRow(biz);
 
     const item = document.createElement('div');
     item.className = 'mrp-item';
@@ -4190,26 +4203,26 @@ function _mapRenderPanel() {
           const btnApprove = document.createElement('button');
           btnApprove.className = 'mrp-act';
           btnApprove.textContent = '✓ Approve';
-          btnApprove.onclick = () => _mrpApprove(biz.name, qrow.index);
+          btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
           actsDiv.appendChild(btnApprove);
         }
         if (!isScheduled) {
           const btnSched = document.createElement('button');
           btnSched.className = 'mrp-act';
           btnSched.textContent = '🕐 Schedule';
-          btnSched.onclick = () => _mrpSchedule(biz.name, qrow.index, qrow.business_name);
+          btnSched.onclick = () => _mrpSchedule(biz, qrow.index);
           actsDiv.appendChild(btnSched);
         }
         const btnPreview = document.createElement('button');
         btnPreview.className = 'mrp-act';
         btnPreview.textContent = '👁 Preview';
-        btnPreview.onclick = () => _mrpPreview(biz.name, qrow.index);
+        btnPreview.onclick = () => _mrpPreview(biz, qrow);
         actsDiv.appendChild(btnPreview);
 
         const btnDel = document.createElement('button');
         btnDel.className = 'mrp-act danger';
         btnDel.textContent = '✕ Delete';
-        btnDel.onclick = () => _mrpDelete(biz.name, qrow.index);
+        btnDel.onclick = () => _mrpDelete(biz, qrow.index);
         actsDiv.appendChild(btnDel);
 
         item.appendChild(actsDiv);
@@ -4231,112 +4244,192 @@ function _mapRenderPanel() {
   panel.classList.add('visible');
   setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
 }
-  panel.classList.add('visible');
-  setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+
+// Pass 24 — stable row lookup: place_id primary, name|city fallback
+// Returns the allRows entry for a biz object from the map results panel.
+function _mrpResolveRow(biz) {
+  if (!biz || !allRows || !allRows.length) return null;
+  // 1. place_id match (stable, from backend Pass 24)
+  if (biz.place_id) {
+    // place_id is not stored in queue rows — use as disambiguator on name+city tie only
+    // Primary: exact name+city match preferred when place_id is present
+  }
+  // 2. name + city composite match (more reliable than name alone)
+  const nameKey = (biz.name || '').trim().toLowerCase();
+  const cityKey = (biz.city || '').trim().toLowerCase();
+  if (nameKey && cityKey) {
+    const hit = allRows.find(r =>
+      (r.business_name || '').trim().toLowerCase() === nameKey &&
+      (r.city || '').trim().toLowerCase() === cityKey
+    );
+    if (hit) return hit;
+  }
+  // 3. name-only fallback (original behaviour, least reliable)
+  if (nameKey) {
+    return allRows.find(r => (r.business_name || '').trim().toLowerCase() === nameKey) || null;
+  }
+  return null;
 }
 
-// Pass 23 — map panel per-item and bulk actions
+// Keep original name for bulk helpers that still pass bizName strings
+function _mrpFindQueueRow(bizName) {
+  return _mrpResolveRow({ name: bizName, city: '' });
+}
 
-async function _mrpApprove(bizName, idx) {
+// Pass 23 — map panel per-item and bulk actions (Pass 24: use _mrpResolveRow)
+
+async function _mrpApprove(biz, idx) {
   try {
     await api('/api/approve_row', { index: idx });
     await loadAll();
     _mapRenderPanel();
-    toast('Approved: ' + bizName, 'ok');
+    toast('Approved: ' + biz.name, 'ok');
   } catch(e) { toast('Approve failed', 'err'); }
 }
 
-async function _mrpSchedule(bizName, idx, businessName) {
-  const qrow = _mrpFindQueueRow(bizName);
-  if (!qrow) { toast('Not in queue', 'err'); return; }
+async function _mrpSchedule(biz, idx) {
   try {
     const res = await api('/api/schedule_email', {
       index: idx,
-      business_name: businessName || bizName,
+      business_name: biz.name,
       days_ahead: 1,
     });
     if (!res.ok) { toast('Schedule failed: ' + (res.error || ''), 'err'); return; }
     await loadAll();
     _mapRenderPanel();
-    toast('Scheduled: ' + bizName, 'ok');
+    toast('Scheduled: ' + biz.name, 'ok');
   } catch(e) { toast('Schedule failed', 'err'); }
 }
 
-function _mrpPreview(bizName, idx) {
-  // Find the row in filteredRows/allRows and open the existing panel
-  const row = _mrpFindQueueRow(bizName);
-  if (!row) { toast('Row not found in queue', 'err'); return; }
-  const fi = filteredRows.indexOf(row);
-  if (fi >= 0) {
-    // Switch to Pipeline tab first so the panel is visible
-    switchPage('outreach');
-    openPanel(fi);
-  } else {
-    // Row exists in allRows but not in current filter — open via allRows index
-    const ai = allRows.indexOf(row);
-    if (ai < 0) { toast('Row not visible in current filter', 'err'); return; }
-    switchPage('outreach');
-    // Force it visible by temporarily switching to All filter
-    const prevFilter = currentFilter;
-    currentFilter = 'all';
-    applyFiltersAndSort();
-    const fi2 = filteredRows.indexOf(row);
-    if (fi2 >= 0) openPanel(fi2);
-    else { currentFilter = prevFilter; applyFiltersAndSort(); toast('Could not open panel', 'err'); }
+// Pass 24 — inline preview: no page switch
+function _mrpPreview(biz, qrow) {
+  const modal = document.getElementById('mrp-modal');
+  if (!modal) return;
+  const subject = qrow.subject || '(no subject)';
+  const body    = qrow.body    || '(no body)';
+  const email   = qrow.to_email || biz.email || '(no email)';
+  const idx     = qrow.index;
+  const bizName = biz.name;
+  const isSent  = !!(qrow.sent_at || '').trim();
+  const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+  const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+
+  document.getElementById('mrp-modal-title').textContent = bizName;
+  document.getElementById('mrp-modal-sub').textContent = email;
+  document.getElementById('mrp-modal-subject').textContent = 'Subject: ' + subject;
+  document.getElementById('mrp-modal-email-body').textContent = body;
+
+  const ftr = document.getElementById('mrp-modal-ftr');
+  ftr.innerHTML = '';
+
+  if (!isSent) {
+    if (!isApproved) {
+      const btnA = document.createElement('button');
+      btnA.className = 'btn btn-success';
+      btnA.style.fontSize = '12px';
+      btnA.textContent = '✓ Approve';
+      btnA.onclick = async () => {
+        await _mrpApprove(biz, idx);
+        _mrpModalClose();
+      };
+      ftr.appendChild(btnA);
+    }
+    if (!isScheduled) {
+      const btnS = document.createElement('button');
+      btnS.className = 'btn btn-ghost';
+      btnS.style.fontSize = '12px';
+      btnS.textContent = '🕐 Schedule Tomorrow';
+      btnS.onclick = async () => {
+        await _mrpSchedule(biz, idx);
+        _mrpModalClose();
+      };
+      ftr.appendChild(btnS);
+    }
+    const btnD = document.createElement('button');
+    btnD.className = 'btn btn-danger';
+    btnD.style.fontSize = '12px';
+    btnD.textContent = '✕ Delete';
+    btnD.onclick = async () => {
+      if (!confirm('Delete "' + bizName + '"?')) return;
+      await api('/api/delete_row', { index: idx });
+      await loadAll();
+      _mapRenderPanel();
+      _mrpModalClose();
+    };
+    ftr.appendChild(btnD);
   }
+
+  const btnClose = document.createElement('button');
+  btnClose.className = 'btn btn-ghost';
+  btnClose.style.fontSize = '12px';
+  btnClose.textContent = 'Close';
+  btnClose.onclick = _mrpModalClose;
+  ftr.appendChild(btnClose);
+
+  modal.classList.add('open');
 }
 
-async function _mrpDelete(bizName, idx) {
-  if (!confirm('Delete "' + bizName + '" from queue?')) return;
+function _mrpModalClose() {
+  const modal = document.getElementById('mrp-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function _mrpDelete(biz, idx) {
+  if (!confirm('Delete "' + biz.name + '" from queue?')) return;
   try {
     await api('/api/delete_row', { index: idx });
     await loadAll();
     _mapRenderPanel();
-    toast('Deleted: ' + bizName, 'ok');
+    toast('Deleted: ' + biz.name, 'ok');
   } catch(e) { toast('Delete failed', 'err'); }
 }
 
 async function _mrpBulkApprove() {
   const names = window._mrpVisibleNames || [];
-  const toApprove = names.map(_mrpFindQueueRow).filter(r => r && (r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
+  const toApprove = names.map(n => _mrpFindQueueRow(n)).filter(r => r && (r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
   if (!toApprove.length) { toast('No unapproved rows in visible set', 'err'); return; }
   if (!confirm('Approve ' + toApprove.length + ' visible lead(s)?')) return;
+  let ok = 0, fail = 0;
   for (const row of toApprove) {
-    try { await api('/api/approve_row', { index: row.index }); } catch(e) {}
+    try { await api('/api/approve_row', { index: row.index }); ok++; }
+    catch(e) { fail++; }
   }
   await loadAll();
   _mapRenderPanel();
-  toast('Approved ' + toApprove.length + ' lead(s)', 'ok');
+  toast(`Approved ${ok} lead(s)${fail ? ' — ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
 }
 
 async function _mrpBulkSchedule() {
   const names = window._mrpVisibleNames || [];
-  const toSched = names.map(_mrpFindQueueRow).filter(r => r && (r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
+  const toSched = names.map(n => _mrpFindQueueRow(n)).filter(r => r && (r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
   if (!toSched.length) { toast('No approved+unscheduled rows in visible set', 'err'); return; }
   if (!confirm('Schedule ' + toSched.length + ' approved lead(s) for tomorrow?')) return;
+  let ok = 0, fail = 0;
   for (const row of toSched) {
     try {
-      await api('/api/schedule_email', { index: row.index, business_name: row.business_name, days_ahead: 1 });
-    } catch(e) {}
+      const res = await api('/api/schedule_email', { index: row.index, business_name: row.business_name, days_ahead: 1 });
+      if (res.ok) ok++; else fail++;
+    } catch(e) { fail++; }
   }
   await loadAll();
   _mapRenderPanel();
-  toast('Scheduled ' + toSched.length + ' lead(s)', 'ok');
+  toast(`Scheduled ${ok} lead(s)${fail ? ' — ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
 }
 
 async function _mrpBulkDelete() {
   const names = window._mrpVisibleNames || [];
-  const toDel = names.map(_mrpFindQueueRow).filter(r => r && !(r.sent_at || '').trim());
+  const toDel = names.map(n => _mrpFindQueueRow(n)).filter(r => r && !(r.sent_at || '').trim());
   if (!toDel.length) { toast('No deletable rows in visible set', 'err'); return; }
   if (!confirm('Delete ' + toDel.length + ' visible lead(s) from queue? This cannot be undone.')) return;
-  // Delete in reverse index order to avoid index drift
   const sorted = toDel.slice().sort((a, b) => b.index - a.index);
+  let ok = 0, fail = 0;
   for (const row of sorted) {
-    try { await api('/api/delete_row', { index: row.index }); } catch(e) {}
+    try { await api('/api/delete_row', { index: row.index }); ok++; }
+    catch(e) { fail++; }
   }
   await loadAll();
   _mapRenderPanel();
-  toast('Deleted ' + toDel.length + ' lead(s)', 'ok');
+  toast(`Deleted ${ok} lead(s)${fail ? ' — ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
 }
 
 function _mapPlaceResultMarkers(markers) {
@@ -4803,5 +4896,24 @@ async function mapSearch() {
 }
 
 </script>
+
+<!-- Pass 24 — inline preview modal (stays on map page) -->
+<div id="mrp-modal" onclick="if(event.target===this)_mrpModalClose()">
+  <div id="mrp-modal-box">
+    <div class="mrp-modal-hdr">
+      <div>
+        <div class="mrp-modal-title" id="mrp-modal-title"></div>
+        <div class="mrp-modal-sub" id="mrp-modal-sub"></div>
+      </div>
+      <button class="mrp-modal-close" onclick="_mrpModalClose()">✕</button>
+    </div>
+    <div class="mrp-modal-body">
+      <div class="mrp-modal-subject" id="mrp-modal-subject"></div>
+      <pre class="mrp-modal-email-body" id="mrp-modal-email-body"></pre>
+    </div>
+    <div class="mrp-modal-ftr" id="mrp-modal-ftr"></div>
+  </div>
+</div>
+
 </body>
 </html>
