@@ -17,7 +17,7 @@
 
 **No backend changes. No queue schema changes. No protected systems touched.**
 
-**Commit:** TBD
+**Commit:** `8abbb57`
 
 ---
 

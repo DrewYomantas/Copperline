@@ -8,7 +8,7 @@ Pass 40 complete.
 
 ---
 
-## Completed: Pass 40 - V2 Stage 2C — Shared Row State Rendering - TBD
+## Completed: Pass 40 - V2 Stage 2C — Shared Row State Rendering - `8abbb57`
 
 Product change: `lead_engine/dashboard_static/index.html` only.
 No backend changes. No protected systems touched.

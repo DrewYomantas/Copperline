@@ -30,7 +30,7 @@ Pass 40 - V2 Stage 2C — Shared Row State Rendering
 - Both Discovery list views and the Pipeline queue table now show materially consistent status, observation presence, and next-action from the same shared logic.
 - Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: TBD
+Commit: `8abbb57`
 
 
 ## Queue State Management Note — Pass 38
