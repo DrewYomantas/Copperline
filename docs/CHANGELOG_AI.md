@@ -134,6 +134,38 @@ Update this file at the end of every pass.
 
 ## 2026-03-16
 
+### Pass 16a — Bug Stabilization: normalize_business_name, discover 400, None guards
+
+**Goal:** Fix three hard backend failures introduced by prior Codex UX passes that left the dashboard unusable for queue health, exception scanning, and map discovery.
+
+**Files changed:**
+- `lead_engine/discovery/prospect_discovery_agent.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/queue/queue_integrity.py`
+- `lead_engine/queue/exception_router.py`
+
+**Failure 1 — `NameError: normalize_business_name` (routes: `/api/queue_health`, `/api/exceptions`)**
+
+Root cause: `dedupe_key_for_prospect()` called `normalize_business_name()` which was documented but never written. Every call crashed at runtime, taking down `queue_integrity.py` and `exception_router.py`.
+
+Fix: Added `normalize_business_name()` using existing `_NAME_NOISE_WORDS` and `_PUNCT_RE`. Additive — no existing logic modified.
+
+**Failure 2 — `/api/discover` and `/api/discover_area` returning 400 on all-duplicates**
+
+Root cause: Both routes returned HTTP 400 when all results were already in the pipeline. Frontend treated any non-2xx as a generic connection failure.
+
+Fix: Changed both zero-new-results paths from `400` → `200` with `ok: false, all_duplicates: true`.
+
+**Failure 3 — `None` `.lower()` crashes in queue helpers**
+
+Root cause: `queue_integrity.py` and `exception_router.py` used `row.get("approved", "").lower()` which crashes when the value is `None`. Fixed with `(row.get("approved") or "").lower()`.
+
+**Verification:** `py_compile` clean on all 4 files. No logic changes. No schema changes. No protected systems touched.
+
+**Commit:** `7e34d57`
+
+---
+
 ### Pass 15b — Outreach Tone Correction: Operational Problem-First Messaging
 
 **Goal:** Correct Pass 15a copy that drifted into generic automation-agency framing. Lead with operational problems the business owner recognizes, not automation as the hook.

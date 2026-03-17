@@ -21,22 +21,20 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 15b — Outreach Tone Correction: Operational Problem-First Messaging
+Pass 16a — Bug Stabilization
 
-- Corrected Pass 15a automation-agency drift
-- `_OPENING_QUESTIONS` rewritten to lead with concrete loss scenarios
-- `_BODY_FIXED` rewritten to lead with what the business is currently losing
-- `cvSendQuick` templates updated to match operational framing
-- `DRAFT_VERSION` bumped to `v6`
-- No logic, routing, schema, or protected system changes
+- Added missing `normalize_business_name()` to `prospect_discovery_agent.py` — fixes `/api/queue_health` and `/api/exceptions` 500s
+- Changed all-duplicates discovery path from HTTP 400 → 200 with `all_duplicates: true` flag — fixes misleading connection error in map UI
+- Added `None` guards on `approved` field in `queue_integrity.py` and `exception_router.py`
+- No logic changes, no schema changes, no protected systems touched
 
-Commit: `fix: Pass 15b — correct outreach tone, lead with operational problems not automation framing`
+Commit: `7e34d57`
 
 ## Previous Completed Pass
-Pass 15a — Outreach Positioning: Remove Missed-Call-First Framing
+Pass 15b — Outreach Tone Correction: Operational Problem-First Messaging
 
 ## Next Pass
-Pass 16 — TBD (territory heatmap, saturation view, tiled backend improvements, or outreach doc updates)
+Pass 16b — TBD (territory heatmap, saturation view, tiled backend improvements, or outreach doc updates)
 
 ## Protected Systems
 - `run_lead_engine.py`
