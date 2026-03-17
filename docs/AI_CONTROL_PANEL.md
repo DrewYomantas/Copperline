@@ -9,15 +9,15 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Bulk Discovery-to-Outreach Workflow Acceleration
+Outreach Review Throughput + Queue Control
 
 ## Current Build Pass
-Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration (complete)
+Pass 34 - Outreach Review Throughput + Queue Control (complete)
 
 ## Last Completed Pass
-Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration
+Pass 34 - Outreach Review Throughput + Queue Control
 
-Commit: `c1a56a4`
+Commit: `COMMIT_PENDING`
 
 ## Next Pass
 TBD
@@ -43,7 +43,7 @@ Passes use bounded cohesive blocks, not artificially tiny micro-changes.
 Examples:
 - Correct: hidden email extraction + contact cleanup + message guardrails because all three improve one outreach-readiness workflow
 - Incorrect: discovery + scheduler UX + message quality in one pass
-- Previous completed example: Pass 33 added visible-subset prep/review actions and smarter bulk handling because all three improved one discovery-to-outreach handoff workflow
+- Previous completed example: Pass 34 added review-session context, rapid next-step controls, and keyboard shortcuts because all three improved one outreach-review throughput workflow
 
 ---
 

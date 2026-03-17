@@ -9,7 +9,7 @@ v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-Bulk Discovery-to-Outreach Workflow Acceleration
+Outreach Review Throughput + Queue Control
 
 ## Copperline Positioning
 Copperline = Service Business Operations
@@ -21,19 +21,19 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration
+Pass 34 - Outreach Review Throughput + Queue Control
 
-- Added a discovery-panel handoff layer that works on the current visible qualified subset instead of forcing row-by-row `Edit` clicks after triage.
-- Added visible-set review/prep controls in the discovery bulk bar so operators can open the current filtered subset in the outreach review panel or bulk-prepare outreach-ready visible rows first.
-- Added compact visible-subset summary counts showing how many current results are reviewable, outreach-ready, and still need approval.
-- Tightened the discovery bulk helpers to use the actual visible queue-row context rather than weaker name-only lookups, keeping actions aligned with Pass 30/32 filtered subsets.
-- Verified the dashboard still loads, triage views still narrow correctly, the new handoff actions open the expected visible subset in review, and prep-first review works without disturbing Pass 29-32 behaviors.
+- Added a review-session status bar in the outreach panel showing the active review set label plus compact queue-state counts for the current subset.
+- Added throughput-oriented flow actions inside the review panel: `Approve + Next`, `Schedule + Next`, `Unschedule + Next`, `Undo + Next`, and `Skip`, all built on the existing review actions without changing scheduler or sender logic.
+- Added keyboard shortcuts for faster sequential review: arrows to move, `A` approve, `Shift+A` approve and continue, `S` schedule, `Shift+S` schedule and continue, `U` unschedule, and `N` skip to the next row.
+- Preserved discovery-to-review continuity by carrying a `Discovery review subset` session label through the Pass 33 bridge, so review context stays clear after opening a visible discovery subset.
+- Verified dashboard load, session labeling, queue-position visibility, rapid review actions, overlay-close protection, and basic Pass 29-33 control availability with a focused live headless smoke pass using a synthetic review subset and stubbed API writes.
 - Reconfirmed no protected systems were touched; the pass stayed in `lead_engine/dashboard_static/index.html`.
 
-Commit: `c1a56a4`
+Commit: `COMMIT_PENDING`
 
 ## Previous Completed Pass
-Pass 32 - Discovery Triage + Lead Qualification Controls
+Pass 33 - Bulk Discovery-to-Outreach Workflow Acceleration
 
 ## Next Pass
 TBD

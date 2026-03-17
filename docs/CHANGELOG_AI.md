@@ -772,3 +772,28 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 **Commit:** `c1a56a4`
 
 ---
+### 2026-03-17 - Pass 34: Outreach Review Throughput + Queue Control
+
+**Goal:** Increase operator throughput while reviewing large outreach subsets after discovery handoff.
+
+**Changes:**
+- Added review-session context directly inside the outreach panel with a clear subset label and live queue-state counts for the active review set.
+- Added context-aware quick flow actions: `Approve + Next`, `Schedule + Next`, `Unschedule + Next`, `Undo + Next`, and `Skip`.
+- Added keyboard shortcuts for faster sequential review (`A`, `Shift+A`, `S`, `Shift+S`, `U`, `N`, and arrow navigation) without changing scheduler or sender logic.
+- Preserved Pass 33 discovery-to-review continuity by carrying a `Discovery review subset` label into the outreach panel when review opens from discovery-visible subsets.
+
+**Files touched:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**Verification:**
+- Extracted the inline dashboard JavaScript and ran `node --check`.
+- Ran a live headless-browser smoke pass against `http://127.0.0.1:5000` with a synthetic review subset and stubbed API writes to verify subset labeling, queue visibility, rapid review actions, skip/next flow, overlay-close protection, and basic Pass 29 discovery control availability.
+- Reconfirmed the pass stayed frontend-only and did not touch protected systems.
+
+**Commit:** `COMMIT_PENDING`
+
+---

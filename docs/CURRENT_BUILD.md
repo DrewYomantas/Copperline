@@ -1,10 +1,56 @@
 # Current Build Pass
 
 ## Active System
-Bulk Discovery-to-Outreach Workflow Acceleration
+Outreach Review Throughput + Queue Control
 
 ## Status
-Pass 33 complete.
+Pass 34 complete.
+
+---
+
+## Completed: Pass 34 - Outreach Review Throughput + Queue Control - `COMMIT_PENDING`
+
+Product change stayed in `lead_engine/dashboard_static/index.html`.
+No backend changes. No protected systems touched.
+
+### Faster sequential review flow
+
+- Added a review-session bar directly under the panel header so operators can see which subset they are reviewing without leaving the panel.
+- Added compact live counts for the current snapshot set: total rows in set, remaining after the current record, pending, approved, scheduled, and no-email rows.
+- Added a new flow-action strip inside the panel body with context-aware actions like `Approve + Next`, `Schedule + Next`, `Unschedule + Next`, `Undo + Next`, and `Skip`.
+
+### Better queue visibility and continuity
+
+- Preserved Pass 30 snapshot-based review stability and layered clearer session context on top of it instead of redesigning the panel.
+- Discovery-opened review sessions now carry a `Discovery review subset` label through the Pass 33 bridge, so the operator can tell they are working inside a narrowed discovery handoff set.
+- Existing panel position controls remain intact, but the current subset is now clearer while moving record to record.
+
+### Faster review controls
+
+- Added keyboard shortcuts for high-volume review sessions:
+  - arrows move
+  - `A` approve
+  - `Shift+A` approve and continue
+  - `S` schedule
+  - `Shift+S` schedule and continue
+  - `U` unschedule
+  - `N` skip to next
+- Built these on top of the current review actions instead of altering queue schema, scheduler logic, or sender behavior.
+
+### Verification
+
+- Extracted inline dashboard JavaScript and ran `node --check` successfully.
+- Ran a focused live headless-browser smoke pass against `http://127.0.0.1:5000` using a synthetic review subset with stubbed API writes to verify:
+  - dashboard load
+  - discovery-to-review subset label continuity
+  - queue position/session visibility
+  - `Approve + Next`
+  - `Unschedule + Next`
+  - `Shift+S` schedule-and-continue
+  - `N` skip progression
+  - overlay-close guard stability
+  - basic Pass 29 discovery control availability
+- Reconfirmed the pass stayed frontend-only and did not touch protected systems.
 
 ---
 

@@ -147,6 +147,11 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .panel-nav-btn:hover{color:var(--text);border-color:var(--border-hi)}
 .panel-nav-btn:disabled{opacity:.3;cursor:not-allowed}
 .panel-pos{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.panel-session-bar{padding:10px 20px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.panel-session-title{font-size:11px;font-weight:600;color:var(--text)}
+.panel-session-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.panel-session-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);font-size:10px;color:var(--muted)}
+.panel-session-shortcuts{font-size:10px;color:var(--dim);line-height:1.5;text-align:right}
 .panel-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;border-radius:var(--rs);transition:.12s}
 .panel-close:hover{color:var(--text);background:var(--surface2)}
 .panel-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
@@ -160,6 +165,8 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .panel-input:disabled{opacity:.5;cursor:not-allowed}
 .panel-textarea{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--mono);font-size:12px;outline:none;resize:vertical;min-height:220px;line-height:1.6;transition:.12s}
 .panel-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.panel-flow-bar{padding:10px 20px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.panel-flow-note{font-size:10px;color:var(--dim);margin-right:auto}
 .panel-footer{border-top:1px solid var(--border);padding:14px 20px;display:flex;gap:8px;flex-shrink:0;background:var(--surface)}
 .panel-score-row{display:flex;align-items:center;gap:10px}
 .panel-reason{font-size:11px;color:var(--muted);font-style:italic;flex:1}
@@ -1035,6 +1042,13 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
         <button class="panel-close" onclick="closePanel()">✕</button>
       </div>
     </div>
+    <div class="panel-session-bar">
+      <div>
+        <div class="panel-session-title" id="panel-session-title"></div>
+        <div class="panel-session-meta" id="panel-session-meta"></div>
+      </div>
+      <div class="panel-session-shortcuts" id="panel-session-shortcuts"></div>
+    </div>
     <div class="panel-body">
       <div class="panel-section">
         <div class="panel-label">Business Info</div>
@@ -1077,6 +1091,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       </div>
     </div>
     <div id="panel-schedule-info" class="panel-sched-info" style="display:none;margin:0 20px 10px"></div>
+    <div id="panel-flow-bar" class="panel-flow-bar"></div>
     <div class="panel-footer">
       <button class="btn btn-success" id="panel-approve-btn" onclick="panelApprove()" style="flex:1">✓ Approve</button>
       <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
@@ -1391,6 +1406,7 @@ let panelSaveTimer = null;
 let panelSaveInFlight = false;
 let panelRowsKeys = [];
 let panelRowKey = '';
+let panelSessionLabel = '';
 let status_draft_version = '';
 
 async function api(path, body) {
@@ -1441,6 +1457,153 @@ function _panelCurrentRow() {
 
 function _panelHasPendingSave() {
   return !!panelSaveTimer || panelSaveInFlight;
+}
+
+function _panelFilterLabel(name) {
+  const labels = {
+    active: 'Actionable queue',
+    pending: 'Pending queue',
+    approved: 'Approved queue',
+    scheduled: 'Scheduled queue',
+    sent: 'Done queue',
+    replied: 'Replied queue',
+    stale: 'Stale draft queue',
+    no_email: 'No-email queue',
+    high_score: 'High-score queue',
+    all: 'All queue',
+  };
+  return labels[name || currentFilter] || 'Review queue';
+}
+
+function _panelDefaultSessionLabel(rowsCtx) {
+  if (panelSessionLabel) return panelSessionLabel;
+  if (Array.isArray(rowsCtx) && rowsCtx.length && rowsCtx !== filteredRows) return 'Review subset';
+  return _panelFilterLabel(currentFilter);
+}
+
+function _panelSessionStats(rows) {
+  const sessionRows = Array.isArray(rows) ? rows : [];
+  return sessionRows.reduce((acc, row) => {
+    const isSent = !!(row.sent_at || '').trim();
+    const isScheduled = !!(row.send_after || '').trim() && !isSent;
+    const isApproved = String(row.approved || '').toLowerCase() === 'true';
+    const hasEmail = !!((row.to_email || '').trim().includes('@'));
+    if (isSent) acc.sent += 1;
+    else if (isScheduled) acc.scheduled += 1;
+    else if (isApproved) acc.approved += 1;
+    else acc.pending += 1;
+    if (!hasEmail) acc.noEmail += 1;
+    return acc;
+  }, { pending: 0, approved: 0, scheduled: 0, sent: 0, noEmail: 0 });
+}
+
+function _panelRenderSessionChrome(rows, fi) {
+  const titleEl = document.getElementById('panel-session-title');
+  const metaEl = document.getElementById('panel-session-meta');
+  const shortcutsEl = document.getElementById('panel-session-shortcuts');
+  if (!titleEl || !metaEl || !shortcutsEl) return;
+  const stats = _panelSessionStats(rows);
+  const total = rows.length;
+  const remaining = Math.max(total - fi - 1, 0);
+  titleEl.textContent = panelSessionLabel || _panelFilterLabel(currentFilter);
+  metaEl.innerHTML =
+    `<span class="panel-session-chip">${total} in set</span>` +
+    `<span class="panel-session-chip">${remaining} after this</span>` +
+    `<span class="panel-session-chip">${stats.pending} pending</span>` +
+    `<span class="panel-session-chip">${stats.approved} approved</span>` +
+    `<span class="panel-session-chip">${stats.scheduled} scheduled</span>` +
+    (stats.noEmail ? `<span class="panel-session-chip">${stats.noEmail} no email</span>` : '');
+  shortcutsEl.innerHTML = '←/→ move • A approve • Shift+A approve+next • S schedule • Shift+S schedule+next • U unschedule • N next';
+}
+
+function _panelRenderFlowActions(row) {
+  const flowEl = document.getElementById('panel-flow-bar');
+  if (!flowEl) return;
+  if (!row || row.sent_at) {
+    flowEl.innerHTML = '<span class="panel-flow-note">Use Prev / Next to move through this review set.</span>';
+    return;
+  }
+  const hasNext = panelIdx >= 0 && panelIdx < (_panelCurrentRows().length - 1);
+  const canApprove = !!((row.to_email || '').trim().includes('@'));
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  const isScheduled = !!(row.send_after || '').trim();
+  const buttons = [];
+  if (!isApproved && canApprove) {
+    buttons.push('<button class="btn btn-success" style="font-size:11px;padding:5px 10px" onclick="panelApproveAndNext()">Approve + Next</button>');
+  }
+  if (!isScheduled) {
+    buttons.push('<button class="btn btn-secondary" style="font-size:11px;padding:5px 10px" onclick="panelScheduleTomorrowAndNext()">Schedule + Next</button>');
+  } else {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelUnscheduleAndNext()">Unschedule + Next</button>');
+  }
+  if (isApproved) {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelUnapproveAndNext()">Undo + Next</button>');
+  }
+  if (hasNext) {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelSkipNext()">Skip →</button>');
+  }
+  flowEl.innerHTML =
+    `<span class="panel-flow-note">${hasNext ? 'Keep moving through this review set without closing the panel.' : 'Last row in this review set.'}</span>` +
+    buttons.join('');
+}
+
+function _panelAdvanceAfterAction(doneLabel) {
+  const rows = _panelCurrentRows();
+  const nextIdx = panelIdx + 1;
+  if (nextIdx >= 0 && nextIdx < rows.length) {
+    openPanel(nextIdx, rows, panelSessionLabel);
+    return true;
+  }
+  toast(`${doneLabel} — end of review set`, 'ok');
+  return false;
+}
+
+async function panelSkipNext() {
+  if (_panelHasPendingSave()) {
+    toast('Wait for the current draft save to finish first.', 'info');
+    return false;
+  }
+  return _panelAdvanceAfterAction('Skipped');
+}
+
+async function panelApproveAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const wasApproved = String(row.approved || '').toLowerCase() === 'true';
+  await panelApprove();
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  if (!wasApproved && isApproved) return _panelAdvanceAfterAction('Approved');
+  return false;
+}
+
+async function panelScheduleTomorrowAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const before = (row.send_after || '').trim();
+  await panelScheduleTomorrow();
+  const after = (row.send_after || '').trim();
+  if ((!before && after) || (before !== after && !!after)) return _panelAdvanceAfterAction('Scheduled');
+  return false;
+}
+
+async function panelUnscheduleAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const before = (row.send_after || '').trim();
+  await panelUnschedule();
+  const after = (row.send_after || '').trim();
+  if (before && !after) return _panelAdvanceAfterAction('Unscheduled');
+  return false;
+}
+
+async function panelUnapproveAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const wasApproved = String(row.approved || '').toLowerCase() === 'true';
+  await panelUnapprove();
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  if (wasApproved && !isApproved) return _panelAdvanceAfterAction('Unapproved');
+  return false;
 }
 
 function _panelSyncOpenState() {
@@ -1699,9 +1862,10 @@ function toggleExtraFilters(btn) {
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
-function openPanel(fi, rowsCtx) {
+function openPanel(fi, rowsCtx, sessionLabel) {
   const rows = Array.isArray(rowsCtx) && rowsCtx.length ? rowsCtx : filteredRows;
   panelRowsKeys = _panelSnapshotKeys(rows);
+  panelSessionLabel = sessionLabel || _panelDefaultSessionLabel(rowsCtx);
   const panelRows = _panelCurrentRows();
   if (!panelRows.length) return;
   panelIdx = Math.max(0, Math.min(fi, panelRows.length - 1));
@@ -1711,15 +1875,19 @@ function openPanel(fi, rowsCtx) {
   const activeKey = _mapPanelActiveKeyForRow(row);
   if (activeKey) _mapPanelActiveKey = activeKey;
   fillPanel(row, panelIdx, panelRows.length);
+  const body = document.querySelector('#review-panel .panel-body');
+  if (body) body.scrollTop = 0;
   document.getElementById('panel-overlay').classList.add('open');
 }
 
 async function fillPanel(row, fi, totalRows) {
-  const total = totalRows || _panelCurrentRows().length || filteredRows.length;
+  const rows = _panelCurrentRows();
+  const total = totalRows || rows.length || filteredRows.length;
   document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
   document.getElementById('panel-pos').textContent = `${fi+1} / ${total}`;
   document.getElementById('btn-prev').disabled = fi === 0;
   document.getElementById('btn-next').disabled = fi === total - 1;
+  _panelRenderSessionChrome(rows, fi);
 
   const parts = [];
   if (row.city) parts.push(`<span>📍 ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
@@ -1822,6 +1990,7 @@ async function fillPanel(row, fi, totalRows) {
   else if (row.approved === 'true') { ab.style.display='none'; ub.style.display=''; if(sb) sb.style.display=''; }
   else { ab.style.display=''; ub.style.display='none'; if(sb) sb.style.display=''; }
   // ── Best-next-action + quick-log + campaign ───────────────────────────────
+  _panelRenderFlowActions(row);
   const _gi = allRows.indexOf(row);
   await _loadPresets();
   let _panelExtra = document.getElementById('panel-extra-sections');
@@ -1891,6 +2060,7 @@ function closePanel(force) {
   panelIdx = -1;
   panelRowsKeys = [];
   panelRowKey = '';
+  panelSessionLabel = '';
 }
 
 function closePanelOnOverlay(e) {
@@ -1994,7 +2164,7 @@ const SEND_WINDOWS = {
 
 async function panelScheduleTomorrow() {
   const row = _panelCurrentRow();
-  if (!row) return;
+  if (!row) return false;
   if (row.sent_at) { toast('Already sent — cannot schedule', 'err'); return; }
   const gi = allRows.indexOf(row);
   try {
@@ -2008,6 +2178,7 @@ async function panelScheduleTomorrow() {
     renderTable();
     fillPanel(row, panelIdx, _panelCurrentRows().length);
     toast('Scheduled for tomorrow', 'ok');
+    return true;
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -2030,6 +2201,7 @@ async function panelUnschedule() {
     fillPanel(row, panelIdx, _panelCurrentRows().length);
     await loadStats();
     toast('Unscheduled', 'ok');
+    return true;
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -2052,6 +2224,7 @@ async function panelReschedule(days) {
     renderTable();
     fillPanel(row, panelIdx, _panelCurrentRows().length);
     toast('Rescheduled for ' + _formatSendAfter(row.send_after), 'ok');
+    return true;
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -4190,8 +4363,13 @@ document.addEventListener('keydown', e => {
   if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
   if (e.key==='ArrowLeft'||e.key==='ArrowUp')   { e.preventDefault(); navigatePanel(-1); }
   if (e.key==='ArrowRight'||e.key==='ArrowDown') { e.preventDefault(); navigatePanel(1); }
-  if (e.key==='Escape') closePanel();
-  if (e.key==='a'||e.key==='A') panelApprove();
+  if (e.key==='Escape') { e.preventDefault(); closePanel(); return; }
+  if ((e.key==='a'||e.key==='A') && e.shiftKey) { e.preventDefault(); panelApproveAndNext(); return; }
+  if (e.key==='a'||e.key==='A') { e.preventDefault(); panelApprove(); return; }
+  if ((e.key==='s'||e.key==='S') && e.shiftKey) { e.preventDefault(); panelScheduleTomorrowAndNext(); return; }
+  if (e.key==='s'||e.key==='S') { e.preventDefault(); panelScheduleTomorrow(); return; }
+  if (e.key==='u'||e.key==='U') { e.preventDefault(); panelUnschedule(); return; }
+  if (e.key==='n'||e.key==='N') { e.preventDefault(); panelSkipNext(); return; }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -4790,7 +4968,7 @@ function _mrpOpenEdit(qrow) {
   if (fi < 0) fi = 0;
   const activeKey = _mapPanelActiveKeyForRow(qrow);
   if (activeKey) _mapPanelActiveKey = activeKey;
-  openPanel(fi, rows);
+  openPanel(fi, rows, 'Discovery review subset');
   _mapRenderPanel();
 }
 
@@ -5050,7 +5228,7 @@ function _mrpOpenRowsInOutreach(rows) {
     const freshRows = keys.map(_panelFindRowByKey).filter(Boolean);
     if (!freshRows.length) { toast('Visible review set is no longer available', 'err'); return; }
     renderTable();
-    openPanel(0, freshRows);
+    openPanel(0, freshRows, 'Discovery review subset');
   }, 180);
 }
 
