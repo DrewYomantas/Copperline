@@ -703,6 +703,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <strong id="bulk-count">0</strong> selected —
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkApprove()">Approve</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="bulkUnapprove()">Unapprove</button>
+  <button class="btn btn-secondary" id="bulk-unschedule-btn" style="font-size:11px;padding:3px 9px;display:none" onclick="bulkUnschedule()">Unschedule</button>
   <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="bulkDelete()">Delete</button>
   <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;margin-left:4px" onclick="clearSelection()">✕ Clear</button>
 </div>
@@ -1764,17 +1765,6 @@ function panelFieldChanged(field, value) {
   }, 500);
 }
 
-// Pass 9b — industry send windows (local time, HH:MM)
-const SEND_WINDOWS = {
-  plumbing:    '07:30',
-  hvac:        '07:30',
-  electrical:  '08:00',
-  roofing:     '08:00',
-  landscaping: '08:30',
-  locksmith:   '08:00',
-  default:     '08:00',
-};
-
 async function panelScheduleTomorrow() {
   const row = filteredRows[panelIdx];
   if (!row) return;
@@ -1833,7 +1823,7 @@ async function panelReschedule(days) {
     row.send_after = res.send_after;
     renderTable();
     fillPanel(row, panelIdx);
-    toast('Rescheduled for ' + _formatSendAfter(send_after), 'ok');
+    toast('Rescheduled for ' + _formatSendAfter(res.send_after), 'ok');
   } catch(e) {
     toast('Connection error', 'err');
   }
@@ -1908,7 +1898,7 @@ async function approveAll() {
 // ── Bulk ──────────────────────────────────────────────────────────────────────
 function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
 function _bulkAllowedInCurrentFilter() {
-  return ['active', 'pending', 'approved'].includes(currentFilter);
+  return ['active', 'pending', 'approved', 'scheduled', 'all'].includes(currentFilter);
 }
 
 function updateBulkSafety() {
@@ -1925,11 +1915,23 @@ function updateBulkSafety() {
   }
 }
 
+function _selectedHasScheduled() {
+  return getSelectedGIs().some(i => {
+    const row = allRows[i];
+    return !!(row && row.send_after && !row.sent_at);
+  });
+}
+
 function updateBulkBar() {
   if (!_bulkAllowedInCurrentFilter()) return;
   const n = document.querySelectorAll('.row-chk:checked').length;
   document.getElementById('bulk-count').textContent = n;
   document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
+  const unsBtn = document.getElementById('bulk-unschedule-btn');
+  if (unsBtn) {
+    const showUnschedule = currentFilter === 'scheduled' || _selectedHasScheduled();
+    unsBtn.style.display = showUnschedule ? '' : 'none';
+  }
 }
 function clearSelection() {
   document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
@@ -1974,6 +1976,35 @@ async function bulkUnapprove() {
   renderTable();
   await loadStats();
   toast(`Unapproved ${okCount}`,'info');
+}
+
+async function bulkUnschedule() {
+  const idxs = getSelectedGIs();
+  if (!idxs.length) return;
+  let unscheduled = 0;
+  for (const i of idxs) {
+    const row = allRows[i];
+    if (!row || !row.send_after || row.sent_at) continue;
+    try {
+      if (row.approved !== 'true') {
+        const ares = await api('/api/approve_row', {index: i});
+        if (!ares.ok) continue;
+        row.approved = 'true';
+      }
+      const res = await api('/api/schedule_email', {
+        index: i,
+        business_name: row.business_name,
+        send_after: '',
+      });
+      if (!res.ok) continue;
+      row.send_after = '';
+      unscheduled += 1;
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`${unscheduled} rows unscheduled and ready to send`, 'ok');
 }
 
 async function bulkDelete() {
