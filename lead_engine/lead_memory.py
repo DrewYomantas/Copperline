@@ -1,27 +1,28 @@
 """
 lead_memory.py
 Durable Lead Memory + Suppression Registry — Pass 44
+Lead Timeline / Lifecycle Event Spine — Pass 47
 
-Persists suppression/contact state for leads independently from the queue CSV.
-Deleting a queue row does NOT erase this memory.
+Persists suppression/contact state and lifecycle event history for leads
+independently from the queue CSV. Deleting a queue row does NOT erase this memory.
 
-Storage: lead_engine/data/lead_memory.json  (gitignored via .gitignore pattern)
+Storage: lead_engine/data/lead_memory.json
 
-Lead identity key priority (mirrors _leadKey in index.html):
-  1. Normalized website domain  (most stable, ~90% coverage)
-  2. Digits-only phone           (~99% coverage)
-  3. normalized_name|normalized_city  (100% fallback)
+Each lead record contains a single history[] list. Two entry types coexist:
 
-Suppression states:
-  contacted            — outreach was sent (at least one real send)
-  suppressed           — operator explicitly suppressed without a more specific reason
-  deleted_intentionally — row was removed from queue by the operator
-  do_not_contact       — business must not be reached (opt-out or explicit block)
-  hold                 — not now, revisit later
-  revived              — was suppressed but operator intentionally un-suppressed
+  type "state"  — state-transition entries written by record_suppression().
+                  These update current_state on the record.
 
-Revived records retain their history. The most-recent entry determines whether
-a lead is currently suppressed.
+  type "event"  — lifecycle event entries written by record_event().
+                  These do NOT update current_state. They add narrative detail.
+
+Event types (EVT_*):
+  EVT_DRAFTED           — a draft was created for this lead
+  EVT_OBSERVATION_ADDED — a business-specific observation was saved
+  EVT_DRAFT_REGENERATED — draft was regenerated using an observation
+  EVT_REPLIED           — lead replied to outreach
+  EVT_NOTE_ADDED        — operator added a conversation note
+  EVT_FOLLOWUP_SENT     — a follow-up message was sent
 """
 from __future__ import annotations
 
@@ -263,3 +264,137 @@ def suppressed_identity_sets() -> tuple[set, set, set]:
         # place_id keys — also add to a web-style check won't help, but
         # we still check via lead_key() lookup which covers pid: keys
     return websites, phones, name_cities
+
+
+# ---------------------------------------------------------------------------
+# Pass 47: Lifecycle event spine
+# ---------------------------------------------------------------------------
+
+# Event type constants — use these instead of bare strings at call sites.
+EVT_DRAFTED           = "drafted"
+EVT_OBSERVATION_ADDED = "observation_added"
+EVT_DRAFT_REGENERATED = "draft_regenerated"
+EVT_REPLIED           = "replied"
+EVT_NOTE_ADDED        = "note_added"
+EVT_FOLLOWUP_SENT     = "followup_sent"
+
+_ALL_EVENT_TYPES = {
+    EVT_DRAFTED, EVT_OBSERVATION_ADDED, EVT_DRAFT_REGENERATED,
+    EVT_REPLIED, EVT_NOTE_ADDED, EVT_FOLLOWUP_SENT,
+}
+
+# Human-readable labels for UI rendering
+_EVENT_LABELS = {
+    EVT_DRAFTED:           "Draft created",
+    EVT_OBSERVATION_ADDED: "Observation saved",
+    EVT_DRAFT_REGENERATED: "Draft regenerated",
+    EVT_REPLIED:           "Replied",
+    EVT_NOTE_ADDED:        "Note added",
+    EVT_FOLLOWUP_SENT:     "Follow-up sent",
+}
+
+# Labels for state-transition entries (used in timeline rendering)
+_STATE_LABELS = {
+    "contacted":             "Contacted",
+    "suppressed":            "Suppressed",
+    "deleted_intentionally": "Removed from queue",
+    "do_not_contact":        "Opted out",
+    "hold":                  "Put on hold",
+    "revived":               "Revived",
+}
+
+
+def record_event(
+    row: dict,
+    event_type: str,
+    *,
+    detail: str = "",
+    operator: str = "operator",
+) -> Optional[dict]:
+    """
+    Append a lifecycle event to a lead's history without changing current_state.
+
+    Creates the lead record if it doesn't exist yet (identity-only record with
+    no current_state set, so is_suppressed() still returns False for it).
+
+    Args:
+        row:        Queue row or biz object.
+        event_type: One of the EVT_* constants.
+        detail:     Optional free-text context (observation snippet, note excerpt, etc.)
+        operator:   Who triggered the event.
+
+    Returns the updated memory record, or None if the write fails silently.
+    """
+    if event_type not in _ALL_EVENT_TYPES:
+        raise ValueError(f"Unknown event_type {event_type!r}. Use EVT_* constants.")
+
+    key = lead_key(row)
+    entry = {
+        "type":        "event",
+        "event_type":  event_type,
+        "label":       _EVENT_LABELS.get(event_type, event_type),
+        "ts":          _now_iso(),
+        "operator":    operator,
+        "detail":      detail,
+        "business_name": _norm(row.get("business_name") or row.get("name") or ""),
+        "city":        _norm(row.get("city") or ""),
+    }
+
+    try:
+        with _lock:
+            data = _load()
+            record = data.setdefault(key, {
+                "key":          key,
+                "history":      [],
+                "business_name": _norm(row.get("business_name") or row.get("name") or ""),
+                "city":         _norm(row.get("city") or ""),
+                "website":      _norm(row.get("website") or ""),
+                "phone":        _norm(row.get("phone") or ""),
+            })
+            record["history"].append(entry)
+            record["last_updated"] = entry["ts"]
+            # Refresh identity fields if richer data is now available
+            record["business_name"] = entry["business_name"] or record.get("business_name", "")
+            record["city"]          = entry["city"] or record.get("city", "")
+            record["website"]       = _norm(row.get("website") or "") or record.get("website", "")
+            record["phone"]         = _norm(row.get("phone") or "") or record.get("phone", "")
+            _save(data)
+            return record
+    except Exception:
+        return None
+
+
+def get_timeline(row: dict) -> list:
+    """
+    Return the full event+state history for a lead, sorted oldest-first.
+
+    Each entry is the raw dict from history[] with an added 'label' field
+    for display, and a normalized 'type' field ('state' or 'event').
+
+    State-transition entries written before Pass 47 lack an explicit 'type'
+    field — these are back-filled as 'state' here so callers don't need to
+    handle the legacy shape.
+
+    Returns [] if the lead has no memory record.
+    """
+    record = get_record(row)
+    if not record:
+        return []
+
+    timeline = []
+    for entry in record.get("history", []):
+        e = dict(entry)
+        # Back-fill type for pre-Pass-47 state-transition entries
+        if "type" not in e:
+            e["type"] = "state"
+        # Back-fill label
+        if "label" not in e:
+            if e["type"] == "state":
+                e["label"] = _STATE_LABELS.get(e.get("state", ""), e.get("state", ""))
+            else:
+                e["label"] = _EVENT_LABELS.get(e.get("event_type", ""), e.get("event_type", ""))
+        timeline.append(e)
+
+    # Sort oldest-first by timestamp
+    timeline.sort(key=lambda e: e.get("ts", ""))
+    return timeline

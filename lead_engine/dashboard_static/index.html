@@ -1113,6 +1113,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       <div class="panel-section">
         <div class="panel-label">Business Info</div>
         <div class="panel-meta" id="panel-meta"></div>
+        <div id="panel-timeline-strip" style="margin-top:6px"></div>
       </div>
       <div class="panel-section">
         <div class="panel-label">To Email</div>
@@ -2630,6 +2631,69 @@ async function fillPanel(row, fi, totalRows) {
   } else {
     socialSec.style.display = 'none';
   }
+  // Pass 47: load timeline strip asynchronously — doesn't block panel render
+  _loadPanelTimeline(row);
+}
+
+// ── Pass 47: Panel timeline strip ────────────────────────────────────────────
+
+const _TL_ICON = {
+  contacted: '✉', suppressed: '🚫', deleted_intentionally: '🗑',
+  do_not_contact: '⛔', hold: '⏸', revived: '↩',
+  drafted: '📝', observation_added: '🔍', draft_regenerated: '♻',
+  replied: '💬', note_added: '🗒', followup_sent: '📨',
+};
+const _TL_COLOR = {
+  contacted: 'var(--blue)', suppressed: 'var(--amber)',
+  deleted_intentionally: 'var(--muted)', do_not_contact: 'var(--red)',
+  hold: 'var(--amber)', revived: 'var(--green)',
+  replied: 'var(--green)', drafted: 'var(--muted)',
+  observation_added: 'var(--copper)', draft_regenerated: 'var(--copper)',
+  note_added: 'var(--muted)', followup_sent: 'var(--blue)',
+};
+
+async function _loadPanelTimeline(row) {
+  const strip = document.getElementById('panel-timeline-strip');
+  if (!strip) return;
+  strip.innerHTML = '';  // clear on each panel open
+  if (!row) return;
+  try {
+    const res = await fetch('/api/lead_timeline', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        business_name: row.business_name || '',
+        website: row.website || '',
+        phone: row.phone || '',
+        city: row.city || '',
+      }),
+    }).then(r => r.json());
+    if (!res.ok || !res.total) return;
+    strip.innerHTML = _timelineStripHtml(res.timeline);
+  } catch(e) {
+    // Timeline load failure is silent — not critical to panel function
+  }
+}
+
+function _timelineStripHtml(timeline) {
+  if (!timeline || !timeline.length) return '';
+  // Show most-recent 6 events, oldest-first in the strip
+  const items = timeline.slice(-6);
+  const dots = items.map(e => {
+    const key = e.event_type || e.state || '';
+    const icon = _TL_ICON[key] || '·';
+    const color = _TL_COLOR[key] || 'var(--muted)';
+    const label = e.label || key;
+    const ts = (e.ts || '').replace('T',' ').replace('Z','').slice(0,16);
+    const detail = (e.detail || e.note || '').slice(0,80);
+    const tip = [label, ts, detail].filter(Boolean).join(' — ');
+    return `<span title="${tip.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:${color};cursor:default">${icon} <span style="color:var(--muted)">${label}</span></span>`;
+  }).join('<span style="color:var(--border);margin:0 3px">·</span>');
+  return `<div style="margin-top:4px;padding:5px 0 2px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:4px">
+    <span style="font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-right:4px">History</span>
+    ${dots}
+    ${timeline.length > 6 ? `<span style="font-size:9px;color:var(--dim)">&nbsp;+${timeline.length - 6} more</span>` : ''}
+  </div>`;
 }
 
 function panelCopyText(btn, text) {
@@ -3159,14 +3223,25 @@ function memFilterRender() {
       ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 8px"
            onclick="memRevive(${JSON.stringify(r.business_name)})">Revive</button>`
       : '';
+    // Pass 47: clickable event count expands timeline detail row
+    const rowId = `mem-detail-${CSS.escape(r.key||r.business_name||'')}`;
+    const evtBtn = histCount > 0
+      ? `<button class="btn btn-ghost" style="font-size:11px;padding:2px 7px"
+           onclick="memToggleTimeline(${JSON.stringify(r.key)},${JSON.stringify(r.business_name)},${JSON.stringify(r.website)},this,'${rowId}')">${histCount} event${histCount===1?'':'s'} ▾</button>`
+      : `<span style="color:var(--dim);font-size:11px">0 events</span>`;
     html += `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:6px 8px;font-weight:500">${r.business_name||'—'}</td>
       <td style="padding:6px 8px;color:var(--muted)">${r.city||'—'}</td>
       <td style="padding:6px 8px">${stateHtml}</td>
       <td style="padding:6px 8px;color:var(--muted);font-size:11px">${r.website||'—'}</td>
       <td style="padding:6px 8px;color:var(--muted)">${ts}</td>
-      <td style="padding:6px 8px;color:var(--muted)">${histCount}</td>
+      <td style="padding:6px 8px">${evtBtn}</td>
       <td style="padding:6px 8px">${reviveBtn}</td>
+    </tr>
+    <tr id="${rowId}" style="display:none">
+      <td colspan="7" style="padding:0 12px 10px 28px;background:var(--surface2)">
+        <div class="mem-timeline-detail" style="padding-top:8px"></div>
+      </td>
     </tr>`;
   }
   html += '</tbody></table>';
@@ -3185,6 +3260,63 @@ async function memRevive(businessName) {
     await loadLeadMemory();
   } else {
     toast('Revive failed: ' + (res.error || 'unknown'), 'err');
+  }
+}
+
+// Pass 47: expand/collapse full timeline in the Lead Memory inspector
+async function memToggleTimeline(key, bizName, website, btn, rowId) {
+  const detailRow = document.getElementById(rowId);
+  if (!detailRow) return;
+
+  const isOpen = detailRow.style.display !== 'none';
+  if (isOpen) {
+    detailRow.style.display = 'none';
+    btn.textContent = btn.textContent.replace('▲','▾');
+    return;
+  }
+
+  detailRow.style.display = '';
+  btn.textContent = btn.textContent.replace('▾','▲');
+
+  const detail = detailRow.querySelector('.mem-timeline-detail');
+  if (!detail) return;
+
+  // Only fetch if not already populated
+  if (detail.dataset.loaded === '1') return;
+  detail.innerHTML = '<span style="font-size:11px;color:var(--muted)">Loading…</span>';
+
+  try {
+    const res = await fetch('/api/lead_timeline', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({business_name: bizName, website: website || ''}),
+    }).then(r => r.json());
+
+    if (!res.ok || !res.total) {
+      detail.innerHTML = '<span style="font-size:11px;color:var(--dim)">No events recorded yet.</span>';
+      detail.dataset.loaded = '1';
+      return;
+    }
+
+    const rows = res.timeline.map(e => {
+      const k = e.event_type || e.state || '';
+      const icon = (_TL_ICON[k] || '·');
+      const color = (_TL_COLOR[k] || 'var(--muted)');
+      const label = e.label || k;
+      const ts = (e.ts||'').replace('T',' ').replace('Z','').slice(0,16);
+      const detail_ = (e.detail || e.note || '').slice(0,100);
+      return `<div style="display:flex;align-items:baseline;gap:8px;padding:3px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;min-width:18px;text-align:center">${icon}</span>
+        <span style="font-size:11px;font-weight:600;color:${color};min-width:120px">${label}</span>
+        <span style="font-size:10px;color:var(--dim);font-family:var(--mono);white-space:nowrap">${ts}</span>
+        ${detail_ ? `<span style="font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${detail_}</span>` : ''}
+      </div>`;
+    });
+
+    detail.innerHTML = rows.join('');
+    detail.dataset.loaded = '1';
+  } catch(e) {
+    detail.innerHTML = '<span style="font-size:11px;color:var(--red)">Failed to load timeline.</span>';
   }
 }
 

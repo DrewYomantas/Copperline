@@ -795,6 +795,13 @@ def api_log_contact():
                                    note=f"contact logged via panel: channel={channel}")
         except Exception as _lm_exc:
             log.warning("lead_memory record failed on log_contact: %s", _lm_exc)
+    # Pass 47: record replied event (non-state, narrative only)
+    if result == "replied":
+        try:
+            _lm.record_event(row, _lm.EVT_REPLIED,
+                             detail=f"channel={channel}")
+        except Exception as _lm_exc:
+            log.warning("lead_memory event failed (replied): %s", _lm_exc)
     return jsonify({"ok":True,"row":row})
 
 @app.route("/api/snooze_row", methods=["POST"])
@@ -977,7 +984,16 @@ def api_update_conversation():
     if idx is None or not (0 <= idx < len(rows)): return jsonify({"ok":False,"error":"Invalid index"}),400
     rows[idx]["conversation_notes"] = d.get("notes",rows[idx].get("conversation_notes",""))
     rows[idx]["conversation_next_step"] = d.get("next_step",rows[idx].get("conversation_next_step",""))
-    _write_pending(rows); return jsonify({"ok":True})
+    _write_pending(rows)
+    # Pass 47: record lifecycle event when a note is saved
+    _notes = (d.get("notes") or "").strip()
+    if _notes:
+        try:
+            _lm.record_event(rows[idx], _lm.EVT_NOTE_ADDED,
+                             detail=_notes[:120])
+        except Exception as _e:
+            log.warning("lead_memory event failed (note_added): %s", _e)
+    return jsonify({"ok":True})
 
 # ── Follow-up status helpers (Pass 22) ───────────────────────────────────────
 # Schedule: touch1=sent_at, touch2=+2d, touch3=+5d, touch4=+10d
@@ -1397,6 +1413,38 @@ def api_lead_memory_check():
     })
 
 
+# ── Pass 47: Lead Timeline route ──────────────────────────────────────────────
+
+@app.route("/api/lead_timeline", methods=["POST"])
+def api_lead_timeline():
+    """
+    Return the full event+state timeline for a lead, sorted oldest-first.
+
+    Input:  { business_name, website?, phone?, place_id?, city? }
+    Output: { ok, key, total, timeline: [{type, label, ts, detail/note, ...}] }
+
+    Uses lead_key() identity priority: place_id > website > phone > name+city.
+    Returns { ok: True, total: 0, timeline: [] } when no memory record exists.
+    """
+    d   = request.json or {}
+    row = {
+        "business_name": (d.get("business_name") or "").strip(),
+        "website":       (d.get("website")       or "").strip(),
+        "phone":         (d.get("phone")         or "").strip(),
+        "place_id":      (d.get("place_id")      or "").strip(),
+        "city":          (d.get("city")          or "").strip(),
+    }
+    if not any(row.values()):
+        return jsonify({"ok": False, "error": "At least one identity field required"}), 400
+    try:
+        key      = _lm.lead_key(row)
+        timeline = _lm.get_timeline(row)
+        return jsonify({"ok": True, "key": key, "total": len(timeline), "timeline": timeline})
+    except Exception as exc:
+        log.error("lead_timeline error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
 @app.route("/api/reset_prospect_status", methods=["POST"])
 def api_reset_prospect_status():
     bn = (request.json.get("business_name") or "").strip().lower()
@@ -1527,6 +1575,12 @@ def api_update_observation():
     row["business_specific_observation"] = observation
     _write_pending(rows)
     log.info("update_observation: idx=%d biz=%s", idx, business_name)
+    # Pass 47: record lifecycle event
+    try:
+        _lm.record_event(rows[idx], _lm.EVT_OBSERVATION_ADDED,
+                         detail=observation[:120])
+    except Exception as _e:
+        log.warning("lead_memory event failed (observation_added): %s", _e)
     return jsonify({"ok": True, "observation": observation})
 
 
@@ -1617,6 +1671,12 @@ def api_regenerate_draft():
     _write_pending(rows)
 
     log.info("regenerate_draft: idx=%d biz=%s", idx, business_name)
+    # Pass 47: record lifecycle event
+    try:
+        _lm.record_event(rows[idx], _lm.EVT_DRAFT_REGENERATED,
+                         detail=f"obs={observation[:80]}")
+    except Exception as _e:
+        log.warning("lead_memory event failed (draft_regenerated): %s", _e)
     return jsonify({
         "ok":          True,
         "subject":     subject,
