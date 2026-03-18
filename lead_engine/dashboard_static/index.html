@@ -126,13 +126,17 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
 .badge-pending{background:var(--amber-bg);color:var(--amber)}
 .badge-approved{background:var(--green-bg);color:var(--green)}
+.badge-bad{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
 .badge-ready{background:rgba(79,142,247,.14);color:var(--blue);border:1px solid rgba(79,142,247,.3)}
 .badge-sent{background:rgba(100,116,139,.1);color:var(--grey)}
 .status-stack{display:flex;flex-direction:column;gap:2px}
 .status-sub{font-size:10px;line-height:1.35;color:var(--muted)}
 .status-sub.ready{color:var(--green)}
 .status-sub.wait{color:var(--amber)}
+.status-sub.sent{color:var(--green)}
+.status-sub.replied{color:var(--copper)}
 .status-sub.info{color:var(--dim)}
+.status-sub.blocked{color:#e74c3c}
 .status-sub.exact{color:var(--dim)}
 
 .row-acts{display:flex;gap:3px}
@@ -172,6 +176,22 @@ tbody td{padding:10px 14px;vertical-align:middle}
 .panel-meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
 .panel-meta span{display:flex;align-items:center;gap:6px}
 .panel-meta a{color:var(--blue);text-decoration:none;font-size:12px}
+.lws-next-callout{margin-top:8px;padding:9px 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2)}
+.lws-next-callout .lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+.lws-next-callout .txt{margin-top:3px;font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
+.lws-next-callout .sub{margin-top:3px;font-size:10px;color:var(--muted);line-height:1.45}
+.lws-next-callout.ready{background:rgba(79,142,247,.1);border-color:rgba(79,142,247,.24)}
+.lws-next-callout.wait{background:rgba(245,166,35,.09);border-color:rgba(245,166,35,.26)}
+.lws-next-callout.blocked{background:rgba(231,76,60,.09);border-color:rgba(231,76,60,.24)}
+.lws-history-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.lws-history-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;border:1px solid var(--border);font-size:9px;font-weight:600;letter-spacing:.03em;color:var(--muted);background:rgba(255,255,255,.03)}
+.lws-history-chip.ready{background:rgba(79,142,247,.12);border-color:rgba(79,142,247,.25);color:var(--blue)}
+.lws-history-chip.wait{background:rgba(245,166,35,.12);border-color:rgba(245,166,35,.26);color:var(--amber)}
+.lws-history-chip.sent{background:rgba(62,207,114,.1);border-color:rgba(62,207,114,.24);color:var(--green)}
+.lws-history-chip.replied{background:rgba(184,115,51,.12);border-color:rgba(184,115,51,.26);color:var(--copper)}
+.lws-history-chip.obs{background:rgba(184,115,51,.08);border-color:rgba(184,115,51,.22);color:var(--copper)}
+.status-history-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.status-history-row .lws-history-chip{padding:1px 6px;font-size:8.5px}
 .panel-input{width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:.12s}
 .panel-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
 .panel-input:disabled{opacity:.5;cursor:not-allowed}
@@ -608,6 +628,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-act{padding:2px 7px;font-size:10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;line-height:1.5;transition:background .12s,color .12s}
 .mrp-act:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
 .mrp-act.approved{background:rgba(46,204,113,.15);color:var(--green);border-color:rgba(46,204,113,.35)}
+.mrp-act.primary{background:rgba(79,142,247,.14);color:var(--blue);border-color:rgba(79,142,247,.3)}
 .mrp-act.danger:hover{background:#c0392b;color:#fff;border-color:#c0392b}
 .mrp-status-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
 .mrp-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
@@ -1545,8 +1566,9 @@ function _leadQualBucket(record, extras) {
 function _leadStatusMeta(record) {
   if (!record) return { badgeClass: 'badge-pending', label: 'Pending', title: '', subline: '', detail: '', tone: 'info' };
   const r = record;
-  if (r.isReplied) return { badgeClass: 'badge-replied', label: 'Replied',  title: 'Reply received',    subline: 'Conversation active',   detail: 'No send action needed',   tone: 'info' };
-  if (r.isSent)    return { badgeClass: 'badge-sent',    label: 'Sent',     title: 'Already sent',       subline: 'Completed send',         detail: 'No further queue action', tone: 'info' };
+  if (r.isDNC)     return { badgeClass: 'badge-bad',     label: 'Blocked',  title: 'Marked do not contact', subline: 'No outreach action',      detail: 'Lead is marked do not contact', tone: 'blocked' };
+  if (r.isReplied) return { badgeClass: 'badge-replied', label: 'Replied',  title: 'Reply received',    subline: 'Conversation active',   detail: 'No send action needed',   tone: 'replied' };
+  if (r.isSent)    return { badgeClass: 'badge-sent',    label: 'Sent',     title: 'Already sent',       subline: 'Completed send',         detail: 'No further queue action', tone: 'sent' };
   if (r.isStale)   return { badgeClass: 'badge-stale',   label: 'Stale',    title: 'Old copy - regenerate before sending', subline: 'Needs refresh before send', detail: 'Draft version is behind current prompt', tone: 'wait' };
   if (r.isScheduled && !r.isReadyScheduled) {
     const relative = r.sendAfter ? (typeof _formatSendAfter      === 'function' ? _formatSendAfter(r.sendAfter)      : r.sendAfter) : '';
@@ -1560,6 +1582,136 @@ function _leadStatusMeta(record) {
   if (r.isApproved) return { badgeClass: 'badge-approved', label: 'Approved', title: 'Approved and ready to send now', subline: 'Ready to send now', detail: 'Included in Send Approved immediately', tone: 'ready' };
   return { badgeClass: 'badge-pending', label: 'Pending', title: 'Still needs operator approval', subline: 'Needs approval before send', detail: 'Not in Send Approved yet', tone: 'info' };
 }
+
+function _leadNeedsDraftRefresh(record) {
+  if (!record || record.isSent) return false;
+  return !!(record.isStale || (record.subject && !record.observation));
+}
+
+function _leadHistoryWhen(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function _leadHistoryItems(record) {
+  if (!record) return [];
+  const r = record;
+  const items = [];
+  if (r.isApproved && !r.isSent) items.push({ tone: 'ready', label: 'approved' });
+  if (r.isScheduled && !r.isReadyScheduled) {
+    items.push({ tone: 'wait', label: 'scheduled ' + ((typeof _formatSendAfter === 'function' && r.sendAfter) ? _formatSendAfter(r.sendAfter) : 'later') });
+  } else if (r.isReadyScheduled) {
+    items.push({ tone: 'ready', label: 'scheduled window reached' });
+  }
+  if (r.sentAt || r.isSent) {
+    const sentLabel = _leadHistoryWhen(r.sentAt);
+    items.push({ tone: 'sent', label: sentLabel ? 'sent ' + sentLabel : 'sent' });
+  }
+  if (r.repliedAt || r.isReplied) {
+    const replyLabel = _leadHistoryWhen(r.repliedAt);
+    items.push({ tone: 'replied', label: replyLabel ? 'replied ' + replyLabel : 'replied' });
+  }
+  if (r.isStale) items.push({ tone: 'wait', label: 'stale draft' });
+  if (r.observation) items.push({ tone: 'obs', label: 'observation on file', title: r.observation });
+  if (r.contactAttempts > 0) {
+    items.push({ tone: 'info', label: `${r.contactAttempts} contact attempt${r.contactAttempts === 1 ? '' : 's'}` });
+  } else if (r.lastContactedAt) {
+    const lastTouched = _leadHistoryWhen(r.lastContactedAt);
+    if (lastTouched) items.push({ tone: 'info', label: 'last touched ' + lastTouched });
+  }
+  return items;
+}
+
+function _leadHistoryChipsHtml(record, opts) {
+  const options = opts || {};
+  const items = _leadHistoryItems(record);
+  if (!items.length) return '';
+  const className = options.className || 'lws-history-row';
+  const limit = Number.isFinite(options.max) ? options.max : items.length;
+  return `<div class="${className}">` + items.slice(0, limit).map(item => {
+    const tone = item.tone || 'info';
+    const title = item.title ? ` title="${escHtml(item.title)}"` : '';
+    return `<span class="lws-history-chip ${tone}"${title}>${escHtml(item.label)}</span>`;
+  }).join('') + `</div>`;
+}
+
+function _leadNextActionContext(record) {
+  if (!record || !record.nextAction) return { tone: 'info', text: '', subtext: '' };
+  if (record.isReplied) return { tone: 'info', text: record.nextAction, subtext: 'Conversation is active. Use the reply context below before changing queue state.' };
+  if (record.isSent) return { tone: 'info', text: record.nextAction, subtext: 'Outreach already went out. Use the history cues here to decide follow-up.' };
+  if (_leadNeedsDraftRefresh(record)) return { tone: 'wait', text: record.nextAction, subtext: 'Refresh the observation-led copy before treating this lead as ready to send.' };
+  if (record.isScheduled && !record.isReadyScheduled) return { tone: 'wait', text: record.nextAction, subtext: 'This row stays out of Send Approved until its scheduled window arrives.' };
+  if (record.isReadyScheduled) return { tone: 'ready', text: record.nextAction, subtext: 'The scheduled window has arrived, so this row is send-ready again right now.' };
+  if (record.isApproved) return { tone: 'ready', text: record.nextAction, subtext: 'It is already in the ready-now queue. Send it now or move it into a later send window.' };
+  if (!record.hasContact) return { tone: 'blocked', text: record.nextAction, subtext: 'No direct outreach route is available yet, so contact discovery comes first.' };
+  return { tone: 'info', text: record.nextAction, subtext: 'This is the clearest shared next step from the current lead state.' };
+}
+
+function _leadControlGuidance(record) {
+  const guidance = {
+    discoveryPrimary: 'edit',
+    discoveryEditLabel: 'Review',
+    panelApproveLabel: '✓ Approve',
+    panelApproveTitle: 'Approve this draft so it is eligible in Send Approved',
+    panelApproveClass: 'btn btn-success',
+    panelScheduleLabel: '🕐 Schedule for Tomorrow Morning',
+    panelScheduleTitle: 'Schedule this email for tomorrow morning using the industry send window',
+    panelScheduleClass: 'btn btn-secondary',
+    panelScheduleAction: 'schedule',
+    flowNote: '',
+  };
+  if (!record) return guidance;
+  const needsRefresh = _leadNeedsDraftRefresh(record);
+  guidance.discoveryEditLabel = needsRefresh ? 'Review Next' : (record.isApproved || record.isScheduled || record.isSent || record.isReplied ? 'Open Review' : 'Review');
+  if (record.isSent || record.isReplied) {
+    guidance.flowNote = record.isReplied
+      ? 'Reply received — review the conversation context before changing anything else.'
+      : 'Already sent — use the history here to decide whether follow-up is needed.';
+    return guidance;
+  }
+  if (record.isScheduled) {
+    guidance.panelScheduleAction = 'unschedule';
+    guidance.panelScheduleLabel = '✕ Unschedule';
+    guidance.panelScheduleTitle = 'Clear this schedule and return the row to the ready-now queue';
+    guidance.panelScheduleClass = 'btn btn-ghost';
+    guidance.flowNote = record.isReadyScheduled
+      ? 'Scheduled window reached — this row is ready now, or you can unschedule it here.'
+      : 'Currently waiting for its scheduled send window. Unschedule only if you want it back in the ready-now queue.';
+    return guidance;
+  }
+  if (needsRefresh) {
+    guidance.panelApproveLabel = '✓ Approve Anyway';
+    guidance.panelApproveTitle = 'Approval is available, but the shared next step is to refresh the draft first';
+    guidance.panelApproveClass = 'btn btn-ghost';
+    guidance.panelScheduleLabel = '🕐 Schedule Anyway';
+    guidance.panelScheduleTitle = 'Scheduling is available, but the shared next step is to refresh the draft first';
+    guidance.panelScheduleClass = 'btn btn-ghost';
+    guidance.flowNote = 'Recommended first: ' + (record.nextAction || 'refresh this draft') + '.';
+    return guidance;
+  }
+  if (record.isApproved || record.isReadyScheduled) {
+    guidance.panelScheduleLabel = '🕐 Schedule Instead';
+    guidance.panelScheduleTitle = 'Move this ready-now row into tomorrow morning\'s send window';
+    guidance.flowNote = 'Ready now — the next queue step is ' + (record.nextAction || 'Send email') + '.';
+    return guidance;
+  }
+  if (record.subject) {
+    guidance.discoveryPrimary = 'approve';
+    guidance.panelApproveLabel = '✓ Approve for Send';
+    guidance.flowNote = 'Recommended next: ' + (record.nextAction || 'Review + approve') + '.';
+    return guidance;
+  }
+  if (!record.hasContact) {
+    guidance.panelApproveClass = 'btn btn-ghost';
+    guidance.panelScheduleClass = 'btn btn-ghost';
+    guidance.flowNote = 'No contact route is available yet, so gather contact info before treating this as ready.';
+    return guidance;
+  }
+  guidance.flowNote = 'Open the lead and complete the next step there.';
+  return guidance;
+}
 // V2 Stage 2B — Unified Workspace Header
 // Single renderer for business identity + status + channels + next action.
 // Used by both mrp-modal and the Pipeline panel (fillPanel).
@@ -1568,10 +1720,9 @@ function _leadStatusMeta(record) {
 const _STATUS_TONE_STYLES = {
   replied:   'background:rgba(184,115,51,.18);color:var(--copper);border:1px solid rgba(184,115,51,.3)',
   sent:      'background:rgba(62,207,114,.12);color:var(--green);border:1px solid rgba(62,207,114,.2)',
-  scheduled: 'background:rgba(245,166,35,.13);color:var(--amber);border:1px solid rgba(245,166,35,.25)',
-  approved:  'background:rgba(79,142,247,.12);color:var(--blue);border:1px solid rgba(79,142,247,.2)',
-  drafted:   'background:var(--surface3);color:var(--muted);border:1px solid var(--border)',
-  new:       'background:var(--surface3);color:var(--muted);border:1px solid var(--border)',
+  ready:     'background:rgba(79,142,247,.12);color:var(--blue);border:1px solid rgba(79,142,247,.2)',
+  wait:      'background:rgba(245,166,35,.13);color:var(--amber);border:1px solid rgba(245,166,35,.25)',
+  info:      'background:var(--surface3);color:var(--muted);border:1px solid var(--border)',
   blocked:   'background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.2)',
 };
 
@@ -1585,10 +1736,12 @@ function _renderLeadWorkspaceHeader(record) {
   if (!record) return '';
   const r = record;
   const esc = typeof escHtml === 'function' ? escHtml : v => String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const statusMeta = _leadStatusMeta(r);
+  const actionMeta = _leadNextActionContext(r);
 
   // Status badge
-  const toneStyle = _STATUS_TONE_STYLES[r.statusTone] || _STATUS_TONE_STYLES.new;
-  const statusBadge = `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.04em;${toneStyle}">${esc(r.status)}</span>`;
+  const toneStyle = _STATUS_TONE_STYLES[statusMeta.tone] || _STATUS_TONE_STYLES.info;
+  const statusBadge = `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.04em;${toneStyle}" title="${esc(statusMeta.title || statusMeta.label)}">${esc(statusMeta.label)}</span>`;
 
   // Channel badges
   const chParts = [];
@@ -1609,15 +1762,19 @@ function _renderLeadWorkspaceHeader(record) {
     ? `<span style="font-size:10px;color:var(--muted);margin-left:4px">${esc(r.industry)}</span>`
     : '';
 
-  // Next action
-  const nextHtml = r.nextAction
-    ? `<div style="margin-top:5px;font-size:10px;color:var(--muted)">Next: <strong style="color:var(--text)">${esc(r.nextAction)}</strong></div>`
-    : '';
-
   // Observation hint (compact — just a tag if present)
   const obsHtml = r.observation
     ? `<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;background:rgba(184,115,51,.1);border:1px solid rgba(184,115,51,.2);color:var(--copper);margin-left:4px" title="${esc(r.observation)}">obs</span>`
     : '';
+
+  const nextHtml = actionMeta.text
+    ? `<div class="lws-next-callout ${actionMeta.tone}">
+        <div class="lbl">Next Step</div>
+        <div class="txt">${esc(actionMeta.text)}</div>
+        ${actionMeta.subtext ? `<div class="sub">${esc(actionMeta.subtext)}</div>` : ''}
+      </div>`
+    : '';
+  const historyHtml = _leadHistoryChipsHtml(r);
 
   return `<div class="lws-header" style="padding:0 0 8px">
     <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:3px">
@@ -1632,6 +1789,7 @@ function _renderLeadWorkspaceHeader(record) {
       ${channels}
     </div>
     ${nextHtml}
+    ${historyHtml}
   </div>`;
 }
 
@@ -1650,18 +1808,18 @@ function _renderLeadWorkspaceHeader(record) {
 function _leadStatusPills(record) {
   if (!record) return '';
   const r = record;
+  const meta = _leadStatusMeta(r);
   // Map statusTone to mrp-pill CSS class
   const toneToClass = {
-    replied:   'sent',       // reuse sent styling for replied in pills
-    sent:      'sent',
-    scheduled: 'scheduled',
-    approved:  'approved',
-    drafted:   'drafted',
-    new:       'drafted',
     blocked:   'drafted',
+    info:      'drafted',
+    replied:   'sent',
+    sent:      'sent',
+    wait:      'scheduled',
+    ready:     'approved',
   };
-  const pillClass = toneToClass[r.statusTone] || 'drafted';
-  let html = `<span class="mrp-pill ${pillClass}">${r.status}</span>`;
+  const pillClass = toneToClass[meta.tone] || 'drafted';
+  let html = `<span class="mrp-pill ${pillClass}" title="${escHtml(meta.title || meta.label)}">${escHtml(meta.label)}</span>`;
   if (r.priorityScore) {
     html += `<span class="mrp-pill score">Score ${r.priorityScore}</span>`;
   }
@@ -1784,6 +1942,8 @@ function _panelRenderFlowActions(row) {
     flowEl.innerHTML = '<span class="panel-flow-note">Use Prev / Next to move through this review set.</span>';
     return;
   }
+  const record = _leadRecord(row);
+  const guidance = _leadControlGuidance(record);
   const hasNext = panelIdx >= 0 && panelIdx < (_panelCurrentRows().length - 1);
   const canApprove = !!((row.to_email || '').trim().includes('@'));
   const isApproved = String(row.approved || '').toLowerCase() === 'true';
@@ -1804,7 +1964,7 @@ function _panelRenderFlowActions(row) {
     buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelSkipNext()">Skip →</button>');
   }
   flowEl.innerHTML =
-    `<span class="panel-flow-note">${hasNext ? 'Keep moving through this review set without closing the panel.' : 'Last row in this review set.'}</span>` +
+    `<span class="panel-flow-note">${escHtml(guidance.flowNote || (hasNext ? 'Keep moving through this review set without closing the panel.' : 'Last row in this review set.'))}</span>` +
     buttons.join('');
 }
 
@@ -2058,10 +2218,12 @@ function statusCellHtml(row) {
     .concat(_scRecord.nextAction && !_scRecord.isSent ? [_scRecord.nextAction] : [])
     .join(' · ');
   const _scSubline = [meta.subline || '', _scSubExtra].filter(Boolean).join(' · ');
+  const _scHistory = _leadHistoryChipsHtml(_scRecord, { className: 'status-history-row', max: 4 });
   return `<div class="status-stack">` +
     `<span class="badge ${meta.badgeClass}" title="${escHtml(meta.title || meta.label)}">${escHtml(meta.label)}</span>` +
     `<div class="status-sub ${meta.tone || 'info'}">${escHtml(_scSubline)}</div>` +
     (meta.detail ? `<div class="status-sub exact">${escHtml(meta.detail)}</div>` : '') +
+    _scHistory +
     `</div>`;
 }
 
@@ -2231,6 +2393,8 @@ function openPanel(fi, rowsCtx, sessionLabel) {
 async function fillPanel(row, fi, totalRows) {
   const rows = _panelCurrentRows();
   const total = totalRows || rows.length || filteredRows.length;
+  const record = _leadRecord(row);
+  const controlGuidance = _leadControlGuidance(record);
   document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
   document.getElementById('panel-pos').textContent = `${fi+1} / ${total}`;
   document.getElementById('btn-prev').disabled = fi === 0;
@@ -2238,7 +2402,6 @@ async function fillPanel(row, fi, totalRows) {
   _panelRenderSessionChrome(rows, fi);
 
   // V2 Stage 2B: build shared workspace header from unified record
-  const _lwsRecord = _leadRecord(row);
   const _lwsMeta = document.getElementById('panel-meta');
   if (_lwsMeta) {
     const parts = [];
@@ -2246,7 +2409,7 @@ async function fillPanel(row, fi, totalRows) {
     if (row.phone) parts.push(`<span>📞 ${escHtml(row.phone)}</span>`);
     if (row.website) parts.push(`<span>🌐 <a href="${escHtml(row.website)}" target="_blank">${escHtml(row.website)}</a></span>`);
     if (row.scan_note) parts.push(`<span style="color:var(--dim);font-style:italic;font-size:11px">🔍 ${escHtml(row.scan_note)}</span>`);
-    _lwsMeta.innerHTML = _renderLeadWorkspaceHeader(_lwsRecord) + parts.join('');
+    _lwsMeta.innerHTML = _renderLeadWorkspaceHeader(record) + parts.join('');
   }
 
   document.getElementById('panel-email').value = row.to_email || '';
@@ -2307,6 +2470,7 @@ async function fillPanel(row, fi, totalRows) {
   const schedEl = document.getElementById('panel-schedule-info');
   if (schedEl) {
     const queueMeta = _queueStateMeta(row);
+    const needsRefresh = _leadNeedsDraftRefresh(record);
     if (row.send_after && !row.sent_at) {
       const waitCopy = row.is_ready
         ? 'The scheduled time has already arrived. This row is eligible in Send Approved now, but it keeps its schedule until you send or clear it.'
@@ -2319,6 +2483,12 @@ async function fillPanel(row, fi, totalRows) {
         `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
         `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
+      schedEl.style.display = '';
+    } else if (needsRefresh && !row.sent_at) {
+      schedEl.className = 'panel-sched-info pending-review';
+      schedEl.innerHTML =
+        `<span class="sched-time">Refresh before send</span>` +
+        `<div class="sched-sub">${escHtml(record.nextAction || 'Regenerate draft before sending.')} - ${escHtml(queueMeta.detail || 'Draft version is behind current prompt.')}</div>`;
       schedEl.style.display = '';
     } else if (row.approved === 'true' && !row.sent_at) {
       schedEl.className = 'panel-sched-info ready-now';
@@ -2360,9 +2530,21 @@ async function fillPanel(row, fi, totalRows) {
   const ab = document.getElementById('panel-approve-btn');
   const ub = document.getElementById('panel-unapprove-btn');
   const sb = document.getElementById('panel-schedule-btn');
-  if (row.sent_at) { ab.style.display='none'; ub.style.display='none'; if(sb) sb.style.display='none'; }
-  else if (row.approved === 'true') { ab.style.display='none'; ub.style.display=''; if(sb) sb.style.display=''; }
-  else { ab.style.display=''; ub.style.display='none'; if(sb) sb.style.display=''; }
+  if (ab) {
+    ab.textContent = controlGuidance.panelApproveLabel;
+    ab.title = controlGuidance.panelApproveTitle;
+    ab.className = controlGuidance.panelApproveClass;
+    ab.style.flex = '1';
+  }
+  if (sb) {
+    sb.textContent = controlGuidance.panelScheduleLabel;
+    sb.title = controlGuidance.panelScheduleTitle;
+    sb.className = controlGuidance.panelScheduleClass;
+    sb.onclick = controlGuidance.panelScheduleAction === 'unschedule' ? panelUnschedule : panelScheduleTomorrow;
+  }
+  if (row.sent_at) { if (ab) ab.style.display='none'; if (ub) ub.style.display='none'; if(sb) sb.style.display='none'; }
+  else if (row.approved === 'true') { if (ab) ab.style.display='none'; if (ub) ub.style.display=''; if(sb) sb.style.display=''; }
+  else { if (ab) ab.style.display=''; if (ub) ub.style.display='none'; if(sb) sb.style.display=''; }
   // ── Best-next-action + quick-log + campaign ───────────────────────────────
   _panelRenderFlowActions(row);
   const _gi = allRows.indexOf(row);
@@ -5228,10 +5410,10 @@ function _mapRenderPanel() {
     // Queue state pills (V2 Stage 2C: via _leadStatusPills)
     if (qrow) {
       const _lrSimple = _leadRecord(qrow);
+      const _simpleGuidance = _leadControlGuidance(_lrSimple);
       const isSent     = _lrSimple.isSent;
       const isApproved = _lrSimple.isApproved;
       const isScheduled = _lrSimple.isScheduled;
-      const score      = _lrSimple.priorityScore;
       const pillsDiv = document.createElement('div');
       pillsDiv.className = 'mrp-status-pills';
       pillsDiv.innerHTML = _leadStatusPills(_lrSimple);
@@ -5248,8 +5430,8 @@ function _mapRenderPanel() {
 
         if (!isApproved) {
           const btnApprove = document.createElement('button');
-          btnApprove.className = 'mrp-act';
-          btnApprove.textContent = '✓ Approve';
+          btnApprove.className = 'mrp-act' + (_simpleGuidance.discoveryPrimary === 'approve' ? ' approved' : '');
+          btnApprove.textContent = _simpleGuidance.discoveryPrimary === 'approve' ? '✓ Approve Next' : '✓ Approve';
           btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
           actsDiv.appendChild(btnApprove);
         }
@@ -5261,8 +5443,8 @@ function _mapRenderPanel() {
           actsDiv.appendChild(btnSched);
         }
         const btnPreview = document.createElement('button');
-        btnPreview.className = 'mrp-act';
-        btnPreview.textContent = '👁 Preview';
+        btnPreview.className = 'mrp-act' + (_simpleGuidance.discoveryPrimary === 'edit' ? ' primary' : '');
+        btnPreview.textContent = _simpleGuidance.discoveryPrimary === 'edit' ? '👁 Review Next' : '👁 Preview';
         btnPreview.onclick = () => _mrpPreview(biz, qrow);
         actsDiv.appendChild(btnPreview);
 
@@ -5616,10 +5798,10 @@ function _mapRenderPanel() {
       if (qrow) {
         // V2 Stage 2C: via _leadStatusPills
         const _lrTriage = _leadRecord(qrow);
+        const _triageGuidance = _leadControlGuidance(_lrTriage);
         const isSent = _lrTriage.isSent;
         const isApproved = _lrTriage.isApproved;
         const isScheduled = _lrTriage.isScheduled;
-        const score = _lrTriage.priorityScore;
         const pillsDiv = document.createElement('div');
         pillsDiv.className = 'mrp-status-pills';
         pillsDiv.innerHTML = _leadStatusPills(_lrTriage);
@@ -5634,8 +5816,8 @@ function _mapRenderPanel() {
 
         if (!isSent && !isApproved) {
           const btnApprove = document.createElement('button');
-          btnApprove.className = 'mrp-act';
-          btnApprove.textContent = 'Approve';
+          btnApprove.className = 'mrp-act' + (_triageGuidance.discoveryPrimary === 'approve' ? ' approved' : '');
+          btnApprove.textContent = _triageGuidance.discoveryPrimary === 'approve' ? 'Approve Next' : 'Approve';
           btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
           actsDiv.appendChild(btnApprove);
         }
@@ -5648,8 +5830,8 @@ function _mapRenderPanel() {
         }
 
         const btnEdit = document.createElement('button');
-        btnEdit.className = 'mrp-act approved';
-        btnEdit.textContent = 'Edit';
+        btnEdit.className = 'mrp-act' + (_triageGuidance.discoveryPrimary === 'edit' ? ' primary' : ' approved');
+        btnEdit.textContent = _triageGuidance.discoveryEditLabel;
         btnEdit.onclick = () => _mrpOpenEdit(qrow);
         actsDiv.appendChild(btnEdit);
 
@@ -5829,13 +6011,14 @@ function _mrpPreview(biz, qrow) {
   const isSent    = !!(qrow.sent_at || '').trim();
   const isApproved  = (qrow.approved || '').toLowerCase() === 'true';
   const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+  const _mrpRecord = _leadRecord(qrow || { business_name: bizName, to_email: email });
+  const _mrpGuidance = _leadControlGuidance(_mrpRecord);
 
   document.getElementById('mrp-modal-title').textContent = bizName;
   document.getElementById('mrp-modal-sub').textContent   = email;
   // V2 Stage 2B: inject unified workspace header into modal
   const _mrpHdrEl = document.getElementById('mrp-modal-lws-header');
   if (_mrpHdrEl) {
-    const _mrpRecord = _leadRecord(qrow || { business_name: bizName, to_email: email });
     _mrpHdrEl.innerHTML = _renderLeadWorkspaceHeader(_mrpRecord);
   }
 
@@ -5877,7 +6060,8 @@ function _mrpPreview(biz, qrow) {
 
     if (!isApproved) {
       const btnA = document.createElement('button');
-      btnA.className = 'btn btn-success'; btnA.style.fontSize = '12px'; btnA.textContent = 'Approve';
+      btnA.className = _mrpGuidance.panelApproveClass; btnA.style.fontSize = '12px'; btnA.textContent = _mrpGuidance.panelApproveLabel.replace(/^✓\s*/, '');
+      btnA.title = _mrpGuidance.panelApproveTitle || '';
       btnA.onclick = async () => {
         _btnPending(btnA, 'Approving...');
         await _mrpApprove(biz, idx);
@@ -5888,7 +6072,8 @@ function _mrpPreview(biz, qrow) {
 
     if (isScheduled) {
       const btnU = document.createElement('button');
-      btnU.className = 'btn btn-ghost'; btnU.style.fontSize = '12px'; btnU.textContent = 'Unschedule';
+      btnU.className = _mrpGuidance.panelScheduleClass; btnU.style.fontSize = '12px'; btnU.textContent = _mrpGuidance.panelScheduleLabel;
+      btnU.title = _mrpGuidance.panelScheduleTitle || '';
       btnU.onclick = async () => {
         _btnPending(btnU, 'Removing...');
         try {
@@ -5902,7 +6087,8 @@ function _mrpPreview(biz, qrow) {
       ftr.appendChild(btnU);
     } else {
       const btnS = document.createElement('button');
-      btnS.className = 'btn btn-ghost'; btnS.style.fontSize = '12px'; btnS.textContent = 'Schedule Tomorrow';
+      btnS.className = _mrpGuidance.panelScheduleClass; btnS.style.fontSize = '12px'; btnS.textContent = _mrpGuidance.panelScheduleLabel.replace(' for Tomorrow Morning', '').replace('🕐 ', '');
+      btnS.title = _mrpGuidance.panelScheduleTitle || '';
       btnS.onclick = async () => {
         _btnPending(btnS, 'Scheduling...');
         await _mrpSchedule(biz, idx);
@@ -6291,6 +6477,7 @@ function _leadRecord(input) {
   // Pass 42: isStale + isReadyScheduled for _leadStatusMeta
   const isStale          = !isSent && !!(typeof status_draft_version !== 'undefined' && status_draft_version && draftVersion && draftVersion !== status_draft_version);
   const isReadyScheduled = !!(isScheduled && row.is_ready);
+  const observation      = row.business_specific_observation || '';
 
   // Compute primary status label
   let status, statusTone;
@@ -6307,11 +6494,11 @@ function _leadRecord(input) {
   if (isDNC) nextAction = '';
   else if (isSent && isReplied) nextAction = 'Manage reply';
   else if (isSent) nextAction = 'Wait for reply';
+  else if (row.subject && !observation) nextAction = 'Add observation + regenerate draft';
+  else if (row.subject && isLegacyDraft) nextAction = 'Regenerate draft before send';
   else if (isScheduled) nextAction = 'Sending ' + (row.send_after ? _formatSendAfter(row.send_after) : 'soon');
   else if (isApproved && hasEmail) nextAction = 'Send email';
   else if (isApproved) nextAction = 'Send via ' + bestChannel;
-  else if (row.subject && isLegacyDraft) nextAction = 'Add observation + regenerate draft';
-  else if (row.subject && !row.business_specific_observation) nextAction = 'Add observation + regenerate draft';
   else if (row.subject) nextAction = 'Review + approve';
   else if (!hasContact) nextAction = 'Find contact info';
   else nextAction = 'Generate draft';
@@ -6320,7 +6507,6 @@ function _leadRecord(input) {
   const subject         = row.subject              || '';
   const body            = row.body                 || '';
   const facebookDraft   = row.facebook_dm_draft    || row.social_dm_text || '';
-  const observation     = row.business_specific_observation || '';
 
   // History markers
   const sentAt            = row.sent_at              || '';
