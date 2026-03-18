@@ -1481,6 +1481,85 @@ async function api(path, body) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// V2 Stage 2E — Shared Qualification + Status Meta Helpers
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * _leadQualBucket(record, extras)
+ * Qualification bucket from _leadRecord + optional biz-only extras.
+ * Returns { key, label, order, tone, reasons }
+ */
+function _leadQualBucket(record, extras) {
+  if (!record) return { key: 'weak', label: 'Weak / skip', order: 3, tone: 'weak', reasons: [] };
+  const r = record;
+  const score       = (extras && extras.score    != null) ? extras.score    : r.priorityScore;
+  const oppScore    = (extras && extras.oppScore  != null) ? extras.oppScore  : r.opportunityScore;
+  const rating      = (extras && extras.rating      != null) ? Number(extras.rating)      : 0;
+  const reviewCount = (extras && extras.reviewCount != null) ? Number(extras.reviewCount) : 0;
+  const contactability = ((extras && extras.contactability) || '').trim().toLowerCase();
+  const hasEmail    = r.hasEmail;
+  const hasWebsite  = r.hasWebsite;
+  const hasPhone    = r.hasPhone;
+  const isSent      = r.isSent;
+  const isApproved  = r.isApproved;
+  const isScheduled = r.isScheduled;
+  const strongSignals = score >= 4 || oppScore >= 60 || (rating >= 4.5 && reviewCount >= 20);
+  const usableSignals = score >= 3 || oppScore >= 35 || (rating >= 4.1 && reviewCount >= 8);
+  const highContactability   = contactability.includes('high');
+  const mediumContactability = highContactability || contactability.includes('medium');
+  const lowScore = score > 0 && score <= 2;
+  let key = 'weak', label = 'Weak / skip', order = 3, tone = 'weak';
+  if (isSent) {
+    key = 'closed'; label = 'Sent / closed'; order = 4; tone = 'closed';
+  } else if (hasEmail && (isApproved || isScheduled || strongSignals || highContactability || (hasWebsite && hasPhone))) {
+    key = 'ready'; label = 'Ready now'; order = 0; tone = 'ready';
+  } else if (!hasEmail && (hasWebsite || hasPhone) && (strongSignals || usableSignals || mediumContactability)) {
+    key = 'needs-contact'; label = 'Needs contact info'; order = 2; tone = 'needs-contact';
+  } else if (hasEmail || ((hasWebsite || hasPhone) && (usableSignals || mediumContactability))) {
+    key = 'maybe'; label = 'Maybe later'; order = 1; tone = 'maybe';
+  }
+  const reasons = [];
+  if (hasEmail)                    reasons.push('Email ready');
+  else if (hasWebsite && hasPhone) reasons.push('Web + phone only');
+  else if (hasPhone)               reasons.push('Phone only');
+  else if (hasWebsite)             reasons.push('Website only');
+  else                             reasons.push('No contact path');
+  if (score >= 4)       reasons.push('Score ' + score);
+  else if (lowScore)    reasons.push(score ? 'Low score ' + score : 'Low score');
+  else if (score === 3) reasons.push('Mid score');
+  if (!hasEmail)               reasons.push('Needs email');
+  if (!hasWebsite)             reasons.push('No website');
+  if (!hasPhone && !hasEmail)  reasons.push('No direct contact');
+  if ((rating >= 4.5 && reviewCount >= 20) || (rating >= 4.1 && reviewCount >= 8))
+    reasons.push(rating.toFixed(1) + '\u2605/' + Math.round(reviewCount));
+  if (highContactability) reasons.push('High contactability');
+  return { key, label, order, tone, reasons: Array.from(new Set(reasons)).slice(0, 3) };
+}
+
+/**
+ * _leadStatusMeta(record)
+ * Shared status badge/label/subline/detail/tone from _leadRecord.
+ * Same return shape as _queueStateMeta.
+ */
+function _leadStatusMeta(record) {
+  if (!record) return { badgeClass: 'badge-pending', label: 'Pending', title: '', subline: '', detail: '', tone: 'info' };
+  const r = record;
+  if (r.isReplied) return { badgeClass: 'badge-replied', label: 'Replied',  title: 'Reply received',    subline: 'Conversation active',   detail: 'No send action needed',   tone: 'info' };
+  if (r.isSent)    return { badgeClass: 'badge-sent',    label: 'Sent',     title: 'Already sent',       subline: 'Completed send',         detail: 'No further queue action', tone: 'info' };
+  if (r.isStale)   return { badgeClass: 'badge-stale',   label: 'Stale',    title: 'Old copy - regenerate before sending', subline: 'Needs refresh before send', detail: 'Draft version is behind current prompt', tone: 'wait' };
+  if (r.isScheduled && !r.isReadyScheduled) {
+    const relative = r.sendAfter ? (typeof _formatSendAfter      === 'function' ? _formatSendAfter(r.sendAfter)      : r.sendAfter) : '';
+    const exact    = r.sendAfter ? (typeof _formatSendAfterExact === 'function' ? _formatSendAfterExact(r.sendAfter) : r.sendAfter) : '';
+    return { badgeClass: 'badge-scheduled', label: 'Scheduled', title: 'Scheduled for ' + (exact || r.sendAfter), subline: 'Waits until ' + (relative || r.sendAfter), detail: (exact || '') + ' - not in Send Approved yet', tone: 'wait' };
+  }
+  if (r.isReadyScheduled) {
+    const exact = r.sendAfter ? (typeof _formatSendAfterExact === 'function' ? _formatSendAfterExact(r.sendAfter) : r.sendAfter) : '';
+    return { badgeClass: 'badge-ready', label: 'Ready Now', title: 'Scheduled window reached at ' + (exact || r.sendAfter), subline: 'Scheduled time reached', detail: (exact || '') + ' - included in Send Approved now', tone: 'ready' };
+  }
+  if (r.isApproved) return { badgeClass: 'badge-approved', label: 'Approved', title: 'Approved and ready to send now', subline: 'Ready to send now', detail: 'Included in Send Approved immediately', tone: 'ready' };
+  return { badgeClass: 'badge-pending', label: 'Pending', title: 'Still needs operator approval', subline: 'Needs approval before send', detail: 'Not in Send Approved yet', tone: 'info' };
+}
 // V2 Stage 2B — Unified Workspace Header
 // Single renderer for business identity + status + channels + next action.
 // Used by both mrp-modal and the Pipeline panel (fillPanel).
@@ -1965,62 +2044,8 @@ function _formatSendAfterExact(isoStr) {
 }
 
 function _queueStateMeta(row) {
-  const isReplied = row.replied === 'true';
-  const isSent = !!row.sent_at;
-  const isStale = !isSent && status_draft_version && row.draft_version !== status_draft_version;
-  const isScheduled = !!(row.send_after && !row.sent_at);
-  const isReadyScheduled = !!(isScheduled && row.is_ready);
-  const isApproved = row.approved === 'true';
-  const relative = isScheduled ? _formatSendAfter(row.send_after) : '';
-  const exact = isScheduled ? _formatSendAfterExact(row.send_after) : '';
-
-  if (isReplied) {
-    return { badgeClass: 'badge-replied', label: 'Replied', title: 'Reply received', subline: 'Conversation active', detail: 'No send action needed', tone: 'info' };
-  }
-  if (isSent) {
-    return { badgeClass: 'badge-sent', label: 'Sent', title: 'Already sent', subline: 'Completed send', detail: 'No further queue action', tone: 'info' };
-  }
-  if (isStale) {
-    return { badgeClass: 'badge-stale', label: 'Stale', title: 'Old copy - regenerate before sending', subline: 'Needs refresh before send', detail: 'Draft version is behind current prompt', tone: 'wait' };
-  }
-  if (isScheduled && !isReadyScheduled) {
-    return {
-      badgeClass: 'badge-scheduled',
-      label: 'Scheduled',
-      title: `Scheduled for ${exact || row.send_after}`,
-      subline: `Waits until ${relative || row.send_after}`,
-      detail: `${exact} - not in Send Approved yet`,
-      tone: 'wait',
-    };
-  }
-  if (isReadyScheduled) {
-    return {
-      badgeClass: 'badge-ready',
-      label: 'Ready Now',
-      title: `Scheduled window reached at ${exact || row.send_after}`,
-      subline: 'Scheduled time reached',
-      detail: `${exact} - included in Send Approved now`,
-      tone: 'ready',
-    };
-  }
-  if (isApproved) {
-    return {
-      badgeClass: 'badge-approved',
-      label: 'Approved',
-      title: 'Approved and ready to send now',
-      subline: 'Ready to send now',
-      detail: 'Included in Send Approved immediately',
-      tone: 'ready',
-    };
-  }
-  return {
-    badgeClass: 'badge-pending',
-    label: 'Pending',
-    title: 'Still needs operator approval',
-    subline: 'Needs approval before send',
-    detail: 'Not in Send Approved yet',
-    tone: 'info',
-  };
+  // Pass 42: thin wrapper over _leadStatusMeta. Same return shape preserved.
+  return _leadStatusMeta(_leadRecord(row));
 }
 
 function statusCellHtml(row) {
@@ -5326,89 +5351,47 @@ function _mapPanelNumber(...values) {
 }
 
 function _mapPanelQualification(item, qrow) {
-  const hasEmail = !!((item.biz.email || (qrow && qrow.to_email) || '').trim());
-  const hasWebsite = !!((item.biz.website || (qrow && qrow.website) || '').trim());
-  const hasPhone = !!((item.biz.phone || (qrow && qrow.phone) || '').trim());
-  const score = _mapPanelItemScore(item, qrow);
-  const oppScore = _mapPanelNumber(
-    qrow && (qrow.opp_score ?? qrow.opportunity_score),
-    item.biz.opp_score ?? item.biz.opportunity_score
-  );
-  const rating = _mapPanelNumber(qrow && qrow.rating, item.biz.rating);
-  const reviewCount = _mapPanelNumber(
-    qrow && (qrow.review_count ?? qrow.reviews),
-    item.biz.review_count ?? item.biz.reviews
-  );
-  const contactability = String((qrow && qrow.contactability) || item.biz.contactability || '').trim().toLowerCase();
-  const isSent = !!(qrow && (qrow.sent_at || '').trim());
-  const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
-  const isApproved = !!(qrow && String(qrow.approved || '').toLowerCase() === 'true');
-  const strongSignals = score >= 4 || oppScore >= 60 || (rating >= 4.5 && reviewCount >= 20);
-  const usableSignals = score >= 3 || oppScore >= 35 || (rating >= 4.1 && reviewCount >= 8);
-  const highContactability = contactability.includes('high');
-  const mediumContactability = highContactability || contactability.includes('medium');
-  const lowScore = score > 0 && score <= 2;
+  // Pass 42: delegates to _leadQualBucket via _leadRecord.
+  // Biz-only extras (rating, reviewCount, contactability) passed through separately.
+  const baseInput = qrow || { business_name: item.biz.name || '', city: item.biz.city || '', website: item.biz.website || '', phone: item.biz.phone || '', to_email: item.biz.email || '' };
+  const record = _leadRecord(baseInput);
 
-  let key = 'weak';
-  let label = 'Weak / skip';
-  let order = 3;
-  let tone = 'weak';
+  // Override contact fields with biz-object values if stronger
+  const mergedRecord = Object.assign({}, record, {
+    hasEmail:   !!((item.biz.email   || record.email   || '').trim().includes('@')),
+    hasWebsite: !!((item.biz.website || record.website || '').trim()),
+    hasPhone:   (((item.biz.phone    || record.phone   || '').replace(/\D/g, '')).length >= 7),
+    priorityScore:    _mapPanelItemScore(item, qrow),
+    opportunityScore: _mapPanelNumber(
+      qrow && (qrow.opp_score ?? qrow.opportunity_score),
+      item.biz.opp_score ?? item.biz.opportunity_score
+    ),
+  });
 
-  if (isSent) {
-    key = 'closed';
-    label = 'Sent / closed';
-    order = 4;
-    tone = 'closed';
-  } else if (hasEmail && (isApproved || isScheduled || strongSignals || highContactability || (hasWebsite && hasPhone))) {
-    key = 'ready';
-    label = 'Ready now';
-    order = 0;
-    tone = 'ready';
-  } else if (!hasEmail && (hasWebsite || hasPhone) && (strongSignals || usableSignals || mediumContactability)) {
-    key = 'needs-contact';
-    label = 'Needs contact info';
-    order = 2;
-    tone = 'needs-contact';
-  } else if (hasEmail || ((hasWebsite || hasPhone) && (usableSignals || mediumContactability))) {
-    key = 'maybe';
-    label = 'Maybe later';
-    order = 1;
-    tone = 'maybe';
-  }
+  const extras = {
+    score:           mergedRecord.priorityScore,
+    oppScore:        mergedRecord.opportunityScore,
+    rating:          _mapPanelNumber(qrow && qrow.rating, item.biz.rating),
+    reviewCount:     _mapPanelNumber(qrow && (qrow.review_count ?? qrow.reviews), item.biz.review_count ?? item.biz.reviews),
+    contactability:  String((qrow && qrow.contactability) || item.biz.contactability || ''),
+  };
 
-  const reasons = [];
-  if (hasEmail) reasons.push('Email ready');
-  else if (hasWebsite && hasPhone) reasons.push('Web + phone only');
-  else if (hasPhone) reasons.push('Phone only');
-  else if (hasWebsite) reasons.push('Website only');
-  else reasons.push('No contact path');
-
-  if (score >= 4) reasons.push(`Score ${score}`);
-  else if (lowScore) reasons.push(score ? `Low score ${score}` : 'Low score');
-  else if (score === 3) reasons.push('Mid score');
-
-  if (!hasEmail) reasons.push('Needs email');
-  if (!hasWebsite) reasons.push('No website');
-  if (!hasPhone && !hasEmail) reasons.push('No direct contact');
-  if ((rating >= 4.5 && reviewCount >= 20) || (rating >= 4.1 && reviewCount >= 8)) {
-    reasons.push(`${rating.toFixed(1)}★/${Math.round(reviewCount)}`);
-  }
-  if (highContactability) reasons.push('High contactability');
+  const bucket = _leadQualBucket(mergedRecord, extras);
 
   return {
-    key,
-    label,
-    order,
-    tone,
-    hasEmail,
-    hasWebsite,
-    hasPhone,
-    score,
-    lowScore,
-    isSent,
-    isApproved,
-    isScheduled,
-    reasons: Array.from(new Set(reasons)).slice(0, 3),
+    key:         bucket.key,
+    label:       bucket.label,
+    order:       bucket.order,
+    tone:        bucket.tone,
+    hasEmail:    mergedRecord.hasEmail,
+    hasWebsite:  mergedRecord.hasWebsite,
+    hasPhone:    mergedRecord.hasPhone,
+    score:       mergedRecord.priorityScore,
+    lowScore:    mergedRecord.priorityScore > 0 && mergedRecord.priorityScore <= 2,
+    isSent:      mergedRecord.isSent,
+    isApproved:  mergedRecord.isApproved,
+    isScheduled: mergedRecord.isScheduled,
+    reasons:     bucket.reasons,
   };
 }
 
@@ -6288,6 +6271,9 @@ function _leadRecord(input) {
   const hasForm      = !!formUrl.trim();
   const hasContact   = hasEmail || hasFacebook || hasInstagram || hasForm;
   const bestChannel  = hasEmail ? 'email' : hasFacebook ? 'facebook' : hasInstagram ? 'instagram' : hasForm ? 'form' : 'none';
+  // Pass 42: hasWebsite + hasPhone for _leadQualBucket
+  const hasWebsite   = !!(website.trim());
+  const hasPhone     = !!(phone.replace(/\D/g,'').length >= 7);
 
   // Qualification
   const priorityScore  = parseInt(row.final_priority_score  || b.priority_score  || b.score || 0) || 0;
@@ -6302,6 +6288,9 @@ function _leadRecord(input) {
   const isDNC        = !!(String(row.do_not_contact || '').toLowerCase() === 'true');
   const draftVersion = row.draft_version   || '';
   const isLegacyDraft = !!draftVersion && draftVersion !== 'v9';
+  // Pass 42: isStale + isReadyScheduled for _leadStatusMeta
+  const isStale          = !isSent && !!(typeof status_draft_version !== 'undefined' && status_draft_version && draftVersion && draftVersion !== status_draft_version);
+  const isReadyScheduled = !!(isScheduled && row.is_ready);
 
   // Compute primary status label
   let status, statusTone;
@@ -6351,10 +6340,12 @@ function _leadRecord(input) {
     // Contact
     email, facebookUrl, instagramUrl, formUrl,
     hasEmail, hasFacebook, hasInstagram, hasForm, hasContact, bestChannel,
+    hasWebsite, hasPhone,
     // Qualification
     priorityScore, opportunityScore, scoringReason,
     // Workflow status
     isSent, isApproved, isScheduled, isReplied, isDNC, isLegacyDraft,
+    isStale, isReadyScheduled,
     status, statusTone, draftVersion, nextAction,
     // Draft
     subject, body, facebookDraft, observation,

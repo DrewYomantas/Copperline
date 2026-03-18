@@ -21,16 +21,17 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
+Pass 42 - V2 Stage 2E — Qualification + Status Derivation Unification
 
-- Added `_leadKeyIndex` module var — a `Map<_leadKey, row>` rebuilt on every `loadAll()` call.
-- Added `_buildLeadKeyIndex(rows)` — builds the index using `_leadKey(row)` (website → phone → name+city priority) for O(1) stable-key lookup. Zero collisions confirmed against live queue (162 unique websites, 179 unique phones).
-- Wired `_buildLeadKeyIndex(allRows)` into `loadAll()` immediately after `allRows` is assigned.
-- Rewrote `_mrpResolveRow(biz)`: (1) exact `_leadKeyIndex.get(_leadKey(biz))` lookup; (2) name+city scan fallback for legacy rows; (3) name-only last resort preserved for full backward compatibility.
-- All `_mrpResolveRow` call sites unchanged — upgrade is entirely internal to the function.
+- Extended `_leadRecord` with `hasWebsite`, `hasPhone` (contact), `isStale`, `isReadyScheduled` (workflow) so shared helpers can read all qualification + status signals from one place.
+- Added `_leadQualBucket(record, extras)` — shared qualification bucket logic (ready/maybe/needs-contact/weak/closed) extracted from `_mapPanelQualification` and generalized for both Discovery and Pipeline.
+- Added `_leadStatusMeta(record)` — shared status badge/label/subline/detail/tone logic extracted from `_queueStateMeta` and derived entirely from `_leadRecord`.
+- `_queueStateMeta` rewritten as a one-line wrapper: `return _leadStatusMeta(_leadRecord(row))`.
+- `_mapPanelQualification` rewritten as a thin wrapper: builds `_leadRecord`, merges biz-only extras, calls `_leadQualBucket`, returns compatible shape.
+- Discovery and Pipeline now derive qualification bucket and status meaning from the same two shared helpers.
 - Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: `4159c60`
+Commit: TBD
 
 
 ## Queue State Management Note — Pass 38
@@ -51,7 +52,7 @@ Backup: `_backups/pending_emails_pre_p38_20260317_182909.csv`
 - unscheduled+unsent: 130
 
 ## Previous Completed Pass
-Pass 40 - V2 Stage 2C — Shared Row State Rendering
+Pass 41 - V2 Stage 2D — Stable Key Propagation
 
 ## Next Pass
 TBD

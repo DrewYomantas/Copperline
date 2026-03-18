@@ -1,10 +1,80 @@
 ﻿# Current Build Pass
 
 ## Active System
-V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
+V2 Stage 2E — Qualification + Status Derivation Unification
 
 ## Status
-Pass 41 complete.
+Pass 42 complete.
+
+---
+
+## Completed: Pass 42 - V2 Stage 2E — Qualification + Status Derivation Unification - TBD
+
+Product change: `lead_engine/dashboard_static/index.html` only.
+No backend changes. No protected systems touched.
+
+### Problem addressed
+
+`_mapPanelQualification` (Discovery) and `_queueStateMeta` (Pipeline) both
+computed `isSent`, `isApproved`, `isScheduled`, qualification bucket logic,
+and status badge/label/tone independently. Same lead = different derivation path.
+
+### Changes
+
+**`_leadRecord` extensions**
+- `hasWebsite` and `hasPhone` added to contact section and return object.
+- `isStale` and `isReadyScheduled` added to workflow section and return object.
+- These four fields were previously recomputed inline in both `_mapPanelQualification`
+  and `_queueStateMeta` on every call. Now derived once in `_leadRecord`.
+
+**`_leadQualBucket(record, extras)`** (new, before Stage 2B header)
+- Shared qualification bucket: ready / maybe / needs-contact / weak / closed.
+- Takes a `_leadRecord` plus optional biz-only extras (rating, reviewCount, contactability).
+- Extras allow Discovery to pass map-result signals not present in queue rows.
+- Returns `{ key, label, order, tone, reasons }` — same shape as old inline code.
+
+**`_leadStatusMeta(record)`** (new, before Stage 2B header)
+- Shared status badge/label/subline/detail/tone from `_leadRecord`.
+- Reads `isReplied`, `isSent`, `isStale`, `isScheduled`, `isReadyScheduled`, `isApproved`
+  from the record, plus `sendAfter` for schedule formatting.
+- Returns same shape as old `_queueStateMeta` body.
+
+**`_queueStateMeta(row)` rewritten**
+- Was: 60-line function with full inline derivation.
+- Now: `return _leadStatusMeta(_leadRecord(row));`
+- Return shape identical. All callers (`statusCellHtml`, `fillPanel`, etc.) unchanged.
+
+**`_mapPanelQualification(item, qrow)` rewritten**
+- Was: 80-line function recomputing all contact/status fields inline.
+- Now: builds `_leadRecord(baseInput)`, merges biz-object overrides for contact fields,
+  builds extras object with biz-only signals, calls `_leadQualBucket`.
+- Return shape identical. All callers (`_mapRenderPanel`, triage render, etc.) unchanged.
+
+### What now derives from shared helpers
+
+| Concern | Old source | New source |
+|---|---|---|
+| Qualification bucket (ready/maybe/etc.) | Inline in `_mapPanelQualification` | `_leadQualBucket` |
+| Status badge/label/subline | Inline in `_queueStateMeta` | `_leadStatusMeta` |
+| isStale | Inline in `_queueStateMeta` | `_leadRecord.isStale` |
+| isReadyScheduled | Inline in `_queueStateMeta` | `_leadRecord.isReadyScheduled` |
+| hasWebsite, hasPhone | Inline in `_mapPanelQualification` | `_leadRecord.hasWebsite/Phone` |
+
+### What remains separate on purpose
+
+- `statusBadge(row)` — compact table badge with different visual purpose; still reads row directly.
+  Could call `_leadStatusMeta` in a future pass.
+- Biz-only extras in `_mapPanelQualification` (rating, reviewCount, contactability) — these come
+  from map-result biz objects and are intentionally not in `_leadRecord` or queue rows.
+- `isRowActionable(row)` / filter logic — separate concern; reads `row.is_ready` directly.
+
+### Verification
+
+- `node --check` on extracted dashboard JS: clean.
+- `python -c "import dashboard_server"` import: clean.
+- All 8 change sites confirmed: `_leadQualBucket` at line ~1493, `_leadStatusMeta` at ~1545,
+  `_queueStateMeta` wrapper at ~2048, `_mapPanelQualification` wrapper at ~5379,
+  `_leadRecord` extensions at ~6275, 6343, 6348.
 
 ---
 

@@ -1,4 +1,29 @@
-﻿### 2026-03-17 - Pass 41: V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
+﻿### 2026-03-17 - Pass 42: V2 Stage 2E — Qualification + Status Derivation Unification
+
+**Goal:** Centralize qualification bucket and status badge/label derivation so Discovery and Pipeline use the same shared helpers, not parallel inline logic.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+- `_leadRecord` extended: `hasWebsite`, `hasPhone`, `isStale`, `isReadyScheduled` added.
+- `_leadQualBucket(record, extras)` — shared qualification bucket (ready/maybe/needs-contact/weak/closed).
+- `_leadStatusMeta(record)` — shared status badge/label/subline/detail/tone.
+- `_queueStateMeta` rewritten as `return _leadStatusMeta(_leadRecord(row))`.
+- `_mapPanelQualification` rewritten as thin wrapper over `_leadRecord` + `_leadQualBucket`.
+
+**No backend changes. No queue schema changes. No protected systems touched.**
+All caller shapes preserved.
+
+**Commit:** TBD
+
+---
+
+### 2026-03-17 - Pass 41: V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
 
 **Goal:** Replace `_mrpResolveRow`'s fuzzy name+city scan with a stable key-indexed lookup. Website (90% coverage, 0 collisions) and phone (99%, 0 collisions) are now the primary match signals.
 
