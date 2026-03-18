@@ -277,10 +277,16 @@ EVT_DRAFT_REGENERATED = "draft_regenerated"
 EVT_REPLIED           = "replied"
 EVT_NOTE_ADDED        = "note_added"
 EVT_FOLLOWUP_SENT     = "followup_sent"
+# Pass 48: workflow state events
+EVT_APPROVED          = "approved"
+EVT_UNAPPROVED        = "unapproved"
+EVT_SCHEDULED         = "scheduled"
+EVT_UNSCHEDULED       = "unscheduled"
 
 _ALL_EVENT_TYPES = {
     EVT_DRAFTED, EVT_OBSERVATION_ADDED, EVT_DRAFT_REGENERATED,
     EVT_REPLIED, EVT_NOTE_ADDED, EVT_FOLLOWUP_SENT,
+    EVT_APPROVED, EVT_UNAPPROVED, EVT_SCHEDULED, EVT_UNSCHEDULED,
 }
 
 # Human-readable labels for UI rendering
@@ -291,6 +297,10 @@ _EVENT_LABELS = {
     EVT_REPLIED:           "Replied",
     EVT_NOTE_ADDED:        "Note added",
     EVT_FOLLOWUP_SENT:     "Follow-up sent",
+    EVT_APPROVED:          "Approved",
+    EVT_UNAPPROVED:        "Approval removed",
+    EVT_SCHEDULED:         "Scheduled",
+    EVT_UNSCHEDULED:       "Unscheduled",
 }
 
 # Labels for state-transition entries (used in timeline rendering)

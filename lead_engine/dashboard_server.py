@@ -283,7 +283,10 @@ def api_approve_row():
     if idx is None or not (0 <= idx < len(rows)):
         return jsonify({"ok": False, "error": "Invalid index"}), 400
     rows[idx]["approved"] = "true"
-    _write_pending(rows); return jsonify({"ok": True})
+    _write_pending(rows)
+    try: _lm.record_event(rows[idx], _lm.EVT_APPROVED)
+    except Exception as _e: log.warning("lead_memory event failed (approved): %s", _e)
+    return jsonify({"ok": True})
 
 @app.route("/api/unapprove_row", methods=["POST"])
 def api_unapprove_row():
@@ -291,7 +294,10 @@ def api_unapprove_row():
     if idx is None or not (0 <= idx < len(rows)):
         return jsonify({"ok": False, "error": "Invalid index"}), 400
     rows[idx]["approved"] = "false"
-    _write_pending(rows); return jsonify({"ok": True})
+    _write_pending(rows)
+    try: _lm.record_event(rows[idx], _lm.EVT_UNAPPROVED)
+    except Exception as _e: log.warning("lead_memory event failed (unapproved): %s", _e)
+    return jsonify({"ok": True})
 
 @app.route("/api/approve_all", methods=["POST"])
 def api_approve_all():
@@ -868,6 +874,13 @@ def api_schedule_email():
     _write_pending(rows)
     action = "cleared" if not send_after else "scheduled"
     log.info("schedule_email %s idx=%s business=%r send_after=%r", action, idx, business_name, send_after)
+    # Pass 48: record scheduled/unscheduled lifecycle event
+    try:
+        _evt = _lm.EVT_UNSCHEDULED if not send_after else _lm.EVT_SCHEDULED
+        _det = send_after if send_after else ""
+        _lm.record_event(rows[idx], _evt, detail=_det)
+    except Exception as _e:
+        log.warning("lead_memory event failed (%s): %s", action, _e)
     return jsonify({"ok": True, "send_after": send_after})
 
 @app.route("/api/debug/scheduled_send_probe", methods=["POST"])
