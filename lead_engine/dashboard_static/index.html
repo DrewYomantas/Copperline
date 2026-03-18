@@ -1176,6 +1176,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
       <button class="btn btn-secondary" id="panel-schedule-btn" onclick="panelScheduleTomorrow()" title="Schedule this email for tomorrow morning using the industry send window">🕐 Schedule for Tomorrow Morning</button>
       <button class="btn btn-ghost" onclick="closePanel()">Close</button>
+      <button class="btn btn-ghost" id="panel-mark-contacted-btn" onclick="panelMarkContacted()" title="Record this lead as contacted in durable memory — suppresses from fresh discovery" style="display:none">✉ Mark Contacted</button>
       <button class="btn btn-ghost" onclick="panelHold()" title="Hold — not now, suppressed from discovery but kept in memory">⏸ Hold</button>
       <button class="btn btn-ghost" onclick="panelOptOut()" title="Mark as do not contact — blocks future sends, persists in memory">🚫 Opt Out</button>
       <button class="btn btn-danger" onclick="panelDelete()">Delete</button>
@@ -2573,6 +2574,9 @@ async function fillPanel(row, fi, totalRows) {
   if (row.sent_at) { if (ab) ab.style.display='none'; if (ub) ub.style.display='none'; if(sb) sb.style.display='none'; }
   else if (row.approved === 'true') { if (ab) ab.style.display='none'; if (ub) ub.style.display=''; if(sb) sb.style.display=''; }
   else { if (ab) ab.style.display=''; if (ub) ub.style.display='none'; if(sb) sb.style.display=''; }
+  // Pass 46: Mark Contacted — show only for unsent rows that are not already contacted in memory
+  const mcb = document.getElementById('panel-mark-contacted-btn');
+  if (mcb) mcb.style.display = row.sent_at ? 'none' : '';
   // ── Best-next-action + quick-log + campaign ───────────────────────────────
   _panelRenderFlowActions(row);
   const _gi = allRows.indexOf(row);
@@ -3066,6 +3070,30 @@ async function panelHold() {
     toast('Lead held — won\'t resurface in discovery', 'info');
   } else {
     toast('Hold failed: ' + (res.error || 'unknown'), 'err');
+  }
+}
+
+// Pass 46: Mark Contacted — record outreach in durable memory for leads
+// that were contacted outside the normal send flow (social, form, phone, etc.)
+// or where a send happened but the queue row was not updated automatically.
+async function panelMarkContacted() {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  if (row.sent_at) { toast('Already marked as sent in queue', 'info'); return; }
+  if (!confirm('Mark this lead as Contacted?\nThey will be suppressed from fresh discovery.')) return;
+  const gi = allRows.indexOf(row);
+  const res = await api('/api/suppress_lead', {
+    index: gi,
+    business_name: row.business_name || '',
+    state: 'contacted',
+    note: 'manually marked contacted from panel',
+  });
+  if (res.ok) {
+    const mcb = document.getElementById('panel-mark-contacted-btn');
+    if (mcb) mcb.style.display = 'none';
+    toast('Marked as contacted — suppressed from discovery', 'ok');
+  } else {
+    toast('Mark contacted failed: ' + (res.error || 'unknown'), 'err');
   }
 }
 

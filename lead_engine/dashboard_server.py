@@ -788,6 +788,13 @@ def api_log_contact():
         row["next_followup_at"] = ""
     if result == "sent" and not row.get("sent_at"): row["sent_at"] = now
     _write_pending(rows); log.info("contact_logged idx=%s channel=%s result=%s",idx,channel,result)
+    # Pass 46: record contacted state in durable memory when result is "sent"
+    if result == "sent":
+        try:
+            _lm.record_suppression(row, "contacted",
+                                   note=f"contact logged via panel: channel={channel}")
+        except Exception as _lm_exc:
+            log.warning("lead_memory record failed on log_contact: %s", _lm_exc)
     return jsonify({"ok":True,"row":row})
 
 @app.route("/api/snooze_row", methods=["POST"])
