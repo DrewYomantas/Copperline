@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 — Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 45 — Durable Memory Coverage Hardening (complete)
+Pass 46 -- Contacted Memory Seeding + Safer Contact Recording (complete)
 
 ## Last Completed Pass
-Pass 45 — Durable Memory Coverage Hardening
+Pass 46 -- Contacted Memory Seeding + Safer Contact Recording
 
-Commit: `e7c382c`
+Commit: `65d113e`
 
 ## Next Pass
 TBD
@@ -26,7 +26,6 @@ TBD
 - Territory heatmap overlay
 - Industry saturation view
 - Tiled backend improvements (rate-limit handling)
-- Seed lead_memory from existing sent queue (50 real sends)
 - Update `Copperline-Outreach-Sequence.md` and `Copperline-Proposal-Template.md`
 
 ---
@@ -76,6 +75,7 @@ Copperline is an internal platform used to:
 | Map discovery interface | `lead_engine/dashboard_static/index.html` |
 | Dashboard API | `lead_engine/dashboard_server.py` |
 | Durable lead memory | `lead_engine/lead_memory.py` + `lead_engine/data/lead_memory.json` |
+| Memory seed script | `lead_engine/scripts/seed_contacted_memory.py` |
 
 ## Protected Systems
 
@@ -95,15 +95,25 @@ Copperline is an internal platform used to:
 - Email sending is manual - auto-send is not enabled
 - Quick reply templates require `COPPERLINE_LINKS` config before live use
 - Suppressed/contacted leads are filtered from all discovery entry points by default
-  (override: include_suppressed=1 query param or body field)
 
-## Suppression Coverage (as of Pass 45)
+## Suppression Coverage (as of Pass 46)
 
-| Route | Suppression filtered? | Override param |
+| Route | Suppression filtered? | Override |
 |---|---|---|
-| `POST /api/discover` | Yes — before pipeline run | `include_suppressed` in body |
-| `POST /api/discover_area` | Yes — marker list | `include_suppressed` query param |
-| `POST /api/discover_area_batch` | Yes — per-iteration markers | `include_suppressed` in body |
+| `POST /api/discover` | Yes -- before pipeline run | `include_suppressed` in body |
+| `POST /api/discover_area` | Yes -- marker list | `include_suppressed` query param |
+| `POST /api/discover_area_batch` | Yes -- per-iteration markers | `include_suppressed` in body |
+
+## Contacted Memory Recording (as of Pass 46)
+
+| Path | When recorded | State |
+|---|---|---|
+| `api_delete_row` | Row deleted from queue | `deleted_intentionally` |
+| `api_opt_out_row` | Opt out from panel | `do_not_contact` |
+| `api_log_contact` (result=sent) | Manual contact log | `contacted` |
+| Panel Hold button | Operator hold action | `hold` |
+| Panel Mark Contacted button | Manual marking for unsent rows | `contacted` |
+| Seed script (one-shot) | Backfill of 34 real-sent rows | `contacted` |
 
 ## Operator Goal
 

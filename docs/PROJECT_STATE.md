@@ -21,27 +21,25 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 45 — Durable Memory Coverage Hardening
+Pass 46 -- Contacted Memory Seeding + Safer Contact Recording
 
-- Extended suppression filtering to `api_discover`: suppressed rows are filtered
-  before `run_pipeline` so they are not re-drafted. Returns `suppressed_skipped`
-  count. New `all_suppressed` response state when all rows are filtered.
-- Extended suppression filtering to `api_discover_area_batch`: per-iteration
-  row check before marker accumulation. Adds `suppressed` flag to each marker.
-  Returns `total_suppressed_skipped` in response.
-- Both routes accept `include_suppressed` param to override filtering.
-- All three discovery routes now have consistent suppression behavior.
-- No other ingest paths require changes (api_discover_area: Pass 44;
-  api_run_pipeline: protected-adjacent, not a discovery entry point).
-- 4/4 verification checks passed.
-- Only file changed: `lead_engine/dashboard_server.py`.
+- New script `lead_engine/scripts/seed_contacted_memory.py`: idempotent one-shot
+  seed of 34 real-sent rows into lead_memory.json as 'contacted'. Uses is_real_send()
+  as the gate (confirmed SMTP sends only, not logged-only rows). Dry-run by default.
+  Executed: 34/34 seeded, all with web: identity keys.
+- `api_log_contact` hook: when result=='sent', calls _lm.record_suppression(row,
+  'contacted'). Forward-looking -- all future manual contact logs auto-seed memory.
+- Panel footer: 'Mark Contacted' button (hidden when row already has sent_at,
+  visible for unsent rows). Calls /api/suppress_lead with state='contacted'.
+- fillPanel visibility block updated to toggle the new button alongside approve/schedule.
+- No protected systems touched. No queue schema changes. 6/6 checks passed.
 
-Commit: `e7c382c`
+Commit: `65d113e`
 
 ## Previous Completed Pass
-Pass 44 — Durable Lead Memory + Suppression Registry
+Pass 45 -- Durable Memory Coverage Hardening
 
-Commit: `e4cfc38`
+Commit: `e7c382c`
 
 ## Queue State Management Note -- Pass 38
 **Date:** 2026-03-17
