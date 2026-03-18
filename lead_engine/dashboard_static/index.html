@@ -738,7 +738,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   <div class="sub-tab" data-parent="clients" data-page="mc-clients" onclick="switchSubPage('clients','mc-clients',this)" style="display:none">📋 Clients</div>
   <div class="sub-tab" data-parent="clients" data-page="mc-new"     onclick="switchSubPage('clients','mc-new',this)"     style="display:none">＋ New Client</div>
   <!-- Health: no sub-tabs — shows both page-health and page-exceptions together -->
-  <!-- Tools: no sub-tabs for now -->
+  <!-- Tools sub-tabs -->
+  <div class="sub-tab" data-parent="tools" data-page="tools"       onclick="switchSubPage('tools','tools',this)">⚙ Tools</div>
+  <div class="sub-tab" data-parent="tools" data-page="lead-memory" onclick="switchSubPage('tools','lead-memory',this)">🧠 Lead Memory</div>
 </nav>
 
 <!-- ══════════════ PAGE: OUTREACH ══════════════ -->
@@ -1174,7 +1176,8 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       <button class="btn btn-ghost" id="panel-unapprove-btn" onclick="panelUnapprove()" style="display:none">Undo Approve</button>
       <button class="btn btn-secondary" id="panel-schedule-btn" onclick="panelScheduleTomorrow()" title="Schedule this email for tomorrow morning using the industry send window">🕐 Schedule for Tomorrow Morning</button>
       <button class="btn btn-ghost" onclick="closePanel()">Close</button>
-      <button class="btn btn-ghost" onclick="panelOptOut()" title="Mark as do not contact — blocks future sends">🚫 Opt Out</button>
+      <button class="btn btn-ghost" onclick="panelHold()" title="Hold — not now, suppressed from discovery but kept in memory">⏸ Hold</button>
+      <button class="btn btn-ghost" onclick="panelOptOut()" title="Mark as do not contact — blocks future sends, persists in memory">🚫 Opt Out</button>
       <button class="btn btn-danger" onclick="panelDelete()">Delete</button>
     </div>
   </div>
@@ -1399,6 +1402,31 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="tools-stub">
   <h2>⚙ Tools</h2>
   <p>Utility functions will be added here.<br>For now, use the Pipeline and Discovery tabs for all operations.</p>
+</div>
+</div>
+
+<!-- ══════════════ PAGE: LEAD MEMORY ══════════════ -->
+<div class="page" id="page-lead-memory">
+<div class="ops-wrap">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+    <h2 style="margin:0">🧠 Lead Memory</h2>
+    <span id="mem-count" class="tag" style="display:none"></span>
+    <span style="flex:1"></span>
+    <input id="mem-search" type="text" class="d-input" placeholder="Search name / city / website…"
+      style="width:220px" oninput="memFilterRender()">
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="mem-suppressed-only" onchange="memFilterRender()"> Suppressed only
+    </label>
+    <button class="btn btn-ghost" onclick="loadLeadMemory()" style="font-size:12px">↺ Refresh</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:18px">
+    Durable memory of leads that were contacted, deleted, held, opted-out, or suppressed.
+    Suppressed leads are filtered from fresh discovery by default.
+    Use <strong>Revive</strong> to un-suppress a lead so it can resurface in discovery.
+  </p>
+  <div id="mem-table-wrap">
+    <p style="color:var(--muted);font-size:13px">Navigate here to load.</p>
+  </div>
 </div>
 </div>
 
@@ -3021,6 +3049,117 @@ async function panelOptOut() {
   if (res.ok) { row.do_not_contact='true'; row.approved='false'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); toast('Marked as do not contact','info'); }
 }
 
+// ── Pass 44: Durable Lead Memory ────────────────────────────────────────────
+
+async function panelHold() {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  if (!confirm('Mark as Hold — not now?\nThe lead stays in the queue but is suppressed from fresh discovery.')) return;
+  const gi = allRows.indexOf(row);
+  const res = await api('/api/suppress_lead', {
+    index: gi,
+    business_name: row.business_name || '',
+    state: 'hold',
+    note: 'held by operator from panel',
+  });
+  if (res.ok) {
+    toast('Lead held — won\'t resurface in discovery', 'info');
+  } else {
+    toast('Hold failed: ' + (res.error || 'unknown'), 'err');
+  }
+}
+
+let _memAllRecords = [];
+
+async function loadLeadMemory() {
+  const wrap = document.getElementById('mem-table-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<p style="color:var(--muted);font-size:13px">Loading…</p>';
+  try {
+    const res = await fetch('/api/lead_memory').then(r => r.json());
+    if (!res.ok) { wrap.innerHTML = '<p style="color:var(--red)">Failed to load memory.</p>'; return; }
+    _memAllRecords = res.records || [];
+    const cntEl = document.getElementById('mem-count');
+    if (cntEl) { cntEl.textContent = _memAllRecords.length + ' records'; cntEl.style.display = ''; }
+    memFilterRender();
+  } catch(e) {
+    wrap.innerHTML = '<p style="color:var(--red)">Load error: ' + e.message + '</p>';
+  }
+}
+
+function memFilterRender() {
+  const wrap = document.getElementById('mem-table-wrap');
+  if (!wrap) return;
+  const q = (document.getElementById('mem-search')?.value || '').trim().toLowerCase();
+  const suppOnly = document.getElementById('mem-suppressed-only')?.checked;
+  const SUPP = new Set(['contacted','suppressed','deleted_intentionally','do_not_contact','hold']);
+  let rows = _memAllRecords;
+  if (suppOnly) rows = rows.filter(r => SUPP.has(r.current_state));
+  if (q) rows = rows.filter(r =>
+    (r.business_name||'').toLowerCase().includes(q) ||
+    (r.city||'').toLowerCase().includes(q) ||
+    (r.website||'').toLowerCase().includes(q)
+  );
+  if (!rows.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:13px">' +
+      (suppOnly || q ? 'No records match.' : 'No lead memory records yet. Memory is recorded when leads are deleted, opted out, or suppressed.') +
+      '</p>';
+    return;
+  }
+  const _stateLabel = s => ({'contacted':'Contacted','suppressed':'Suppressed',
+    'deleted_intentionally':'Deleted','do_not_contact':'Do Not Contact',
+    'hold':'Hold','revived':'Revived'}[s] || s);
+  const _stateColor = s => ({'contacted':'var(--blue)','suppressed':'var(--amber)',
+    'deleted_intentionally':'var(--muted)','do_not_contact':'var(--red)',
+    'hold':'var(--amber)','revived':'var(--green)'}[s] || 'var(--text)');
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="border-bottom:1px solid var(--border);color:var(--muted)">
+      <th style="text-align:left;padding:6px 8px">Business</th>
+      <th style="text-align:left;padding:6px 8px">City</th>
+      <th style="text-align:left;padding:6px 8px">State</th>
+      <th style="text-align:left;padding:6px 8px">Website</th>
+      <th style="text-align:left;padding:6px 8px">Last Updated</th>
+      <th style="text-align:left;padding:6px 8px">Events</th>
+      <th style="padding:6px 8px"></th>
+    </tr></thead><tbody>`;
+  for (const r of rows) {
+    const ts = r.last_updated ? r.last_updated.replace('T',' ').replace('Z','') : '—';
+    const histCount = (r.history||[]).length;
+    const isSuppressed = SUPP.has(r.current_state);
+    const stateHtml = `<span style="color:${_stateColor(r.current_state)};font-weight:600">${_stateLabel(r.current_state)}</span>`;
+    const reviveBtn = isSuppressed
+      ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 8px"
+           onclick="memRevive(${JSON.stringify(r.business_name)})">Revive</button>`
+      : '';
+    html += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 8px;font-weight:500">${r.business_name||'—'}</td>
+      <td style="padding:6px 8px;color:var(--muted)">${r.city||'—'}</td>
+      <td style="padding:6px 8px">${stateHtml}</td>
+      <td style="padding:6px 8px;color:var(--muted);font-size:11px">${r.website||'—'}</td>
+      <td style="padding:6px 8px;color:var(--muted)">${ts}</td>
+      <td style="padding:6px 8px;color:var(--muted)">${histCount}</td>
+      <td style="padding:6px 8px">${reviveBtn}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+async function memRevive(businessName) {
+  if (!businessName) return;
+  if (!confirm(`Revive "${businessName}"?\nThey will appear in fresh discovery again.`)) return;
+  const res = await api('/api/revive_lead', {
+    business_name: businessName,
+    note: 'revived by operator from memory inspector',
+  });
+  if (res.ok) {
+    toast('Revived: ' + businessName, 'ok');
+    await loadLeadMemory();
+  } else {
+    toast('Revive failed: ' + (res.error || 'unknown'), 'err');
+  }
+}
+
 async function resetProspectStatus(businessName) {
   const res = await api('/api/reset_prospect_status',{business_name:businessName});
   if (res.ok) toast(`Reset ${businessName} — will re-draft on next run`,'ok');
@@ -3627,6 +3766,7 @@ function _runPageHooks(name) {
   if (name === 'sprint')        sprintLoad();
   if (name === 'conversations') convLoad();
   if (name === 'health')        { healthLoad(); exceptionsLoad(); }
+  if (name === 'lead-memory')   loadLeadMemory();  // Pass 44
   if (name === 'map') {
     requestAnimationFrame(() => {
       _mapInit();

@@ -41,6 +41,7 @@ from outreach.followup_scheduler import run_followup_scheduler
 from outreach.reply_checker import check_for_replies, reconcile_sent_mail
 from outreach.email_draft_agent import DRAFT_VERSION as _CURRENT_DRAFT_VERSION
 from city_planner import CityPlanner
+import lead_memory as _lm  # Pass 44: durable lead memory + suppression registry
 
 # ---------------------------------------------------------------------------
 # Load queue modules via direct file path — avoids collision with Python's
@@ -316,6 +317,12 @@ def api_delete_row():
     idx = request.json.get("index"); rows = _read_pending()
     if idx is None or not (0 <= idx < len(rows)):
         return jsonify({"ok": False, "error": "Invalid index"}), 400
+    # Pass 44: record durable memory BEFORE removing from queue
+    try:
+        _lm.record_suppression(rows[idx], "deleted_intentionally",
+                               note="deleted from queue by operator")
+    except Exception as _lm_exc:
+        log.warning("lead_memory record failed on delete: %s", _lm_exc)
     rows.pop(idx); _write_pending(rows); return jsonify({"ok": True})
 
 @app.route("/api/run_followups", methods=["POST"])
@@ -566,18 +573,23 @@ def api_discover_area():
         drafts_created = max(0, queue_after - queue_before)
 
         # Build lightweight marker list for the map
-        markers = [
-            {
-                "name":     r.get("business_name", ""),
-                "city":     r.get("city", ""),
-                "email":    r.get("to_email", ""),
-                "channel":  r.get("contact_method", ""),
-                "lat":      r.get("lat", ""),
-                "lng":      r.get("lng", ""),
-                "place_id": r.get("place_id", ""),  # Pass 24: stable ID for panel matching
-            }
-            for r in new_prospect_rows
-        ]
+        # Pass 44: tag suppressed leads so the frontend can filter/dim them
+        _include_supp = request.args.get("include_suppressed","").strip() in ("1","true")
+        markers = []
+        for r in new_prospect_rows:
+            _supp = _lm.is_suppressed(r)
+            if _supp and not _include_supp:
+                continue   # suppress from default discovery results
+            markers.append({
+                "name":       r.get("business_name", ""),
+                "city":       r.get("city", ""),
+                "email":      r.get("to_email", ""),
+                "channel":    r.get("contact_method", ""),
+                "lat":        r.get("lat", ""),
+                "lng":        r.get("lng", ""),
+                "place_id":   r.get("place_id", ""),
+                "suppressed": _supp,
+            })
 
         return jsonify({
             "ok":               True,
@@ -1176,7 +1188,175 @@ def api_opt_out_row():
             if pr.get("business_name","").strip().lower()==name: pr["do_not_contact"]="true"
         with PROSPECTS_CSV.open("w",newline="",encoding="utf-8") as f:
             writer=csv.DictWriter(f,fieldnames=fieldnames); writer.writeheader(); writer.writerows(prows)
-    log.info("opt_out name=%s",name); return jsonify({"ok":True})
+    log.info("opt_out name=%s",name)
+    # Pass 44: persist durable do_not_contact memory
+    try:
+        _lm.record_suppression(rows[idx], "do_not_contact",
+                               note="opt-out via operator action")
+    except Exception as _lm_exc:
+        log.warning("lead_memory record failed on opt_out: %s", _lm_exc)
+    return jsonify({"ok":True})
+
+
+# ── Pass 44: Durable Lead Memory + Suppression Registry ─────────────────────
+
+@app.route("/api/suppress_lead", methods=["POST"])
+def api_suppress_lead():
+    """
+    Record a suppression state for a lead.
+
+    Input:  { index, business_name, state, note? }
+            state must be one of: contacted, suppressed, deleted_intentionally,
+                                  do_not_contact, hold
+    Output: { ok, key, current_state, business_name }
+
+    Does NOT remove the row from the queue — use /api/delete_row for that.
+    Memory persists even after the queue row is removed.
+    """
+    d   = request.json or {}
+    idx = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+    state         = (d.get("state") or "").strip()
+    note          = (d.get("note") or "").strip()
+
+    _VALID = {"contacted", "suppressed", "deleted_intentionally", "do_not_contact", "hold"}
+    if not state or state not in _VALID:
+        return jsonify({"ok": False, "error": f"state must be one of {sorted(_VALID)}"}), 400
+
+    if idx is not None:
+        rows = _read_pending()
+        if isinstance(idx, int) and 0 <= idx < len(rows):
+            row = rows[idx]
+            if business_name and row.get("business_name","").strip().lower() != business_name.lower():
+                return jsonify({"ok": False, "error": "Row index/name mismatch"}), 409
+        else:
+            # idx supplied but invalid — fall back to name-only lookup
+            row = {"business_name": business_name}
+    else:
+        row = {"business_name": business_name}
+
+    if not business_name and not row.get("business_name"):
+        return jsonify({"ok": False, "error": "business_name required"}), 400
+
+    try:
+        record = _lm.record_suppression(row, state, note=note)
+        log.info("suppress_lead: key=%s state=%s biz=%s", record["key"], state, business_name)
+        return jsonify({
+            "ok":            True,
+            "key":           record["key"],
+            "current_state": record["current_state"],
+            "business_name": record.get("business_name", business_name),
+        })
+    except Exception as exc:
+        log.error("suppress_lead error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@app.route("/api/revive_lead", methods=["POST"])
+def api_revive_lead():
+    """
+    Remove suppression for a lead — it will appear in fresh discovery again.
+
+    Input:  { index?, business_name, note? }
+            At minimum business_name must be provided.
+    Output: { ok, key, current_state, business_name }
+    """
+    d   = request.json or {}
+    idx = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+    note          = (d.get("note") or "").strip()
+
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name required"}), 400
+
+    if idx is not None:
+        rows = _read_pending()
+        if isinstance(idx, int) and 0 <= idx < len(rows):
+            row = rows[idx]
+        else:
+            row = {"business_name": business_name}
+    else:
+        row = {"business_name": business_name}
+
+    try:
+        record = _lm.revive_lead(row, note=note)
+        log.info("revive_lead: key=%s biz=%s", record["key"], business_name)
+        return jsonify({
+            "ok":            True,
+            "key":           record["key"],
+            "current_state": record["current_state"],
+            "business_name": record.get("business_name", business_name),
+        })
+    except Exception as exc:
+        log.error("revive_lead error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@app.route("/api/lead_memory")
+def api_lead_memory():
+    """
+    Return all durable lead memory records.
+
+    Query params:
+        suppressed_only=1  — return only currently-suppressed leads
+        q=<text>           — filter by business_name substring (case-insensitive)
+
+    Response: { ok, total, records: [...] }
+    """
+    suppressed_only = request.args.get("suppressed_only","").strip() in ("1","true")
+    q = request.args.get("q","").strip().lower()
+
+    try:
+        all_records = _lm.get_all_records()
+        records = list(all_records.values())
+
+        if suppressed_only:
+            _SUPP = {"contacted","suppressed","deleted_intentionally","do_not_contact","hold"}
+            records = [r for r in records if r.get("current_state") in _SUPP]
+
+        if q:
+            records = [r for r in records if q in (r.get("business_name") or "").lower()
+                       or q in (r.get("city") or "").lower()
+                       or q in (r.get("website") or "").lower()]
+
+        records.sort(key=lambda r: r.get("last_updated",""), reverse=True)
+
+        return jsonify({"ok": True, "total": len(records), "records": records})
+    except Exception as exc:
+        log.error("lead_memory error: %s", exc, exc_info=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@app.route("/api/lead_memory/check", methods=["POST"])
+def api_lead_memory_check():
+    """
+    Check whether a specific lead is suppressed.
+
+    Input:  { business_name, website?, phone?, place_id? }
+    Output: { ok, is_suppressed, current_state, key, record? }
+    """
+    d   = request.json or {}
+    row = {
+        "business_name": (d.get("business_name") or "").strip(),
+        "website":       (d.get("website") or "").strip(),
+        "phone":         (d.get("phone") or "").strip(),
+        "place_id":      (d.get("place_id") or "").strip(),
+        "city":          (d.get("city") or "").strip(),
+    }
+    if not row["business_name"] and not row["website"] and not row["phone"] and not row["place_id"]:
+        return jsonify({"ok": False, "error": "At least one identity field required"}), 400
+
+    key    = _lm.lead_key(row)
+    record = _lm.get_record(row)
+    supp   = _lm.is_suppressed(row)
+    return jsonify({
+        "ok":           True,
+        "is_suppressed": supp,
+        "current_state": record.get("current_state") if record else None,
+        "key":          key,
+        "record":       record,
+    })
+
 
 @app.route("/api/reset_prospect_status", methods=["POST"])
 def api_reset_prospect_status():
