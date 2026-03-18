@@ -17,7 +17,7 @@
 **No backend changes. No queue schema changes. No protected systems touched.**
 All `_mrpResolveRow` call sites unchanged.
 
-**Commit:** TBD
+**Commit:** `4159c60`
 
 ---
 

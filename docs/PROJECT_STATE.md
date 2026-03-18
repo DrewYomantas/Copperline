@@ -30,7 +30,7 @@ Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Link
 - All `_mrpResolveRow` call sites unchanged — upgrade is entirely internal to the function.
 - Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: TBD
+Commit: `4159c60`
 
 
 ## Queue State Management Note — Pass 38

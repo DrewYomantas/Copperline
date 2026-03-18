@@ -8,7 +8,7 @@ Pass 41 complete.
 
 ---
 
-## Completed: Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking - TBD
+## Completed: Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking - `4159c60`
 
 Product change: `lead_engine/dashboard_static/index.html` only.
 No backend changes. No protected systems touched.
