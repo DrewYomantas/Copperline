@@ -491,6 +491,8 @@ def api_discover():
     if not api_key: return jsonify({"ok":False,"error":"GOOGLE_PLACES_API_KEY not set."}),400
     data = request.json; industry = data.get("industry","plumbing")
     city = data.get("city","Rockford"); state = data.get("state","IL"); limit = int(data.get("limit",20))
+    # Pass 45: honour include_suppressed flag — default False
+    include_suppressed = str(data.get("include_suppressed","")).strip().lower() in ("1","true")
     from datetime import datetime as _dt
     try:
         rows = discover_prospects(industry=industry,city=city,state=state,api_key=api_key,limit=limit,scrape_emails=True)
@@ -500,11 +502,32 @@ def api_discover():
             _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,"found":0,"status":"all_duplicates"})
             _city_planner.record_discovery(city,state,0,industry=industry)
             return jsonify({"ok":False,"all_duplicates":True,"error":"No new leads found — all results already in pipeline."}),200
-        log.info("Discovered %d prospects: industry=%s city=%s state=%s",len(rows),industry,city,state)
-        _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,"found":len(rows),"status":"ok"})
-        _city_planner.record_discovery(city,state,len(rows),industry=industry)
+        # Pass 45: filter suppressed rows before running the pipeline so they
+        # are not re-drafted.  Rows whose identities are not yet in memory
+        # (no suppression record) are allowed through unconditionally.
+        if not include_suppressed:
+            unsuppressed = [r for r in rows if not _lm.is_suppressed(r)]
+            suppressed_skipped = len(rows) - len(unsuppressed)
+            if suppressed_skipped:
+                log.info("discover: skipped %d suppressed rows (industry=%s city=%s)",
+                         suppressed_skipped, industry, city)
+        else:
+            unsuppressed = rows
+            suppressed_skipped = 0
+        if not unsuppressed:
+            log.info("Discover: all %d rows suppressed, nothing to pipeline", len(rows))
+            _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,"found":0,"status":"all_suppressed"})
+            _city_planner.record_discovery(city,state,0,industry=industry)
+            return jsonify({"ok":False,"all_suppressed":True,"suppressed_skipped":suppressed_skipped,
+                            "error":"All discovered leads are currently suppressed."}),200
+        log.info("Discovered %d prospects (suppressed_skipped=%d): industry=%s city=%s state=%s",
+                 len(unsuppressed),suppressed_skipped,industry,city,state)
+        _append_search_history({"ts":ts,"city":city,"state":state,"industry":industry,"limit":limit,
+                                 "found":len(unsuppressed),"suppressed_skipped":suppressed_skipped,"status":"ok"})
+        _city_planner.record_discovery(city,state,len(unsuppressed),industry=industry)
         run_pipeline(input_csv=PROSPECTS_CSV,skip_scan=True)
-        return jsonify({"ok":True,"found":len(rows),"total_queue":len(_read_pending())})
+        return jsonify({"ok":True,"found":len(unsuppressed),"suppressed_skipped":suppressed_skipped,
+                        "total_queue":len(_read_pending())})
     except Exception as exc:
         log.error("Discover error: %s",exc,exc_info=True)
         _append_search_history({"ts":_dt.utcnow().strftime("%Y-%m-%d %H:%M UTC"),"city":city,"state":state,"industry":industry,"limit":limit,"found":0,"status":"error","error":str(exc)[:120]})
@@ -644,10 +667,14 @@ def api_discover_area_batch():
     STOP_THRESHOLD   = 5   # stop if found < this
     ITER_DELAY       = 1.5  # seconds between iterations
 
+    # Pass 45: honour include_suppressed flag — default False (mirrors api_discover_area)
+    include_suppressed = str(data.get("include_suppressed","")).strip().lower() in ("1","true")
+
     total_new      = 0
     iterations_run = 0
     stopped_reason = "max_iterations"
     all_markers    = []
+    total_suppressed_skipped = 0
     queue_before   = len(_read_pending())
 
     for iteration in range(1, MAX_ITERATIONS + 1):
@@ -678,18 +705,22 @@ def api_discover_area_batch():
 
         if found > 0:
             total_new += found
-            all_markers.extend([
-                {
-                    "name":     r.get("business_name", ""),
-                    "city":     r.get("city", ""),
-                    "email":    r.get("to_email", ""),
-                    "channel":  r.get("contact_method", ""),
-                    "lat":      r.get("lat", ""),
-                    "lng":      r.get("lng", ""),
-                    "place_id": r.get("place_id", ""),
-                }
-                for r in new_rows
-            ])
+            # Pass 45: filter suppressed rows before accumulating markers
+            for r in new_rows:
+                _supp = _lm.is_suppressed(r)
+                if _supp and not include_suppressed:
+                    total_suppressed_skipped += 1
+                    continue
+                all_markers.append({
+                    "name":       r.get("business_name", ""),
+                    "city":       r.get("city", ""),
+                    "email":      r.get("to_email", ""),
+                    "channel":    r.get("contact_method", ""),
+                    "lat":        r.get("lat", ""),
+                    "lng":        r.get("lng", ""),
+                    "place_id":   r.get("place_id", ""),
+                    "suppressed": _supp,
+                })
 
         if found == 0:
             stopped_reason = "no_results"
@@ -716,17 +747,18 @@ def api_discover_area_batch():
         f"{lat:.4f},{lng:.4f}", "area", total_new, industry=industry
     )
 
-    log.info("discover_area_batch done: total_new=%d iterations=%d reason=%s",
-             total_new, iterations_run, stopped_reason)
+    log.info("discover_area_batch done: total_new=%d suppressed_skipped=%d iterations=%d reason=%s",
+             total_new, total_suppressed_skipped, iterations_run, stopped_reason)
 
     return jsonify({
-        "ok":            True,
-        "total_new":     total_new,
-        "iterations_run": iterations_run,
-        "stopped_reason": stopped_reason,
-        "drafts_created": drafts_created,
-        "queue_total":   queue_after,
-        "markers":       all_markers,
+        "ok":                True,
+        "total_new":         total_new,
+        "suppressed_skipped": total_suppressed_skipped,
+        "iterations_run":    iterations_run,
+        "stopped_reason":    stopped_reason,
+        "drafts_created":    drafts_created,
+        "queue_total":       queue_after,
+        "markers":           all_markers,
     })
 
 
