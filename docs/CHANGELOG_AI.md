@@ -1,5 +1,57 @@
 ﻿### 2026-03-17 - Pass 43: V2 Stage 2F — Next-Action-Driven Controls + History Visibility
 
+### 2026-03-18 - Pass 44: Durable Lead Memory + Suppression Registry
+
+**Goal:** Ensure leads that were contacted, deleted, suppressed, held, or opted-out are durably remembered and do not casually resurface in fresh discovery. Provide an operator-accessible inspector and revive path.
+
+**Files changed:**
+- `lead_engine/lead_memory.py` (new)
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`lead_memory.py` (new standalone module):
+- Persists to `lead_engine/data/lead_memory.json` — fully independent of queue CSV.
+- Identity key mirrors frontend `_leadKey()`: `pid:` > `web:` > `ph:` > `nc:name|city`.
+- Suppression states: `contacted`, `suppressed`, `deleted_intentionally`, `do_not_contact`, `hold`, `revived`.
+- All writes are lock-protected with atomic tmp-then-rename.
+- Public API: `record_suppression`, `revive_lead`, `is_suppressed`, `get_record`, `get_suppressed_keys`, `suppressed_identity_sets`, `lead_key`.
+
+`dashboard_server.py`:
+- `import lead_memory as _lm` added.
+- `api_delete_row` — records `deleted_intentionally` before queue pop. Memory survives deletion.
+- `api_opt_out_row` — records `do_not_contact` in durable memory after queue write.
+- `POST /api/suppress_lead` — operator-triggered suppression with explicit state.
+- `POST /api/revive_lead` — clears suppression, adds `revived` history entry.
+- `GET /api/lead_memory` — all records, filterable by `suppressed_only` and `q`.
+- `POST /api/lead_memory/check` — single-lead suppression check by any identity signal.
+- `api_discover_area` markers — suppressed leads excluded from default results; `?include_suppressed=1` to override.
+- All memory calls wrapped in try/except — failure never blocks a queue operation.
+
+`index.html`:
+- Hold button added to panel footer — suppresses from discovery without deleting the row.
+- Tools nav gains Lead Memory sub-tab with searchable, filterable record table.
+- Per-row Revive button for suppressed leads in the memory inspector.
+- `_runPageHooks` wired: navigating to `lead-memory` auto-loads the table.
+
+**No protected systems touched. No queue schema changes.**
+
+**Verification:**
+- `python -c "import lead_memory; import dashboard_server"` — both clean.
+- `node --check` on extracted dashboard JS — clean.
+- 6/6 functional checks passed (deleted_intentionally, hold, revive, do_not_contact, suppressed_identity_sets, revived absent from suppressed_keys).
+
+**Commit:** `e4cfc38`
+
+---
+
+### 2026-03-17 - Pass 43: V2 Stage 2F — Next-Action-Driven Controls + History Visibility
+
 **Goal:** Make operator controls and visibility cues follow the shared lead record model more clearly so the next step is easier to see and act on.
 
 **Files changed:**

@@ -1,6 +1,6 @@
-﻿# Copperline Project State
+# Copperline Project State
 
-Last Updated: 2026-03-17
+Last Updated: 2026-03-18
 
 ## Copperline Version
 v0.2
@@ -21,20 +21,30 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 43 - V2 Stage 2F — Next-Action-Driven Controls + History Visibility
+Pass 44 — Durable Lead Memory + Suppression Registry
 
-- Added shared next-action and history UI helpers so operator guidance now comes from `_leadRecord` semantics instead of scattered inline checks.
-- Strengthened the shared workspace header with a clearer `Next Step` callout plus visible history chips for approved, scheduled, sent, replied, stale, and observation-present states.
-- Discovery and Pipeline status rendering now lean more consistently on `_leadStatusMeta(_leadRecord(...))`, including clearer blocked/sent/replied tones.
-- Review-panel footer controls and flow guidance now align with the lead's actual state, including stale-refresh-first and scheduled/unschedule contexts.
-- Queue status cells now surface shared history chips where operators make send/review decisions.
-- `_leadRecord.nextAction` now prioritizes stale or observation-missing refresh work before send-oriented actions.
-- Zero backend changes. No queue schema changes. No protected systems touched.
+- New standalone module `lead_engine/lead_memory.py` persists suppression/contact
+  memory to `lead_engine/data/lead_memory.json`, independent of the queue CSV.
+- Deleting a queue row now records `deleted_intentionally` in memory before the pop.
+- Opting out a lead records `do_not_contact` in durable memory.
+- Four new API routes: `/api/suppress_lead`, `/api/revive_lead`, `/api/lead_memory`,
+  `/api/lead_memory/check`.
+- `api_discover_area` filters suppressed leads from marker results by default
+  (`?include_suppressed=1` to override).
+- Panel footer gains Hold button (suppresses from discovery without deleting).
+- Tools nav gains Lead Memory sub-tab: searchable table with suppressed-only
+  filter and per-row Revive action.
+- No protected systems touched. No queue schema changes.
+- 6/6 functional verification checks passed.
+
+Commit: `e4cfc38`
+
+## Previous Completed Pass
+Pass 43 - V2 Stage 2F -- Next-Action-Driven Controls + History Visibility
 
 Commit: `5a09991`
 
-
-## Queue State Management Note — Pass 38
+## Queue State Management Note -- Pass 38
 **Date:** 2026-03-17
 **Operation:** Bulk unschedule of 56 pre-Pass-36 (v7 draft) scheduled rows.
 
@@ -50,9 +60,6 @@ Backup: `_backups/pending_emails_pre_p38_20260317_182909.csv`
 - sent rows: 50
 - scheduled+unsent: 0
 - unscheduled+unsent: 130
-
-## Previous Completed Pass
-Pass 42 - V2 Stage 2E — Qualification + Status Derivation Unification
 
 ## Next Pass
 TBD

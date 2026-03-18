@@ -1,6 +1,6 @@
-﻿# Copperline AI Control Panel
+# Copperline AI Control Panel
 
-Last Updated: 2026-03-17
+Last Updated: 2026-03-18
 Repository Version: v0.2
 
 ---
@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 — Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 43 - V2 Stage 2F — Next-Action-Driven Controls + History Visibility (complete)
+Pass 44 — Durable Lead Memory + Suppression Registry (complete)
 
 ## Last Completed Pass
-Pass 43 - V2 Stage 2F — Next-Action-Driven Controls + History Visibility
+Pass 44 — Durable Lead Memory + Suppression Registry
 
-Commit: `5a09991`
+Commit: `e4cfc38`
 
 ## Next Pass
 TBD
@@ -26,6 +26,7 @@ TBD
 - Territory heatmap overlay
 - Industry saturation view
 - Tiled backend improvements (rate-limit handling)
+- Seed lead_memory from existing sent queue (50 real sends)
 - Update `Copperline-Outreach-Sequence.md` and `Copperline-Proposal-Template.md`
 
 ---
@@ -79,6 +80,7 @@ Copperline is an internal platform used to:
 | Follow-up automation | `lead_engine/run_lead_engine.py` |
 | Map discovery interface | `lead_engine/dashboard_static/index.html` |
 | Dashboard API | `lead_engine/dashboard_server.py` |
+| Durable lead memory | `lead_engine/lead_memory.py` + `lead_engine/data/lead_memory.json` |
 
 ## Protected Systems
 
@@ -97,6 +99,7 @@ Copperline is an internal platform used to:
 - No build steps - frontend is a single HTML file with CDN dependencies only
 - Email sending is manual - auto-send is not enabled
 - Quick reply templates require `COPPERLINE_LINKS` config before live use
+- Suppressed/contacted leads are filtered from fresh discovery by default
 
 ## Operator Goal
 
