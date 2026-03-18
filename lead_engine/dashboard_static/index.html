@@ -1455,6 +1455,7 @@ function _clinkOr(url, fallback) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 let allRows = [];
+let _leadKeyIndex = new Map(); // Pass 41: stable-key index for _mrpResolveRow
 let filteredRows = [];
 let currentFilter = 'active';
 let panelIdx = -1;
@@ -1822,6 +1823,7 @@ async function loadAll() {
     _refreshNavBadges();
     allRows = Array.isArray(queue) ? queue : [];
     if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
+    _buildLeadKeyIndex(allRows); // Pass 41: rebuild stable-key index
     renderTable();
     _panelSyncOpenState();
   } catch(err) {
@@ -5705,14 +5707,35 @@ function _mapRenderPanel() {
   setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
 }
 
-function _mrpResolveRow(biz) {
-  if (!biz || !allRows || !allRows.length) return null;
-  // 1. place_id match (stable, from backend Pass 24)
-  if (biz.place_id) {
-    // place_id is not stored in queue rows — use as disambiguator on name+city tie only
-    // Primary: exact name+city match preferred when place_id is present
+
+// ── Pass 41: stable key index ────────────────────────────────────────────────
+// Pre-indexes allRows by _leadKey so _mrpResolveRow can do O(1) exact-key
+// lookup instead of sequential fuzzy scan. Rebuilt every time allRows changes.
+function _buildLeadKeyIndex(rows) {
+  const idx = new Map();
+  if (!Array.isArray(rows)) return idx;
+  for (const row of rows) {
+    const k = _leadKey(row);
+    if (k && !idx.has(k)) idx.set(k, row); // first occurrence wins on collision
   }
-  // 2. name + city composite match (more reliable than name alone)
+  _leadKeyIndex = idx;
+  return idx;
+}
+
+function _mrpResolveRow(biz) {
+  // Pass 41: key-index first, fuzzy fallback for legacy rows
+  if (!biz || !allRows || !allRows.length) return null;
+
+  // 1. Exact stable-key lookup via _leadKey (website → phone → name+city)
+  //    This is O(1) and works for 90-99% of rows that have website or phone.
+  const stableKey = _leadKey(biz);
+  if (stableKey && _leadKeyIndex.size > 0) {
+    const hit = _leadKeyIndex.get(stableKey);
+    if (hit) return hit;
+  }
+
+  // 2. Name+city scan fallback — handles legacy rows where stable key produces
+  //    different normalizations (e.g. website URL format changed, phone stripped).
   const nameKey = (biz.name || '').trim().toLowerCase();
   const cityKey = (biz.city || '').trim().toLowerCase();
   if (nameKey && cityKey) {
@@ -5722,7 +5745,8 @@ function _mrpResolveRow(biz) {
     );
     if (hit) return hit;
   }
-  // 3. name-only fallback (original behaviour, least reliable)
+
+  // 3. Name-only last resort (original behaviour — least reliable, preserved for compat)
   if (nameKey) {
     return allRows.find(r => (r.business_name || '').trim().toLowerCase() === nameKey) || null;
   }

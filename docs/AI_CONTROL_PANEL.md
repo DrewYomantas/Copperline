@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 — Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 40 - V2 Stage 2C — Shared Row State Rendering (complete)
+Pass 41 - V2 Stage 2D — Stable Key Propagation (complete)
 
 ## Last Completed Pass
-Pass 40 - V2 Stage 2C — Shared Row State Rendering
+Pass 41 - V2 Stage 2D — Stable Key Propagation
 
-Commit: `8abbb57`
+Commit: TBD
 
 ## Next Pass
 TBD

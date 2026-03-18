@@ -1,4 +1,27 @@
-﻿### 2026-03-17 - Pass 40: V2 Stage 2C — Shared Row State Rendering
+﻿### 2026-03-17 - Pass 41: V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
+
+**Goal:** Replace `_mrpResolveRow`'s fuzzy name+city scan with a stable key-indexed lookup. Website (90% coverage, 0 collisions) and phone (99%, 0 collisions) are now the primary match signals.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+- `_leadKeyIndex = new Map()` module var added alongside `allRows`.
+- `_buildLeadKeyIndex(rows)` function: builds Map from `_leadKey(row)` for all rows. Called in `loadAll()` after `allRows` assignment.
+- `_mrpResolveRow(biz)` rewritten: Layer 1 = `_leadKeyIndex.get(_leadKey(biz))` exact lookup; Layer 2 = name+city scan fallback; Layer 3 = name-only last resort (compat preserved).
+
+**No backend changes. No queue schema changes. No protected systems touched.**
+All `_mrpResolveRow` call sites unchanged.
+
+**Commit:** TBD
+
+---
+
+### 2026-03-17 - Pass 40: V2 Stage 2C — Shared Row State Rendering
 
 **Goal:** Reduce duplicated row-state logic between Discovery and Pipeline renders. Add observation visibility and next-action hints to both views consistently.
 

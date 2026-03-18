@@ -21,16 +21,16 @@ Missed-call texting is one downstream solution, not the primary pitch.
 Outreach goal: start a conversation about operational problems, not sell a product.
 
 ## Last Completed Pass
-Pass 40 - V2 Stage 2C — Shared Row State Rendering
+Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
 
-- Added `_leadStatusPills(record)` — shared pill HTML from `_leadRecord`. Replaces duplicate inline isSent/isApproved/isScheduled/score logic across both `_mapRenderPanel` render paths. Now also surfaces observation tag in both Discovery list views.
-- Added `_leadNextActionHint(record)` — shared next-action hint HTML from `_leadRecord`. Added to both Discovery list renders (simple and triage).
-- Replaced both inline `mrp-status-pills` blocks in `_mapRenderPanel` with calls to `_leadStatusPills` + `_leadNextActionHint`.
-- Augmented `statusCellHtml` (Pipeline queue table): `_scSubline` now appends obs tag (when observation present) and next-action hint (when unsent) via `_leadRecord(row)`.
-- Both Discovery list views and the Pipeline queue table now show materially consistent status, observation presence, and next-action from the same shared logic.
+- Added `_leadKeyIndex` module var — a `Map<_leadKey, row>` rebuilt on every `loadAll()` call.
+- Added `_buildLeadKeyIndex(rows)` — builds the index using `_leadKey(row)` (website → phone → name+city priority) for O(1) stable-key lookup. Zero collisions confirmed against live queue (162 unique websites, 179 unique phones).
+- Wired `_buildLeadKeyIndex(allRows)` into `loadAll()` immediately after `allRows` is assigned.
+- Rewrote `_mrpResolveRow(biz)`: (1) exact `_leadKeyIndex.get(_leadKey(biz))` lookup; (2) name+city scan fallback for legacy rows; (3) name-only last resort preserved for full backward compatibility.
+- All `_mrpResolveRow` call sites unchanged — upgrade is entirely internal to the function.
 - Zero backend changes. No queue schema changes. No protected systems touched.
 
-Commit: `8abbb57`
+Commit: TBD
 
 
 ## Queue State Management Note — Pass 38
@@ -51,7 +51,7 @@ Backup: `_backups/pending_emails_pre_p38_20260317_182909.csv`
 - unscheduled+unsent: 130
 
 ## Previous Completed Pass
-Pass 39 - V2 Stage 2A+2B — Unified Lead Record + Workspace Panel
+Pass 40 - V2 Stage 2C — Shared Row State Rendering
 
 ## Next Pass
 TBD

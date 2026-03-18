@@ -1,10 +1,72 @@
 ﻿# Current Build Pass
 
 ## Active System
-V2 Stage 2C — Shared Row State Rendering
+V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking
 
 ## Status
-Pass 40 complete.
+Pass 41 complete.
+
+---
+
+## Completed: Pass 41 - V2 Stage 2D — Stable Key Propagation + Stronger Discovery-Queue Linking - TBD
+
+Product change: `lead_engine/dashboard_static/index.html` only.
+No backend changes. No protected systems touched.
+
+### Problem addressed
+
+`_mrpResolveRow` — the only bridge between Discovery map `biz` objects and
+Pipeline queue rows — relied entirely on fuzzy name+city string matching.
+Website (present on 90% of rows) and phone (99%) were completely unused,
+even though both are stable identifiers with zero collision in the live queue.
+
+### Changes
+
+**`_leadKeyIndex` module var** (line ~1458)
+- `let _leadKeyIndex = new Map()` — initialized empty, rebuilt on every `loadAll`.
+
+**`_buildLeadKeyIndex(rows)`** (line ~5714)
+- Iterates `allRows`, calls `_leadKey(row)` on each, inserts into the Map.
+- `_leadKey` priority: website → phone → name+city (same as Pass 39).
+- First-occurrence wins on any key collision. In practice: zero collisions
+  confirmed against live queue (162 unique websites, 179 unique phones, 180 unique name+city).
+- Returns the populated Map and also sets `_leadKeyIndex`.
+
+**Wired into `loadAll()`** (line ~1826)
+- `_buildLeadKeyIndex(allRows)` called immediately after `allRows = Array.isArray(queue) ? queue : []`.
+- Index is fresh on every queue refresh, discovery load, approve, schedule, delete, etc.
+
+**`_mrpResolveRow(biz)` rewrite** (line ~5726)
+- Layer 1 (new): `_leadKeyIndex.get(_leadKey(biz))` — O(1) exact lookup via
+  stable key. Succeeds for ~90% of biz objects that have a website.
+- Layer 2 (preserved): name+city composite scan — catches legacy rows where
+  website/phone normalisation differs from what the biz object carries.
+- Layer 3 (preserved): name-only scan — original fallback, least reliable,
+  retained for full backward compatibility.
+- All existing `_mrpResolveRow` call sites are unchanged.
+
+### Identity matching: exact vs fallback
+
+| Key type | Coverage | Match type | Collisions |
+|---|---|---|---|
+| website (normalized) | 90% of queue rows | Exact O(1) | 0 |
+| phone (digits only) | 99% of queue rows | Exact O(1) | 0 |
+| name+city | 100% of queue rows | Exact O(1) via index, linear scan fallback | 0 |
+| name-only | 100% (last resort) | Linear scan | Possible for common names |
+
+### What remains fuzzy on purpose
+
+- Name-only last resort (Layer 3) — preserved for compat with legacy callers
+  like `_mrpFindQueueRow(bizName)` that have no city context.
+- `_mrpFindQueueRow` shim is unchanged — still delegates to `_mrpResolveRow`
+  with a synthetic `{ name: bizName, city: '' }` biz object.
+
+### Verification
+
+- `node --check` on extracted dashboard JS: clean.
+- `python -c "import dashboard_server"` import: clean.
+- All 4 change sites confirmed via targeted search.
+- Live queue inspection: 0 website collisions, 0 phone collisions across 180 rows.
 
 ---
 
