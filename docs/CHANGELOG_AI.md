@@ -1752,6 +1752,6 @@ operator can choose the next area to search more deliberately.
   `Territory Overlay`, `Next Areas`, `map-territory-legend`,
   and `mapReloadTerritoryOverlay`
 
-**Commit:** `PENDING_COMMIT`
+**Commit:** `6285e65`
 
 ---

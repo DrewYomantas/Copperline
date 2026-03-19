@@ -31,7 +31,7 @@ Pass 52 -- Territory Heatmap Overlay
   the overlay can set the search circle to a chosen cell, but it does not auto-run
   discovery or change the underlying discovery pipeline.
 
-Commit: `PENDING_COMMIT`
+Commit: `6285e65`
 
 ## Previous Completed Pass
 Pass 51 -- Observation Autowrite + Candidate Approval Layer
