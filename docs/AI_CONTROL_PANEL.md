@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 50a / 51a -- Stale Draft Refresh Workflow (complete)
+Pass 51 -- Observation Autowrite + Candidate Approval Layer (complete)
 
 ## Last Completed Pass
-Pass 50a / 51a -- Stale Draft Refresh Workflow
+Pass 51 -- Observation Autowrite + Candidate Approval Layer
 
-Commit: `5b43aaa`
+Commit: `PENDING_COMMIT`
 
 ## Next Pass
 Territory heatmap overlay
@@ -48,6 +48,7 @@ track replies, convert to clients, deploy missed-call texting.
 |---|---|
 | Lead discovery engine | `lead_engine/discovery/` |
 | First-touch drafting | `lead_engine/outreach/email_draft_agent.py` |
+| Observation candidate generation | `lead_engine/outreach/observation_candidate_agent.py` |
 | Follow-up drafting | `lead_engine/outreach/followup_draft_agent.py` |
 | Follow-up scheduler | `lead_engine/outreach/followup_scheduler.py` |
 | Email queue | `lead_engine/queue/pending_emails.csv` |
@@ -70,12 +71,13 @@ track replies, convert to clients, deploy missed-call texting.
 - No build steps - frontend is a single HTML file with CDN dependencies only
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Follow-up drafting now blocks when lead-specific continuation context is weak
-- Stale first-touch rows now have a direct refresh path from queue row -> observation field -> regenerate -> next stale row
+- Observation candidates can be generated only from stored lead evidence and still require operator review/save before drafting
+- Stale first-touch rows still keep the direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 
 ---
 
-## Lifecycle Event Registry (as of Pass 50a / 51a)
+## Lifecycle Event Registry (as of Pass 51)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

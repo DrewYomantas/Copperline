@@ -1549,3 +1549,87 @@ Wired call into `draft_email()` between body assembly and sign-off append.
 **Commit:** `67716ce`
 
 ---
+### 2026-03-19 - Pass 51: Observation Autowrite + Candidate Approval Layer
+
+**Goal:** Generate grounded observation candidates from real available lead
+context so operators can approve/edit observations faster without weakening the
+existing observation-led drafting standard.
+
+**Files changed:**
+- `lead_engine/outreach/observation_candidate_agent.py`
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`lead_engine/outreach/observation_candidate_agent.py`:
+- Added deterministic observation candidate generation with four explicit
+  families:
+  `prior_observation_restore`, `limited_contact_methods`,
+  `single_contact_route`, and `phone_only_listing`.
+- Added shared observation validation for save/regenerate paths:
+  `observation_missing`, `observation_too_short`, `observation_generic`,
+  `observation_too_long`, `observation_banned_language`.
+- Added candidate blocking for weak or unsafe generation:
+  `weak_source_context`, `insufficient_context`,
+  `invalid_missing_context_overlap`.
+- Candidate generation only uses safe existing evidence:
+  saved lead memory observations, matched prospect contactability, visible
+  contact routes on file, and specific queue insight signals/sentences when
+  they support a concrete operational/contact-path note.
+
+`lead_engine/dashboard_server.py`:
+- Added `POST /api/generate_observation_candidate`.
+- Added `_read_prospects()` and `_find_matching_prospect(...)` so candidate
+  generation can reuse current stored prospect context without schema changes.
+- Updated `POST /api/update_observation` to use shared observation validation and
+  return structured blocked reasons on invalid requests.
+- Updated `POST /api/regenerate_draft` to validate the observation again before
+  rebuilding the draft, preserving observation-led protections.
+
+`lead_engine/dashboard_static/index.html`:
+- Added observation tooling actions in the existing panel:
+  `Generate Obs`, `Save Observation`, `Use Candidate`,
+  `Regenerate Candidate`.
+- Added observation candidate UI states:
+  loading, ready, blocked, evidence preview, rationale, source labels, and
+  confidence/family metadata.
+- Added `apiJson(...)` helper for observation routes that need structured
+  non-200 JSON handling.
+- Existing panel flow now supports:
+  generate candidate -> review/use/edit -> save observation -> regenerate draft.
+- Candidate generation auto-runs when the panel opens on an unsent row with no
+  saved observation and no existing candidate state.
+
+**Design decisions:**
+- Did not touch `run_lead_engine.py`.
+- Did not change queue column order or naming.
+- Did not change scheduler timing or due-date math.
+- Did not change email sender core.
+- Did not auto-accept generated observations.
+- Did not add hidden background bulk mutation of all leads.
+
+**Verification:**
+- Dashboard JS parses clean via `new vm.Script(...)`.
+- Python imports clean for `lead_engine.dashboard_server` and
+  `lead_engine.outreach.observation_candidate_agent`.
+- Flask test client checks on the local repo:
+  - `Massie Heating and Air Conditioning` -> ready candidate,
+    family `limited_contact_methods`
+  - `Integrity Auto Care` -> blocked candidate,
+    `blocked_reason=weak_source_context`
+  - invalid save with `need more leads from better marketing` -> `400`,
+    `blocked_reason=observation_banned_language`
+  - invalid regenerate with the same observation -> `400`,
+    `blocked_reason=observation_banned_language`
+- Current queue pass through the candidate layer:
+  `49` ready rows, `131` blocked rows
+  (`110` `weak_source_context`, `21` `insufficient_context`).
+
+**Commit:** `PENDING_COMMIT`
+
+---

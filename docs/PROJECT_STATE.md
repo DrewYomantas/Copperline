@@ -15,30 +15,29 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 50a / 51a -- Stale Draft Refresh Workflow
+Pass 51 -- Observation Autowrite + Candidate Approval Layer
 
-- Kept stale-draft detection and observation-led regeneration rules intact;
-  no scheduler timing, send-path, or queue schema changes.
-- `lead_engine/dashboard_static/index.html` now adds a direct queue-row stale
-  action (`Add Obs` / `Refresh`) that opens the existing review panel straight
-  into the observation field instead of forcing extra panel hops.
-- The review panel stale state now exposes refresh-specific actions inside the
-  existing "Refresh before send" block:
-  `Add/Edit observation`, `Regenerate now`, and `Next stale` when another stale
-  row exists in the current review set.
-- Review-session chrome now surfaces stale-row counts, and stale rows gain a
-  dedicated `Regen + Next Stale` flow action to help operators move through
-  refresh work without weakening approval/send safeguards.
-- Regeneration failures remain blocked by observation-led rules and now keep the
-  operator anchored on the observation field with visible UI error text instead
-  of feeling like a backend-only failure.
+- Added a bounded observation-candidate layer that builds short grounded
+  observation suggestions from real lead evidence already on file instead of
+  forcing the operator to author every observation from scratch.
+- New candidate generation stays inside the existing observation-led workflow:
+  operators can generate, review, load into the observation field, edit, save,
+  and then regenerate the draft from the approved observation.
+- Candidate generation only uses safe existing context:
+  saved lead memory observations, matched prospect contactability, visible
+  contact routes on file, and limited queue insight signals when they support a
+  concrete operational/contact-path observation.
+- Weak evidence now blocks cleanly with structured reasons instead of inventing
+  category-level or salesy observation text.
+- Observation validation is now shared across save and regenerate paths, so
+  banned generic growth/agency language stays blocked even if manually entered.
 
-Commit: `5b43aaa`
+Commit: `PENDING_COMMIT`
 
 ## Previous Completed Pass
-Pass 50 -- Follow-Up System Rebuild
+Pass 50a / 51a -- Stale Draft Refresh Workflow
 
-Commit: `4ab7bd5`
+Commit: `5b43aaa`
 
 ## Next Pass
 Territory heatmap overlay
@@ -54,10 +53,14 @@ Territory heatmap overlay
 ## Core Operator Workflow
 
 1. Discover businesses via map
-2. Add a business-specific observation for each strong lead
-3. System generates observation-led first-touch drafts
-4. Operator reviews, approves, or schedules for tomorrow morning
-5. Emails are sent manually via Gmail
-6. Follow-up drafting only proceeds when the lead record has grounded continuation context
-7. Weak or generic follow-ups block instead of auto-queuing generic nurture copy
-8. Clients onboard to missed-call texting service
+2. System can generate a grounded observation candidate when real lead evidence
+   is strong enough
+3. Operator reviews or edits the observation, then saves it to the lead row
+4. System generates observation-led first-touch drafts from the approved/saved
+   observation
+5. Operator reviews, approves, or schedules for tomorrow morning
+6. Emails are sent manually via Gmail
+7. Follow-up drafting only proceeds when the lead record has grounded
+   continuation context
+8. Weak or generic follow-ups block instead of auto-queuing generic nurture copy
+9. Clients onboard to missed-call texting service

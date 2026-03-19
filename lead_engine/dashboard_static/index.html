@@ -369,6 +369,33 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .obs-input.obs-blocked{border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.06)}
 .obs-hint{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5}
 .obs-hint.obs-hint-blocked{color:var(--amber)}
+.obs-tool-row{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.btn-obs-tool{background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:var(--rs);font-size:10px;font-weight:600;cursor:pointer;transition:.12s;font-family:var(--sans)}
+.btn-obs-tool:hover{border-color:var(--border-hi);background:var(--surface)}
+.btn-obs-tool:disabled{opacity:.45;cursor:not-allowed}
+.obs-tool-status{font-size:10px;color:var(--muted);flex:1;line-height:1.4}
+.obs-tool-status.obs-err{color:var(--red,#e05)}
+.obs-tool-status.obs-ok{color:var(--green)}
+.obs-candidate-box{margin-top:8px;border:1px solid var(--border);border-radius:var(--rs);padding:9px 10px;background:var(--surface3);display:flex;flex-direction:column;gap:6px}
+.obs-candidate-box.ready{border-left:3px solid var(--blue)}
+.obs-candidate-box.blocked{border-left:3px solid var(--amber);background:rgba(245,166,35,.06)}
+.obs-candidate-box.loading{border-left:3px solid var(--copper)}
+.obs-candidate-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.obs-candidate-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.obs-candidate-meta{display:flex;gap:5px;flex-wrap:wrap}
+.obs-candidate-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:600;border:1px solid var(--border)}
+.obs-candidate-chip.conf-high{background:rgba(62,207,114,.1);color:var(--green);border-color:rgba(62,207,114,.25)}
+.obs-candidate-chip.conf-medium{background:rgba(79,142,247,.1);color:var(--blue);border-color:rgba(79,142,247,.25)}
+.obs-candidate-chip.grade-strong,.obs-candidate-chip.grade-tied_to_workflow{background:rgba(62,207,114,.1);color:var(--green);border-color:rgba(62,207,114,.25)}
+.obs-candidate-chip.grade-specific{background:rgba(79,142,247,.1);color:var(--blue);border-color:rgba(79,142,247,.25)}
+.obs-candidate-chip.grade-warn,.obs-candidate-chip.grade-generic,.obs-candidate-chip.grade-category_only{background:rgba(245,166,35,.13);color:var(--amber);border-color:rgba(245,166,35,.25)}
+.obs-candidate-text{font-size:12px;line-height:1.55;color:var(--text);font-family:var(--mono);white-space:pre-wrap}
+.obs-candidate-rationale{font-size:10px;color:var(--muted);line-height:1.5}
+.obs-candidate-evidence{display:flex;gap:5px;flex-wrap:wrap}
+.obs-evidence-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:9px;color:var(--muted);background:var(--surface);border:1px solid var(--border)}
+.obs-candidate-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-obs-inline{background:transparent;border:1px solid var(--border);color:var(--text);padding:4px 9px;border-radius:var(--rs);font-size:10px;font-weight:600;cursor:pointer}
+.btn-obs-inline:hover{border-color:var(--border-hi);background:var(--surface)}
 .obs-regen-row{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
 .btn-regen{background:var(--copper);color:#fff;border:none;border-radius:var(--rs);padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:.12s;font-family:var(--sans)}
 .btn-regen:hover{opacity:.88}
@@ -1203,6 +1230,12 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
           <div class="obs-hint" id="panel-obs-hint">
             Specific detail about this business — not a category label. Must be specific enough it wouldn't fit most businesses in the same trade.
           </div>
+          <div class="obs-tool-row">
+            <button class="btn-obs-tool" id="panel-obs-generate-btn" onclick="panelGenerateObservationCandidate()">Generate Obs</button>
+            <button class="btn-obs-tool" id="panel-obs-save-btn" onclick="panelSaveObservation()" disabled>Save Observation</button>
+            <span class="obs-tool-status" id="panel-obs-tool-status"></span>
+          </div>
+          <div class="obs-candidate-box" id="panel-obs-candidate-box" style="display:none"></div>
           <!-- Pass 49: obs history toggle + list -->
           <div id="panel-obs-history-wrap" style="display:none">
             <span class="obs-history-toggle" onclick="panelObsHistoryToggle()" id="panel-obs-history-toggle">▸ prior observations</span>
@@ -1580,6 +1613,23 @@ async function api(path, body) {
     throw new Error(`API ${path} returned ${r.status}: ${text.slice(0, 120)}`);
   }
   return r.json();
+}
+
+async function apiJson(path, methodOrBody, maybeBody) {
+  const body = maybeBody !== undefined ? maybeBody : methodOrBody;
+  const opts = body !== undefined
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    : {};
+  const r = await fetch(path, opts);
+  const text = await r.text().catch(() => '');
+  let data = {};
+  if (text) {
+    try { data = JSON.parse(text); }
+    catch (_) { data = { ok: false, error: text.slice(0, 200) }; }
+  }
+  if (typeof data.ok === 'undefined') data.ok = r.ok;
+  data._httpStatus = r.status;
+  return data;
 }
 
 
@@ -2928,6 +2978,95 @@ function channelBadgesInline(row) {
 
 // ── Observation field helpers (Pass 36, extended Pass 49) ────────────────────
 
+function _panelObsCandidateState(row) {
+  if (!row) return { status: 'idle' };
+  if (!row._obsCandidateState) {
+    row._obsCandidateState = { status: 'idle' };
+  }
+  return row._obsCandidateState;
+}
+
+function _panelSetObservationToolStatus(message, tone) {
+  const el = document.getElementById('panel-obs-tool-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.className = 'obs-tool-status' + (tone === 'err' ? ' obs-err' : tone === 'ok' ? ' obs-ok' : '');
+}
+
+function _panelRefreshObservationButtons(row) {
+  const obsInput = document.getElementById('panel-obs-input');
+  const genBtn   = document.getElementById('panel-obs-generate-btn');
+  const saveBtn  = document.getElementById('panel-obs-save-btn');
+  if (!obsInput || !genBtn || !saveBtn || !row) return;
+  const isSent = !!row.sent_at;
+  const currentObs = (obsInput.value || '').trim();
+  const savedObs = (row._savedObservationText || '').trim();
+  const state = _panelObsCandidateState(row);
+
+  genBtn.disabled = isSent || state.status === 'loading';
+  genBtn.textContent = state.status === 'ready' ? 'Regenerate Obs' : 'Generate Obs';
+  saveBtn.disabled = isSent || !currentObs || currentObs === savedObs;
+}
+
+function _panelRenderObservationCandidate(row) {
+  const box = document.getElementById('panel-obs-candidate-box');
+  if (!box) return;
+  const state = _panelObsCandidateState(row);
+  if (!row || !!row.sent_at || state.status === 'idle') {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+
+  if (state.status === 'loading') {
+    box.className = 'obs-candidate-box loading';
+    box.innerHTML =
+      `<div class="obs-candidate-head">` +
+      `<div class="obs-candidate-title">Observation Candidate</div>` +
+      `<div class="obs-candidate-meta"><span class="obs-candidate-chip">scanning context</span></div>` +
+      `</div>` +
+      `<div class="obs-candidate-rationale">Building a candidate from saved lead context only...</div>`;
+    box.style.display = '';
+    return;
+  }
+
+  if (state.status === 'blocked') {
+    const evidence = (state.evidence || []).map(item => `<span class="obs-evidence-chip">${escHtml(item)}</span>`).join('');
+    box.className = 'obs-candidate-box blocked';
+    box.innerHTML =
+      `<div class="obs-candidate-head">` +
+      `<div class="obs-candidate-title">No Safe Candidate Yet</div>` +
+      `<div class="obs-candidate-meta">${state.family ? `<span class="obs-candidate-chip">${escHtml(state.family)}</span>` : ''}</div>` +
+      `</div>` +
+      `<div class="obs-candidate-rationale">${escHtml(state.blocked_message || 'No grounded observation candidate could be produced from the current evidence.')}</div>` +
+      (evidence ? `<div class="obs-candidate-evidence">${evidence}</div>` : '') +
+      `<div class="obs-candidate-actions"><button class="btn-obs-inline" onclick="panelGenerateObservationCandidate()">Try Again</button></div>`;
+    box.style.display = '';
+    return;
+  }
+
+  const meta = []
+    .concat(state.confidence ? [`<span class="obs-candidate-chip conf-${escHtml(state.confidence)}">${escHtml(state.confidence)} confidence</span>`] : [])
+    .concat(state.grade && state.grade.grade ? [`<span class="obs-candidate-chip grade-${escHtml(state.grade.grade)}">${escHtml(state.grade.label || state.grade.grade)}</span>`] : [])
+    .concat(state.family ? [`<span class="obs-candidate-chip">${escHtml(state.family)}</span>`] : [])
+    .join('');
+  const evidence = (state.evidence || []).map(item => `<span class="obs-evidence-chip">${escHtml(item)}</span>`).join('');
+  box.className = 'obs-candidate-box ready';
+  box.innerHTML =
+    `<div class="obs-candidate-head">` +
+    `<div class="obs-candidate-title">Observation Candidate</div>` +
+    `<div class="obs-candidate-meta">${meta}</div>` +
+    `</div>` +
+    `<div class="obs-candidate-text">${escHtml(state.candidate_text || '')}</div>` +
+    (state.rationale ? `<div class="obs-candidate-rationale">${escHtml(state.rationale)}</div>` : '') +
+    (evidence ? `<div class="obs-candidate-evidence">${evidence}</div>` : '') +
+    `<div class="obs-candidate-actions">` +
+    `<button class="btn-obs-inline" onclick="panelUseObservationCandidate()">Use Candidate</button>` +
+    `<button class="btn-obs-inline" onclick="panelGenerateObservationCandidate()">Regenerate Candidate</button>` +
+    `</div>`;
+  box.style.display = '';
+}
+
 function _obsRenderGradeBar(obs) {
   // Render the grade bar from a local grade computation (no round-trip needed
   // for the pill/message; server grade is used only on save confirmation).
@@ -2999,11 +3138,13 @@ function _panelPopulateObs(row) {
 
   const obs     = (row.business_specific_observation || '').trim();
   const isSent  = !!row.sent_at;
+  row._savedObservationText = obs;
 
   obsInput.value    = obs;
   obsInput.disabled = isSent;
   regenStat.textContent = '';
   regenStat.className   = 'obs-regen-status';
+  _panelSetObservationToolStatus('', '');
 
   // Pass 49: render grade bar from current obs value
   _obsRenderGradeBar(isSent ? '' : obs);
@@ -3026,6 +3167,12 @@ function _panelPopulateObs(row) {
     if (obsReqTag) { obsReqTag.style.display = ''; obsReqTag.textContent = 'observation on file'; }
     obsHint.textContent = 'Observation saved. Use ↻ Regenerate Draft to rebuild email + DM copy from this observation.';
     obsHint.className   = 'obs-hint';
+  }
+
+  _panelRenderObservationCandidate(row);
+  _panelRefreshObservationButtons(row);
+  if (!isSent && !obs && _panelObsCandidateState(row).status === 'idle') {
+    panelGenerateObservationCandidate({ auto: true });
   }
 
   // Pass 49: load obs history asynchronously — non-blocking
@@ -3053,14 +3200,166 @@ function panelObsChanged(value) {
     if (obsReqTag) obsReqTag.textContent = 'required for draft';
     obsHint.textContent = 'Add a specific detail about this business before regenerating.';
     obsHint.className = 'obs-hint obs-hint-blocked';
+    _panelRefreshObservationButtons(row);
     return;
   }
 
   if (regenBtn) regenBtn.disabled = false;
   obsInput.classList.remove('obs-blocked');
-  if (obsReqTag) obsReqTag.textContent = 'unsaved — will save on regenerate';
-  obsHint.textContent = 'Click ↻ Regenerate Draft to save this observation and rebuild copy from it.';
+  if (obsReqTag) obsReqTag.textContent = obs === (row._savedObservationText || '').trim() ? 'observation on file' : 'unsaved — save or regenerate';
+  obsHint.textContent = obs === (row._savedObservationText || '').trim()
+    ? 'Observation saved. Use ↻ Regenerate Draft when you want fresh copy from it.'
+    : 'Click Save Observation to store this note, or ↻ Regenerate Draft to save and rebuild copy from it.';
   obsHint.className = 'obs-hint';
+  _panelRefreshObservationButtons(row);
+}
+
+async function panelGenerateObservationCandidate(opts) {
+  const options = opts || {};
+  const row = _panelCurrentRow();
+  if (!row || row.sent_at) return false;
+  const gi = allRows.indexOf(row);
+  if (gi < 0) {
+    _panelSetObservationToolStatus('Cannot locate row - refresh queue first.', 'err');
+    return false;
+  }
+
+  row._obsCandidateState = { status: 'loading' };
+  _panelRenderObservationCandidate(row);
+  _panelSetObservationToolStatus(options.auto ? 'Scanning saved context for a grounded candidate...' : 'Generating observation candidate...', '');
+  _panelRefreshObservationButtons(row);
+
+  try {
+    const res = await apiJson('/api/generate_observation_candidate', {
+      index: gi,
+      business_name: row.business_name,
+    });
+    if (!res.ok && !res.blocked) {
+      row._obsCandidateState = {
+        status: 'blocked',
+        blocked_reason: res.blocked_reason || 'candidate_error',
+        blocked_message: res.error || 'Could not build an observation candidate.',
+        evidence: [],
+        source_labels: [],
+      };
+      _panelRenderObservationCandidate(row);
+      _panelSetObservationToolStatus(row._obsCandidateState.blocked_message, 'err');
+      _panelRefreshObservationButtons(row);
+      return false;
+    }
+
+    if (res.blocked) {
+      row._obsCandidateState = {
+        status: 'blocked',
+        blocked_reason: res.blocked_reason || 'insufficient_context',
+        blocked_message: res.blocked_message || 'No safe observation candidate could be produced.',
+        evidence: res.evidence || [],
+        source_labels: res.source_labels || [],
+        confidence: res.confidence || '',
+        family: res.family || '',
+      };
+      _panelRenderObservationCandidate(row);
+      _panelSetObservationToolStatus(res.blocked_message || 'No safe candidate was produced.', 'err');
+      _panelRefreshObservationButtons(row);
+      return false;
+    }
+
+    row._obsCandidateState = {
+      status: 'ready',
+      candidate_text: res.candidate_text || '',
+      family: res.family || '',
+      confidence: res.confidence || '',
+      rationale: res.rationale || '',
+      evidence: res.evidence || [],
+      source_labels: res.source_labels || [],
+      grade: res.grade || null,
+    };
+    _panelRenderObservationCandidate(row);
+    _panelSetObservationToolStatus('Observation candidate ready - review it before saving or regenerating.', 'ok');
+    _panelRefreshObservationButtons(row);
+    return true;
+  } catch (err) {
+    row._obsCandidateState = {
+      status: 'blocked',
+      blocked_reason: 'candidate_error',
+      blocked_message: err.message || 'Candidate generation failed.',
+      evidence: [],
+      source_labels: [],
+    };
+    _panelRenderObservationCandidate(row);
+    _panelSetObservationToolStatus(row._obsCandidateState.blocked_message, 'err');
+    _panelRefreshObservationButtons(row);
+    return false;
+  }
+}
+
+function panelUseObservationCandidate() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const state = _panelObsCandidateState(row);
+  const obsInput = document.getElementById('panel-obs-input');
+  if (!obsInput || state.status !== 'ready' || !(state.candidate_text || '').trim()) return false;
+  obsInput.value = state.candidate_text;
+  panelObsChanged(state.candidate_text);
+  _panelSetObservationToolStatus('Candidate loaded into the observation field. Save it or regenerate the draft when ready.', 'ok');
+  panelFocusObservation(false);
+  return true;
+}
+
+async function panelSaveObservation() {
+  const row = _panelCurrentRow();
+  if (!row || row.sent_at) return false;
+  const obsInput = document.getElementById('panel-obs-input');
+  const obsHint  = document.getElementById('panel-obs-hint');
+  const obsReqTag = document.getElementById('panel-obs-required-tag');
+  const obs = (obsInput?.value || '').trim();
+  if (!obs) {
+    _panelSetObservationToolStatus('Observation required before saving.', 'err');
+    panelFocusObservation(true);
+    return false;
+  }
+
+  const gi = allRows.indexOf(row);
+  if (gi < 0) {
+    _panelSetObservationToolStatus('Cannot locate row - refresh queue first.', 'err');
+    return false;
+  }
+
+  const saveBtn = document.getElementById('panel-obs-save-btn');
+  if (saveBtn) saveBtn.disabled = true;
+  _panelSetObservationToolStatus('Saving observation...', '');
+
+  try {
+    const res = await apiJson('/api/update_observation', {
+      index: gi,
+      business_name: row.business_name,
+      observation: obs,
+    });
+    if (!res.ok) {
+      _panelSetObservationToolStatus(res.error || 'Observation save failed.', 'err');
+      return false;
+    }
+
+    row.business_specific_observation = res.observation || obs;
+    row._savedObservationText = row.business_specific_observation;
+    if (obsReqTag) obsReqTag.textContent = 'observation saved';
+    if (obsHint) {
+      obsHint.textContent = 'Observation saved. Use ↻ Regenerate Draft when you want fresh copy from it.';
+      obsHint.className = 'obs-hint';
+    }
+    _obsRenderGradeBar(row.business_specific_observation);
+    await _loadObsHistory(row);
+    renderTable();
+    _panelSetObservationToolStatus('Observation saved.', 'ok');
+    _panelRefreshObservationButtons(row);
+    toast('Observation saved', 'ok');
+    return true;
+  } catch (err) {
+    _panelSetObservationToolStatus(err.message || 'Observation save failed.', 'err');
+    return false;
+  } finally {
+    _panelRefreshObservationButtons(row);
+  }
 }
 
 async function panelRegenerateDraft(opts) {
@@ -3091,7 +3390,7 @@ async function panelRegenerateDraft(opts) {
   regenStat.className   = 'obs-regen-status';
 
   try {
-    const res = await api('/api/regenerate_draft', 'POST', {
+    const res = await apiJson('/api/regenerate_draft', {
       index:         gi,
       business_name: row.business_name,
       observation:   obs,
@@ -3123,6 +3422,7 @@ async function panelRegenerateDraft(opts) {
     row.contact_form_message        = res.dm_draft;
     row.social_dm_text              = res.dm_draft;
     row.business_specific_observation = obs;
+    row._savedObservationText       = obs;
     row.draft_version               = 'v9';
     panelRowKey = _panelMakeKey(row);
 
@@ -3153,6 +3453,7 @@ async function panelRegenerateDraft(opts) {
     regenStat.className   = 'obs-regen-status obs-ok';
 
     renderTable();
+    _panelRefreshObservationButtons(row);
     if (!options.suppressToast) toast('Draft rebuilt from observation', 'ok');
     return true;
   } catch (err) {
@@ -3190,7 +3491,7 @@ async function _loadObsHistory(row) {
   if (toggle) toggle.textContent = '▸ prior observations';
 
   try {
-    const res = await api('/api/obs_history', 'POST', {
+    const res = await apiJson('/api/obs_history', {
       business_name: row.business_name || '',
       website:       row.website       || '',
       phone:         row.phone         || '',

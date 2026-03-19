@@ -39,6 +39,12 @@ from intelligence.email_extractor_agent import enrich_prospects_with_emails
 from discovery.auto_prospect_agent import discover_prospects, INDUSTRY_QUERIES, discover_prospects_area
 from outreach.followup_scheduler import run_followup_scheduler
 from outreach.followup_draft_agent import build_followup_plan, FollowupBlockedError
+from outreach.observation_candidate_agent import (
+    build_observation_candidate,
+    ObservationCandidateBlockedError,
+    ObservationValidationError,
+    validate_observation_text,
+)
 from outreach.reply_checker import check_for_replies, reconcile_sent_mail
 from outreach.email_draft_agent import DRAFT_VERSION as _CURRENT_DRAFT_VERSION
 from city_planner import CityPlanner
@@ -196,6 +202,24 @@ def _prospects_count() -> int:
         return 0
     with PROSPECTS_CSV.open("r", newline="", encoding="utf-8-sig") as f:
         return sum(1 for _ in csv.DictReader(f))
+
+
+def _read_prospects() -> list:
+    if not PROSPECTS_CSV.exists():
+        return []
+    with PROSPECTS_CSV.open("r", newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        return [dict(row) for row in reader]
+
+
+def _find_matching_prospect(row: dict, prospects: list) -> dict | None:
+    if not row or not prospects:
+        return None
+    queue_key = _lm.lead_key(row)
+    for prospect in prospects:
+        if _lm.lead_key(prospect) == queue_key:
+            return prospect
+    return None
 
 @app.route("/")
 def index():
@@ -870,7 +894,7 @@ def api_schedule_email():
 
     rows = _read_pending()
     if not (0 <= idx < len(rows)):
-        return jsonify({"ok": False, "error": "Invalid index"}), 400
+        return jsonify({"ok": False, "error": "Invalid index", "blocked_reason": "invalid_request"}), 400
 
     row_name = rows[idx].get("business_name", "").strip().lower()
     if row_name != business_name.lower():
@@ -1138,7 +1162,11 @@ def api_send_followup():
 
     row = rows[idx]
     if row.get("business_name", "").strip().lower() != business_name.lower():
-        return jsonify({"ok": False, "error": "Row index/name mismatch — queue may have changed"}), 409
+        return jsonify({
+            "ok": False,
+            "error": "Row index/name mismatch — queue may have changed",
+            "blocked_reason": "row_mismatch",
+        }), 409
 
     fs = compute_followup_status(row)
     if fs["status"] != "due":
@@ -1592,7 +1620,6 @@ def api_update_observation():
 
     Does not alter subject/body/send state — observation-only write.
     """
-    from outreach.email_draft_agent import ObservationMissingError, _is_generic_observation
 
     d             = request.json or {}
     idx           = d.get("index")
@@ -1600,15 +1627,13 @@ def api_update_observation():
     observation   = (d.get("observation") or "").strip()
 
     if idx is None or not isinstance(idx, int):
-        return jsonify({"ok": False, "error": "index required (int)"}), 400
+        return jsonify({"ok": False, "error": "index required (int)", "blocked_reason": "invalid_request"}), 400
     if not business_name:
-        return jsonify({"ok": False, "error": "business_name required"}), 400
-    if not observation:
-        return jsonify({"ok": False, "error": "observation required"}), 400
-    if len(observation) < 15:
-        return jsonify({"ok": False, "error": "Observation too short — write a specific business detail."}), 400
-    if _is_generic_observation(observation):
-        return jsonify({"ok": False, "error": "Observation is too generic. Write something specific to this business."}), 400
+        return jsonify({"ok": False, "error": "business_name required", "blocked_reason": "invalid_request"}), 400
+    try:
+        grade = validate_observation_text(observation)
+    except ObservationValidationError as exc:
+        return jsonify({"ok": False, "error": exc.message, "blocked_reason": exc.reason}), 400
 
     rows = _read_pending()
     if not (0 <= idx < len(rows)):
@@ -1628,11 +1653,6 @@ def api_update_observation():
     except Exception as _e:
         log.warning("lead_memory event failed (observation_added): %s", _e)
 
-    grade = {}
-    try:
-        grade = _lm.grade_observation(observation)
-    except Exception:
-        pass
     obs_history_count = 0
     try:
         obs_history_count = len(_lm.get_obs_history(rows[idx]))
@@ -1643,6 +1663,73 @@ def api_update_observation():
         "observation": observation,
         "grade": grade,
         "obs_history_count": obs_history_count,
+    })
+
+
+@app.route("/api/generate_observation_candidate", methods=["POST"])
+def api_generate_observation_candidate():
+    """
+    Build a grounded observation candidate from safe lead context only.
+
+    Input:  { index, business_name }
+    Output:
+      ready -> { ok, blocked: False, candidate_text, family, confidence, grade, rationale, evidence, source_labels }
+      blocked -> { ok, blocked: True, blocked_reason, blocked_message, evidence, source_labels }
+    """
+    d             = request.json or {}
+    idx           = d.get("index")
+    business_name = (d.get("business_name") or "").strip()
+
+    if idx is None or not isinstance(idx, int):
+        return jsonify({"ok": False, "error": "index required (int)", "blocked_reason": "invalid_request"}), 400
+    if not business_name:
+        return jsonify({"ok": False, "error": "business_name required", "blocked_reason": "invalid_request"}), 400
+
+    rows = _read_pending()
+    if not (0 <= idx < len(rows)):
+        return jsonify({"ok": False, "error": "Invalid index", "blocked_reason": "invalid_request"}), 400
+
+    row = rows[idx]
+    if row.get("business_name", "").strip().lower() != business_name.lower():
+        return jsonify({"ok": False, "error": "Row index/name mismatch", "blocked_reason": "row_mismatch"}), 409
+
+    prospect_row = _find_matching_prospect(row, _read_prospects())
+    memory_record = _lm.get_record(row)
+
+    try:
+        candidate = build_observation_candidate(
+            row,
+            memory_record=memory_record,
+            prospect_row=prospect_row,
+        )
+    except ObservationCandidateBlockedError as exc:
+        return jsonify({
+            "ok": True,
+            "blocked": True,
+            "blocked_reason": exc.reason,
+            "blocked_message": exc.message,
+            "evidence": exc.evidence,
+            "source_labels": exc.source_labels,
+            "confidence": exc.confidence,
+            "family": exc.family,
+        })
+    except ObservationValidationError as exc:
+        return jsonify({
+            "ok": True,
+            "blocked": True,
+            "blocked_reason": exc.reason,
+            "blocked_message": exc.message,
+            "evidence": [],
+            "source_labels": ["candidate_validation"],
+        })
+    except Exception as exc:
+        log.warning("api_generate_observation_candidate error: %s", exc)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+    return jsonify({
+        "ok": True,
+        "blocked": False,
+        **candidate,
     })
 
 
@@ -1758,6 +1845,16 @@ def api_regenerate_draft():
                 "Draft generation blocked: no observation on file for this business. "
                 "Add a specific business observation first."
             ),
+        }), 400
+
+    try:
+        validate_observation_text(observation)
+    except ObservationValidationError as exc:
+        return jsonify({
+            "ok": False,
+            "blocked": True,
+            "blocked_reason": exc.reason,
+            "error": exc.message,
         }), 400
 
     # Persist override immediately if one was passed
