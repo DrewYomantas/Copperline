@@ -9,6 +9,7 @@ import csv
 import importlib.util
 import json
 import logging
+import math
 import os
 import re
 import sys
@@ -162,6 +163,7 @@ def _schedule_send_after(industry: str, days_ahead: int = 1) -> str:
     return target.strftime("%Y-%m-%dT%H:%M:%S")
 _DEFAULT_FOLLOWUP_DAYS = 7
 CAMPAIGN_PRESETS_FILE  = BASE_DIR / "data" / "campaign_presets.json"
+TERRITORY_CELL_DEGREES = 0.02
 
 def _load_presets() -> list:
     if not CAMPAIGN_PRESETS_FILE.exists():
@@ -220,6 +222,89 @@ def _find_matching_prospect(row: dict, prospects: list) -> dict | None:
         if _lm.lead_key(prospect) == queue_key:
             return prospect
     return None
+
+
+def _float_or_none(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _int_or_zero(value) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _parse_area_coords(city_value: str, state_value: str) -> tuple[float | None, float | None]:
+    if (state_value or "").strip().lower() != "area":
+        return None, None
+    raw = (city_value or "").strip()
+    if "," not in raw:
+        return None, None
+    lat_str, lng_str = raw.split(",", 1)
+    lat = _float_or_none(lat_str.strip())
+    lng = _float_or_none(lng_str.strip())
+    if lat is None or lng is None:
+        return None, None
+    return lat, lng
+
+
+def _territory_bucket(lat: float, lng: float, *, cell_degrees: float = TERRITORY_CELL_DEGREES) -> dict:
+    lat_idx = math.floor(lat / cell_degrees)
+    lng_idx = math.floor(lng / cell_degrees)
+    min_lat = lat_idx * cell_degrees
+    min_lng = lng_idx * cell_degrees
+    max_lat = min_lat + cell_degrees
+    max_lng = min_lng + cell_degrees
+    return {
+        "key": f"{lat_idx}:{lng_idx}",
+        "min_lat": round(min_lat, 6),
+        "min_lng": round(min_lng, 6),
+        "max_lat": round(max_lat, 6),
+        "max_lng": round(max_lng, 6),
+        "center_lat": round(min_lat + (cell_degrees / 2), 6),
+        "center_lng": round(min_lng + (cell_degrees / 2), 6),
+    }
+
+
+def _territory_cell(cells: dict, lat: float, lng: float) -> dict:
+    bucket = _territory_bucket(lat, lng)
+    key = bucket["key"]
+    if key not in cells:
+        cells[key] = {
+            **bucket,
+            "lead_count": 0,
+            "lead_status_counts": {},
+            "lead_industries": {},
+            "lead_email_count": 0,
+            "search_count": 0,
+            "search_ok_count": 0,
+            "search_duplicate_count": 0,
+            "search_error_count": 0,
+            "search_found_total": 0,
+            "search_industries": {},
+            "search_ok_by_industry": {},
+            "search_duplicate_by_industry": {},
+            "search_found_by_industry": {},
+            "last_search_at": "",
+            "planner_area_records": 0,
+            "planner_checked_count": 0,
+            "planner_leads_total": 0,
+            "planner_checked_by_industry": {},
+            "planner_leads_by_industry": {},
+            "planner_last_checked_at": "",
+            "recommended_radius_m": 1600,
+        }
+    return cells[key]
+
+
+def _bump(counter: dict, key: str, amount: int = 1) -> None:
+    if not key:
+        return
+    counter[key] = int(counter.get(key, 0) or 0) + int(amount or 0)
 
 @app.route("/")
 def index():
@@ -505,6 +590,113 @@ def api_check_api_key():
 @app.route("/api/search_history")
 def api_search_history():
     return jsonify(_load_search_history())
+
+
+@app.route("/api/map_territory_overlay")
+def api_map_territory_overlay():
+    """
+    Build a coarse territory overlay from persisted discovery/search evidence.
+
+    Data sources:
+      - prospects.csv lat/lng rows
+      - search_history.json area searches
+      - city_planner.json AREA entries
+
+    Returns coarse territory cells only. This is neighborhood guidance, not an
+    exact boundary system.
+    """
+    cells: dict[str, dict] = {}
+    prospects = _read_prospects()
+    search_history = _load_search_history()
+    planner_rows = _city_planner.all_cities()
+
+    for row in prospects:
+        lat = _float_or_none(row.get("lat"))
+        lng = _float_or_none(row.get("lng"))
+        if lat is None or lng is None:
+            continue
+        cell = _territory_cell(cells, lat, lng)
+        cell["lead_count"] += 1
+        status = (row.get("status") or "").strip().lower() or "unknown"
+        _bump(cell["lead_status_counts"], status)
+        industry = (row.get("industry") or "").strip().lower()
+        _bump(cell["lead_industries"], industry)
+        if (row.get("to_email") or "").strip():
+            cell["lead_email_count"] += 1
+
+    for entry in search_history:
+        lat, lng = _parse_area_coords(entry.get("city", ""), entry.get("state", ""))
+        if lat is None or lng is None:
+            continue
+        cell = _territory_cell(cells, lat, lng)
+        status = (entry.get("status") or "").strip().lower() or "unknown"
+        industry = (entry.get("industry") or "").strip().lower()
+        found = _int_or_zero(entry.get("found"))
+        cell["search_count"] += 1
+        cell["search_found_total"] += found
+        _bump(cell["search_industries"], industry)
+        _bump(cell["search_found_by_industry"], industry, found)
+        if status == "ok":
+            cell["search_ok_count"] += 1
+            _bump(cell["search_ok_by_industry"], industry)
+        elif status == "all_duplicates":
+            cell["search_duplicate_count"] += 1
+            _bump(cell["search_duplicate_by_industry"], industry)
+        elif status == "error":
+            cell["search_error_count"] += 1
+        ts = (entry.get("ts") or "").strip()
+        if ts and ts > cell["last_search_at"]:
+            cell["last_search_at"] = ts
+
+    for entry in planner_rows:
+        lat, lng = _parse_area_coords(entry.get("city", ""), entry.get("state", ""))
+        if lat is None or lng is None:
+            continue
+        cell = _territory_cell(cells, lat, lng)
+        cell["planner_area_records"] += 1
+        cell["planner_leads_total"] += _int_or_zero(entry.get("leads_found"))
+        industries = entry.get("industries") or {}
+        for industry, meta in industries.items():
+            status = (meta.get("status") or "").strip().lower()
+            if status in {"checked", "skipped", "exhausted", "due"}:
+                cell["planner_checked_count"] += 1
+                _bump(cell["planner_checked_by_industry"], industry.strip().lower())
+            leads_found = _int_or_zero(meta.get("leads_found"))
+            _bump(cell["planner_leads_by_industry"], industry.strip().lower(), leads_found)
+            checked_at = (meta.get("last_checked_at") or "").strip()
+            if checked_at and checked_at > cell["planner_last_checked_at"]:
+                cell["planner_last_checked_at"] = checked_at
+
+    cell_rows = sorted(
+        cells.values(),
+        key=lambda cell: (
+            -int(cell.get("search_count", 0) or 0),
+            -int(cell.get("lead_count", 0) or 0),
+            cell.get("key", ""),
+        ),
+    )
+
+    summary = {
+        "cell_degrees": TERRITORY_CELL_DEGREES,
+        "notes": "Coarse territory cells built from stored area-search centers and stored lead coordinates. Use them as neighborhood guidance, not exact boundaries.",
+        "area_search_rows": sum(1 for e in search_history if str(e.get("state", "")).strip().lower() == "area"),
+        "planner_area_rows": sum(1 for e in planner_rows if str(e.get("state", "")).strip().lower() == "area"),
+        "prospects_with_coords": sum(1 for row in prospects if _float_or_none(row.get("lat")) is not None and _float_or_none(row.get("lng")) is not None),
+        "cells_total": len(cell_rows),
+        "cells_with_searches": sum(1 for cell in cell_rows if int(cell.get("search_count", 0) or 0) > 0),
+        "cells_with_leads": sum(1 for cell in cell_rows if int(cell.get("lead_count", 0) or 0) > 0),
+        "industries": sorted({
+            industry
+            for cell in cell_rows
+            for industry in (
+                list((cell.get("lead_industries") or {}).keys()) +
+                list((cell.get("search_industries") or {}).keys()) +
+                list((cell.get("planner_checked_by_industry") or {}).keys())
+            )
+            if industry
+        }),
+    }
+    return jsonify({"cells": cell_rows, "summary": summary})
 
 # ── City planner ──────────────────────────────────────────────────────────────
 @app.route("/api/cities")

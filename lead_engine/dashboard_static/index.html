@@ -735,6 +735,40 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .map-grid-chip:hover{color:var(--text);border-color:var(--border-hi)}
 .map-grid-chip.active{background:var(--blue-glow);border-color:rgba(79,142,247,.35);color:var(--blue)}
 .map-grid-chip:disabled{opacity:.5;cursor:not-allowed}
+.map-territory-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:10px;flex-wrap:wrap}
+.map-territory-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.map-territory-btn.active{background:var(--blue-glow);color:var(--blue);border-color:rgba(79,142,247,.35)}
+.map-territory-btn.warn-active{background:rgba(245,166,35,.14);color:var(--amber);border-color:rgba(245,166,35,.34)}
+.map-territory-note{font-size:11px;color:var(--muted);line-height:1.5}
+#map-territory-legend{margin-top:10px;display:none}
+.mtl-wrap{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs)}
+.mtl-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mtl-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.mtl-filter{font-size:11px;color:var(--dim)}
+.mtl-cards{display:flex;gap:8px;flex-wrap:wrap}
+.mtl-card{min-width:120px;padding:8px 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2)}
+.mtl-card-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.mtl-card-value{font-size:18px;font-weight:700;color:var(--text);margin-top:3px}
+.mtl-card-note{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.4}
+.mtl-note{font-size:11px;color:var(--muted);line-height:1.5}
+.mtl-list{display:flex;flex-direction:column;gap:6px}
+.mtl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2)}
+.mtl-row-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mtl-row-title{font-size:12px;font-weight:600;color:var(--text)}
+.mtl-row-meta{font-size:10px;color:var(--dim);line-height:1.4}
+.mtl-row-act{border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;background:var(--blue);color:#fff;cursor:pointer;flex-shrink:0}
+.mtl-row-act:hover{background:#1e40af}
+.map-territory-popup{display:flex;flex-direction:column;gap:6px;min-width:210px}
+.map-territory-popup-title{font-size:12px;font-weight:700;color:#111}
+.map-territory-popup-sub{font-size:11px;color:#555}
+.map-territory-popup-stats{display:flex;flex-wrap:wrap;gap:5px}
+.map-territory-popup-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid #d6d8df;background:#f5f6fa;color:#334155}
+.map-territory-popup-chip.next{background:#e9f9ef;border-color:#b8e7c7;color:#127a3f}
+.map-territory-popup-chip.worked{background:#edf4ff;border-color:#c8dafc;color:#2f69d9}
+.map-territory-popup-chip.saturated{background:#fff3e3;border-color:#f3d7ac;color:#a05a00}
+.map-territory-popup-note{font-size:11px;color:#475569;line-height:1.45}
+.map-territory-popup-act{border:none;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;background:#1d4ed8;color:#fff;cursor:pointer}
+.map-territory-popup-act:hover{background:#1e40af}
 .btn-coverage{background:transparent;color:var(--muted);border:1px solid var(--border-hi);font-size:11px;padding:4px 9px}
 .btn-coverage:hover{color:var(--text);border-color:var(--blue)}
 .btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);font-size:12px;padding:6px 13px}
@@ -1440,6 +1474,14 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     </div>
     <div id="map-grid-industries" class="map-grid-chips"></div>
   </div>
+  <div class="map-territory-toolbar">
+    <div class="map-territory-actions">
+      <button id="btnMapTerritoryToggle" class="btn btn-secondary map-territory-btn active" onclick="mapToggleTerritoryOverlay()">◫ Territory Overlay</button>
+      <button id="btnMapTerritoryNext" class="btn btn-ghost map-territory-btn" onclick="mapToggleTerritoryNextOnly()">★ Next Areas</button>
+      <button id="btnMapTerritoryRefresh" class="btn btn-coverage" onclick="mapReloadTerritoryOverlay()">↻ Refresh Overlay</button>
+    </div>
+    <div class="map-territory-note">Coarse territory cells from stored area searches and stored lead coordinates. Use them for neighborhood guidance, not exact boundaries.</div>
+  </div>
   <div id="map-layout">
     <div id="map-container"></div>
         <div id="map-results-panel">
@@ -1473,6 +1515,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
         </div>
       </div>
       <div id="map-status" class="map-status" style="margin-top:8px"></div>
+      <div id="map-territory-legend"></div>
       <div id="map-history">
         <div class="mh-hdr">
           <span class="mh-title">Recent Searches</span>
@@ -4436,6 +4479,7 @@ function _mapUpdateIndustryControls() {
   if (btnVisible && !_mapVisibleSearchActive && !_mapGridSweepActive) btnVisible.disabled = !industry;
   if (btnExhaust && !_exhaustSearchActive && !_mapGridSweepActive) btnExhaust.disabled = !industry || !_mapCenter;
   _mapUpdateGridControls();
+  _mapRenderTerritoryOverlay();
 }
 
 function _mapUpdateGridControls() {
@@ -4651,6 +4695,7 @@ function _runPageHooks(name) {
     requestAnimationFrame(() => {
       _mapInit();
       _mapPopulateIndustries();
+      _mapLoadTerritoryOverlay();
     });
   }
 }
@@ -7297,12 +7342,302 @@ let _mapVisibleSeenKeys     = new Set(); // dedup key set for tiled visible-area
 let _mapGridSweepActive     = false;
 let _mapGridSelectedIndustries = new Set();
 let _mapIndustryOptions = [];
+let _mapTerritoryData = null;
+let _mapTerritoryLayer = null;
+let _mapTerritoryVisible = true;
+let _mapTerritoryNextOnly = false;
+let _mapTerritoryCellsByKey = new Map();
+const MAP_TERRITORY_MIN_LEADS = 2;
 
 function _mapClearCoverage() {
   _mapCoverageCircles.forEach(c => c.remove());
   _mapCoverageCircles = [];
   const btn = document.getElementById('btnClearCoverage');
   if (btn) btn.style.display = 'none';
+}
+
+function _mapTerritorySelectedIndustry() {
+  return (document.getElementById('map-industry')?.value || '').trim().toLowerCase();
+}
+
+function _mapTerritoryIndustryLabel(industry) {
+  return industry ? _mapIndustryLabel(industry) : 'all industries';
+}
+
+function _mapTerritoryCellLabel(cell) {
+  return `${_mapTerritoryNumber(cell.center_lat).toFixed(3)}, ${_mapTerritoryNumber(cell.center_lng).toFixed(3)}`;
+}
+
+function _mapTerritoryNumber(value) {
+  const num = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function _mapTerritoryCellStats(cell, industry) {
+  const leadCount = industry
+    ? _mapTerritoryNumber(cell?.lead_industries?.[industry])
+    : _mapTerritoryNumber(cell?.lead_count);
+  const searchCount = industry
+    ? _mapTerritoryNumber(cell?.search_industries?.[industry])
+    : _mapTerritoryNumber(cell?.search_count);
+  const searchOkCount = industry
+    ? _mapTerritoryNumber(cell?.search_ok_by_industry?.[industry])
+    : _mapTerritoryNumber(cell?.search_ok_count);
+  const duplicateCount = industry
+    ? _mapTerritoryNumber(cell?.search_duplicate_by_industry?.[industry])
+    : _mapTerritoryNumber(cell?.search_duplicate_count);
+  const foundCount = industry
+    ? _mapTerritoryNumber(cell?.search_found_by_industry?.[industry])
+    : _mapTerritoryNumber(cell?.search_found_total);
+  const plannerChecked = industry
+    ? _mapTerritoryNumber(cell?.planner_checked_by_industry?.[industry])
+    : _mapTerritoryNumber(cell?.planner_checked_count);
+  const plannerLeads = industry
+    ? _mapTerritoryNumber(cell?.planner_leads_by_industry?.[industry])
+    : _mapTerritoryNumber(cell?.planner_leads_total);
+  return {
+    leadCount,
+    searchCount,
+    searchOkCount,
+    duplicateCount,
+    foundCount,
+    plannerChecked,
+    plannerLeads,
+    workedCount: searchCount + plannerChecked,
+  };
+}
+
+function _mapTerritoryTone(stats) {
+  const leadSignals = stats.leadCount + stats.plannerLeads;
+  if (leadSignals >= 3 && stats.workedCount <= 1) {
+    return {
+      key: 'next',
+      label: 'Underworked cluster',
+      color: '#3ecf72',
+      fillOpacity: Math.min(0.28, 0.12 + (leadSignals * 0.02)),
+      note: 'Lead signals are here, but this area has only been worked lightly.',
+    };
+  }
+  if ((stats.workedCount >= 4 && stats.foundCount <= 1) || (stats.duplicateCount >= 2 && stats.searchOkCount === 0)) {
+    return {
+      key: 'saturated',
+      label: 'Duplicate-heavy / oversaturated',
+      color: '#f59e0b',
+      fillOpacity: 0.14,
+      note: 'This area has been searched repeatedly with thin or duplicate-heavy yield.',
+    };
+  }
+  if (stats.workedCount > 0 || stats.foundCount > 0) {
+    return {
+      key: 'worked',
+      label: 'Worked area',
+      color: '#4f8ef7',
+      fillOpacity: Math.min(0.22, 0.08 + (stats.foundCount * 0.015)),
+      note: 'This area already has meaningful search or discovery coverage.',
+    };
+  }
+  return {
+    key: 'quiet',
+    label: 'Light signal',
+    color: '#6b7280',
+    fillOpacity: 0.08,
+    note: 'Only light signal is stored here so far.',
+  };
+}
+
+function _mapTerritoryCellRelevant(cell, stats) {
+  return stats.searchCount > 0 || stats.plannerChecked > 0 || stats.leadCount >= MAP_TERRITORY_MIN_LEADS || stats.plannerLeads > 0;
+}
+
+function _mapTerritoryIntersects(cell, bounds) {
+  if (!bounds) return true;
+  return !(
+    _mapTerritoryNumber(cell.max_lat) < bounds.getSouth() ||
+    _mapTerritoryNumber(cell.min_lat) > bounds.getNorth() ||
+    _mapTerritoryNumber(cell.max_lng) < bounds.getWest() ||
+    _mapTerritoryNumber(cell.min_lng) > bounds.getEast()
+  );
+}
+
+function _mapRefreshTerritoryButtons() {
+  const btnToggle = document.getElementById('btnMapTerritoryToggle');
+  const btnNext = document.getElementById('btnMapTerritoryNext');
+  if (btnToggle) {
+    btnToggle.classList.toggle('active', _mapTerritoryVisible);
+    btnToggle.textContent = _mapTerritoryVisible ? '◫ Territory Overlay' : '◫ Overlay Off';
+  }
+  if (btnNext) {
+    btnNext.classList.toggle('warn-active', _mapTerritoryNextOnly);
+    btnNext.textContent = _mapTerritoryNextOnly ? '★ Next Areas Only' : '★ Next Areas';
+  }
+}
+
+function _mapTerritoryPopupHtml(cell, stats, tone, industry) {
+  const searchLabel = industry ? `${_mapTerritoryIndustryLabel(industry)} searches` : 'Area searches';
+  const leadLabel = industry ? `${_mapTerritoryIndustryLabel(industry)} leads` : 'Stored leads';
+  const subLabel = `${_mapTerritoryIndustryLabel(industry)} • coarse territory cell`;
+  return (
+    `<div class="map-territory-popup">` +
+      `<div class="map-territory-popup-title">${escHtml(tone.label)}</div>` +
+      `<div class="map-territory-popup-sub">${escHtml(subLabel)}</div>` +
+      `<div class="map-territory-popup-stats">` +
+        `<span class="map-territory-popup-chip ${tone.key}">${leadLabel}: ${stats.leadCount}</span>` +
+        `<span class="map-territory-popup-chip ${tone.key}">${searchLabel}: ${stats.searchCount}</span>` +
+        `<span class="map-territory-popup-chip ${tone.key}">Planner checks: ${stats.plannerChecked}</span>` +
+      `</div>` +
+      `<div class="map-territory-popup-note">${escHtml(tone.note)}</div>` +
+      `<div class="map-territory-popup-note">Found from stored area searches: <strong>${stats.foundCount}</strong> • duplicate-heavy runs: <strong>${stats.duplicateCount}</strong></div>` +
+      `<button class="map-territory-popup-act" onclick="_mapUseTerritoryCell('${cell.key}')">Use This Cell</button>` +
+    `</div>`
+  );
+}
+
+function _mapRenderTerritoryLegend(summary) {
+  const wrap = document.getElementById('map-territory-legend');
+  if (!wrap) return;
+  if (!_mapTerritoryVisible || !summary || !summary.visibleCells) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  const filterText = _mapTerritorySelectedIndustry()
+    ? `Filtered to ${_mapTerritoryIndustryLabel(_mapTerritorySelectedIndustry())}`
+    : 'Showing all industries';
+  const nextRows = (summary.nextRows || []).slice(0, 5).map(row =>
+    `<div class="mtl-row">` +
+      `<div class="mtl-row-main">` +
+        `<div class="mtl-row-title">${escHtml(_mapTerritoryCellLabel(row.cell))}</div>` +
+        `<div class="mtl-row-meta">${row.leadCount} leads • ${row.searchCount} searches • ${row.plannerChecked} planner checks</div>` +
+      `</div>` +
+      `<button class="mtl-row-act" onclick="_mapUseTerritoryCell('${row.cell.key}')">Use Cell</button>` +
+    `</div>`
+  ).join('');
+  wrap.innerHTML =
+    `<div class="mtl-wrap">` +
+      `<div class="mtl-top">` +
+        `<div class="mtl-title">Territory Overlay</div>` +
+        `<div class="mtl-filter">${escHtml(filterText)}</div>` +
+      `</div>` +
+      `<div class="mtl-cards">` +
+        `<div class="mtl-card"><div class="mtl-card-label">Next Areas</div><div class="mtl-card-value">${summary.nextCells}</div><div class="mtl-card-note">Lead-rich cells with light search coverage</div></div>` +
+        `<div class="mtl-card"><div class="mtl-card-label">Worked</div><div class="mtl-card-value">${summary.workedCells}</div><div class="mtl-card-note">Cells with meaningful stored search/discovery history</div></div>` +
+        `<div class="mtl-card"><div class="mtl-card-label">Saturation Risk</div><div class="mtl-card-value">${summary.saturatedCells}</div><div class="mtl-card-note">Repeat-search cells with thin or duplicate-heavy yield</div></div>` +
+      `</div>` +
+      (nextRows
+        ? `<div class="mtl-list">${nextRows}</div>`
+        : '') +
+      `<div class="mtl-note">Territory cells are coarse neighborhood guides built from persisted area-search centers, AREA planner records, and stored lead coordinates. Use a suggested cell to move the search circle there.</div>` +
+    `</div>`;
+  wrap.style.display = '';
+}
+
+function _mapEnsureTerritoryLayer() {
+  if (!_mapInstance) return null;
+  if (!_mapTerritoryLayer) {
+    _mapTerritoryLayer = L.layerGroup().addTo(_mapInstance);
+  }
+  return _mapTerritoryLayer;
+}
+
+function _mapRenderTerritoryOverlay() {
+  const layer = _mapEnsureTerritoryLayer();
+  if (!layer) return;
+  layer.clearLayers();
+  _mapTerritoryCellsByKey = new Map();
+
+  if (!_mapTerritoryVisible || !_mapTerritoryData || !Array.isArray(_mapTerritoryData.cells)) {
+    _mapRenderTerritoryLegend(null);
+    _mapRefreshTerritoryButtons();
+    return;
+  }
+
+  const bounds = _mapInstance ? _mapInstance.getBounds() : null;
+  const industry = _mapTerritorySelectedIndustry();
+  const summary = { visibleCells: 0, nextCells: 0, workedCells: 0, saturatedCells: 0, nextRows: [] };
+
+  _mapTerritoryData.cells.forEach(cell => {
+    const stats = _mapTerritoryCellStats(cell, industry);
+    if (!_mapTerritoryCellRelevant(cell, stats)) return;
+    if (!_mapTerritoryIntersects(cell, bounds)) return;
+
+    const tone = _mapTerritoryTone(stats);
+    if (_mapTerritoryNextOnly && tone.key !== 'next') return;
+
+    const rect = L.rectangle(
+      [[cell.min_lat, cell.min_lng], [cell.max_lat, cell.max_lng]],
+      {
+        color: tone.color,
+        weight: tone.key === 'next' ? 2 : 1,
+        fillColor: tone.color,
+        fillOpacity: tone.fillOpacity,
+        interactive: false,
+      }
+    ).addTo(layer);
+    if (typeof rect.bringToBack === 'function') rect.bringToBack();
+
+    _mapTerritoryCellsByKey.set(cell.key, cell);
+    summary.visibleCells += 1;
+    if (tone.key === 'next') {
+      summary.nextCells += 1;
+      summary.nextRows.push({ cell, leadCount: stats.leadCount, searchCount: stats.searchCount, plannerChecked: stats.plannerChecked });
+    }
+    else if (tone.key === 'saturated') summary.saturatedCells += 1;
+    else if (tone.key === 'worked') summary.workedCells += 1;
+  });
+
+  summary.nextRows.sort((a, b) =>
+    (b.leadCount + b.plannerChecked) - (a.leadCount + a.plannerChecked) ||
+    a.searchCount - b.searchCount
+  );
+
+  _mapRenderTerritoryLegend(summary);
+  _mapRefreshTerritoryButtons();
+}
+
+async function _mapLoadTerritoryOverlay(force) {
+  if (_mapTerritoryData && !force) {
+    _mapRenderTerritoryOverlay();
+    return _mapTerritoryData;
+  }
+  try {
+    _mapTerritoryData = await api('/api/map_territory_overlay');
+    _mapRenderTerritoryOverlay();
+    return _mapTerritoryData;
+  } catch (err) {
+    const wrap = document.getElementById('map-territory-legend');
+    if (wrap) {
+      wrap.innerHTML = `<div class="mtl-wrap"><div class="mtl-note">Failed to load territory overlay data.</div></div>`;
+      wrap.style.display = '';
+    }
+    return null;
+  }
+}
+
+function mapToggleTerritoryOverlay() {
+  _mapTerritoryVisible = !_mapTerritoryVisible;
+  _mapRenderTerritoryOverlay();
+}
+
+function mapToggleTerritoryNextOnly() {
+  _mapTerritoryNextOnly = !_mapTerritoryNextOnly;
+  _mapRenderTerritoryOverlay();
+}
+
+async function mapReloadTerritoryOverlay() {
+  const btn = document.getElementById('btnMapTerritoryRefresh');
+  if (btn) btn.disabled = true;
+  await _mapLoadTerritoryOverlay(true);
+  if (btn) btn.disabled = false;
+}
+
+function _mapUseTerritoryCell(key) {
+  const cell = _mapTerritoryCellsByKey.get(key);
+  if (!cell || !_mapInstance) return;
+  _mapRadiusM = _mapTerritoryNumber(cell.recommended_radius_m) || 1600;
+  _mapDrawCircle(_mapTerritoryNumber(cell.center_lat), _mapTerritoryNumber(cell.center_lng));
+  const nextZoom = Math.max(_mapInstance.getZoom(), 13);
+  _mapInstance.setView([cell.center_lat, cell.center_lng], nextZoom);
+  toast('Search circle moved to territory cell', 'ok');
 }
 
 function _mapAreaLabel(markers) {
@@ -7815,6 +8150,7 @@ async function mapSearchAreaGrid() {
     _mapRenderHistory();
 
     await loadAll();
+    await _mapLoadTerritoryOverlay(true);
     _mapRenderPanel();
 
     if (statusEl) {
@@ -7922,6 +8258,7 @@ async function mapSearchVisible() {
   const didCancel = !_mapVisibleSearchActive;
   _mapVisibleSearchActive = false;
   _mapUpdateGridControls();
+  await _mapLoadTerritoryOverlay(true);
   btnSV.classList.remove('loading'); btnSV.disabled = !industry;
   if (btnCanc) btnCanc.style.display = 'none';
   statusEl.textContent = didCancel
@@ -8015,7 +8352,8 @@ async function mapSearchExhaust() {
       if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
       _mapRenderHistory();
 
-      loadAll();
+      await loadAll();
+      await _mapLoadTerritoryOverlay(true);
     } else {
       if (statusEl) statusEl.textContent = 'Scan stopped.';
       toast('Scan error: ' + (res.error || 'unknown'), 'err');
@@ -8122,6 +8460,7 @@ function _mapInit() {
   _mapClusterGroup = L.markerClusterGroup();
   _mapInstance.addLayer(_mapClusterGroup);
   console.log('[_mapInit] cluster group initialized');
+  _mapInstance.on('moveend zoomend', () => _mapRenderTerritoryOverlay());
   _mapInstance.on('click', (e) => {
     // Pass 21b: always reposition circle on click — no longer gated on empty results.
     // Results in the panel accumulate across searches; they're only cleared on Reset.
@@ -8176,6 +8515,7 @@ async function mapSearch() {
       _mapSearchHistory.unshift({ lat: _mapCenter.lat, lng: _mapCenter.lng, radiusM: _mapRadiusM, found: res.places_found || 0, label: _histLabel });
       if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
       _mapRenderHistory();
+      await _mapLoadTerritoryOverlay(true);
     } else {
       toast('Search error: ' + res.error, 'err');
       statusEl.textContent = res.error || 'Search returned no new results.';

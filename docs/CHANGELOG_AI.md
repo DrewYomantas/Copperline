@@ -1691,3 +1691,67 @@ system without changing product code.
 **Commit:** `00cf75e`
 
 ---
+
+### 2026-03-19 - Pass 52: Territory Heatmap Overlay
+
+**Goal:** Turn the discovery map into a territory-aware working tool that shows
+stored search coverage, lead concentration, and oversaturation risk so the
+operator can choose the next area to search more deliberately.
+
+**Files changed:**
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`lead_engine/dashboard_server.py`:
+- Added read-only `GET /api/map_territory_overlay`.
+- The route aggregates three verified sources only:
+  - `search_history.json` area-search rows
+  - `city_planner.json` AREA planner rows
+  - `prospects.csv` rows with stored `lat` / `lng`
+- Returns coarse territory cells with:
+  lead counts, lead-industry counts, search counts, successful-search counts,
+  duplicate-heavy counts, planner-check counts, planner lead totals, and a
+  truthful note that the cells are neighborhood guidance rather than exact
+  boundaries.
+
+`lead_engine/dashboard_static/index.html`:
+- Added map controls:
+  `Territory Overlay`, `Next Areas`, and `Refresh Overlay`.
+- Added a Leaflet territory layer that renders coarse cells only from persisted
+  search/planner/lead data.
+- Added territory legend cards for:
+  `Next Areas`, `Worked`, and `Saturation Risk`.
+- Added per-cell popup guidance plus `Use This Cell`, which moves the existing
+  search circle to the selected cell without auto-running discovery.
+- Overlay refreshes after map discovery runs so territory coverage stays aligned
+  with the current stored repo data.
+
+**Design decisions:**
+- Did not change `run_lead_engine.py`.
+- Did not change queue schema order or naming.
+- Did not change sender core, send-path behavior, scheduler timing, or due-date math.
+- Did not introduce fake neighborhood or polygon precision.
+- Used a coarse cell model because the repo stores search centers and prospect
+  coordinates, not exact territory boundaries.
+
+**Verification:**
+- Python imports clean for `lead_engine.dashboard_server`.
+- Dashboard JS parses clean via `new vm.Script(...)`.
+- Flask test client:
+  - `GET /api/map_territory_overlay` -> `200`
+  - returned `386` territory cells
+  - summary built from `226` area-search rows, `11` AREA planner rows, and
+    `613` coordinate-bearing prospects
+- Live local app HTML at `http://127.0.0.1:5000/` contains the new map UI:
+  `Territory Overlay`, `Next Areas`, `map-territory-legend`,
+  and `mapReloadTerritoryOverlay`
+
+**Commit:** `PENDING_COMMIT`
+
+---

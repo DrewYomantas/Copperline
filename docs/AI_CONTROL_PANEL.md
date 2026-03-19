@@ -12,18 +12,17 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Docs Governance Sync for Observation Candidate Era
+Pass 52 -- Territory Heatmap Overlay (complete)
 
 ## Last Completed Pass
-Pass 51 -- Observation Autowrite + Candidate Approval Layer
+Pass 52 -- Territory Heatmap Overlay
 
-Commit: `aea9452`
+Commit: `PENDING_COMMIT`
 
 ## Next Pass
-Territory heatmap overlay
+Industry saturation view
 
 ## Upcoming Passes
-- Territory heatmap overlay
 - Industry saturation view
 
 ---
@@ -77,18 +76,20 @@ track replies, convert to clients, deploy missed-call texting.
 
 - Discovery must be intentional - no auto-search on pan or zoom
 - No build steps - frontend is a single HTML file with CDN dependencies only
+- Territory overlay uses coarse stored search centers and stored lead coordinates only - no fake neighborhood precision
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Observation-led drafting remains required
 - Generated observations are allowed only when grounded in real available lead context
 - Generated observations remain operator-reviewed by default during hardening
 - No hidden bulk observation mutation or auto-accept behavior is in scope
+- Territory cells may guide the operator to the next search area, but do not auto-run discovery
 - Follow-up drafting blocks when lead-specific continuation context is weak
 - Stale first-touch rows still keep the direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 
 ---
 
-## Lifecycle Event Registry (as of Pass 51)
+## Lifecycle Event Registry (as of Pass 52)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

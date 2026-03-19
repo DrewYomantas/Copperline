@@ -15,34 +15,31 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 51 -- Observation Autowrite + Candidate Approval Layer
+Pass 52 -- Territory Heatmap Overlay
 
-- Added a bounded observation-candidate layer that builds short grounded
-  observation suggestions from real lead evidence already on file instead of
-  forcing the operator to author every observation from scratch.
-- New candidate generation stays inside the existing observation-led workflow:
-  operators can generate, review, load into the observation field, edit, save,
-  and then regenerate the draft from the approved observation.
-- Candidate generation only uses safe existing context:
-  saved lead memory observations, matched prospect contactability, visible
-  contact routes on file, and limited queue insight signals when they support a
-  concrete operational/contact-path observation.
-- Observation-led drafting still blocks when no valid observation exists, even
-  after candidate generation is available.
-- Weak evidence now blocks cleanly with structured reasons instead of inventing
-  category-level or salesy observation text.
-- Observation validation is now shared across save and regenerate paths, so
-  banned generic growth/agency language stays blocked even if manually entered.
+- Added a bounded territory overlay on the discovery map using real persisted
+  search and lead data instead of session-only coverage circles alone.
+- Overlay data is built from stored area-search history, AREA planner rows, and
+  stored prospect coordinates, then rendered as coarse neighborhood guidance
+  cells on the Leaflet map.
+- The map now helps the operator see:
+  where searches have already clustered, where leads are concentrated, and
+  which cells look underworked versus duplicate-heavy.
+- Territory cells stay truthful and coarse:
+  they are guidance for local exploration, not exact neighborhood boundaries.
+- Operator flow remains deliberate:
+  the overlay can set the search circle to a chosen cell, but it does not auto-run
+  discovery or change the underlying discovery pipeline.
+
+Commit: `PENDING_COMMIT`
+
+## Previous Completed Pass
+Pass 51 -- Observation Autowrite + Candidate Approval Layer
 
 Commit: `aea9452`
 
-## Previous Completed Pass
-Pass 50a / 51a -- Stale Draft Refresh Workflow
-
-Commit: `5b43aaa`
-
 ## Next Pass
-Territory heatmap overlay
+Industry saturation view
 
 ## Protected Systems
 - `run_lead_engine.py`
@@ -54,18 +51,21 @@ Territory heatmap overlay
 
 ## Core Operator Workflow
 
-1. Discover businesses via map
-2. System can generate a grounded observation candidate when real lead evidence
+1. Review the discovery map for coarse territory coverage, lead clustering, and
+   underworked versus duplicate-heavy cells
+2. Set the search circle manually or from a territory cell, then run deliberate
+   area discovery
+3. System can generate a grounded observation candidate when real lead evidence
    is strong enough
-3. Operator reviews, uses, or edits the observation candidate, then saves the
+4. Operator reviews, uses, or edits the observation candidate, then saves the
    final observation to the lead row
-4. Observation-led first-touch drafting still blocks when there is no valid
+5. Observation-led first-touch drafting still blocks when there is no valid
    saved observation
-5. System generates observation-led first-touch drafts from the approved/saved
+6. System generates observation-led first-touch drafts from the approved/saved
    observation
-6. Operator reviews, approves, or schedules for tomorrow morning
-7. Emails are sent manually via Gmail
-8. Follow-up drafting only proceeds when the lead record has grounded
+7. Operator reviews, approves, or schedules for tomorrow morning
+8. Emails are sent manually via Gmail
+9. Follow-up drafting only proceeds when the lead record has grounded
    continuation context
-9. Weak or generic follow-ups block instead of auto-queuing generic nurture copy
-10. Clients onboard to missed-call texting service
+10. Weak or generic follow-ups block instead of auto-queuing generic nurture copy
+11. Clients onboard to missed-call texting service
