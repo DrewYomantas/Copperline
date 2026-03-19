@@ -1,19 +1,16 @@
 # Current Build Pass
 
 ## Active System
-Pass 50 -- Follow-Up System Rebuild
+Pass 50a / 51a -- Stale Draft Refresh Workflow
 
 ## Status
-Pass 50 complete.
+Pass 50a / 51a complete.
 
 ---
 
-## Completed: Pass 50 -- Follow-Up System Rebuild -- `4ab7bd5`
+## Completed: Pass 50a / 51a -- Stale Draft Refresh Workflow -- `pending`
 
-Product changes across four files:
-- `lead_engine/outreach/followup_draft_agent.py` (new)
-- `lead_engine/outreach/followup_scheduler.py`
-- `lead_engine/dashboard_server.py`
+Product changes across one code file:
 - `lead_engine/dashboard_static/index.html`
 
 Docs updated in:
@@ -27,94 +24,59 @@ No email sender core changes. No scheduler timing changes.
 
 ### Problem addressed
 
-Follow-up copy had split entry points and still leaned on generic sequence-style
-language. The scheduler path and direct-send path did not share the same
-grounding rules, and weak-context rows could still drift toward swappable,
-agency-flavored copy instead of a real continuation tied to the lead record.
+Stale outreach rows were correctly blocked from sending, but the operator path
+to fix them still required too much back-and-forth inside the review panel.
+Rows that needed an observation and regenerate step did not have a direct queue
+action, did not auto-land on the observation field, and did not provide a fast
+way to move to the next stale row once one draft was repaired.
 
 ### What was added
 
-**`lead_engine/outreach/followup_draft_agent.py`** (new)
-
-New deterministic follow-up planner:
-- `build_followup_plan(row, touch_num)` returns `{ subject, body, angle_family,
-  angle_label, context }` or raises `FollowupBlockedError`.
-- Uses only safe current lead context:
-  current observation, obs history, timeline event detail, conversation notes,
-  conversation next step, send timing, contact history, and email-path gating.
-- Explicit angle families:
-  - `observation_continuation`
-  - `operational_nudge`
-  - `note_reframe`
-  - `timeline_reframe`
-  - `low_pressure_closeout`
-- Validation blocks:
-  - banned buzzwords / automation / agency language
-  - hard CTA language
-  - first-touch/opening drift
-  - missing lead-context overlap
-  - swappable generic copy
-  - overlong follow-up bodies
-- Structured blocked reasons:
-  `insufficient_context`, `generic_context`,
-  `invalid_banned_language`, `invalid_hard_cta`,
-  `invalid_generic_copy`, `invalid_missing_context_overlap`,
-  `invalid_not_continuation`, `invalid_too_long`,
-  `contact_path_not_email`
-
-**`lead_engine/outreach/followup_scheduler.py`**
-
-- Kept the scheduler's timing/eligibility mechanics intact.
-- Replaced inline follow-up copy generation with `build_followup_plan(...)`.
-- Rows with weak context now increment `blocked` / `blocked_reasons` and are skipped.
-- Dry run output now includes angle family when a row is actually ready.
-
-**`lead_engine/dashboard_server.py`**
-
-- `POST /api/run_followups_dry_run` now returns both ready previews and blocked previews.
-- `GET /api/followup_queue` now annotates rows with:
-  `followup_copy_ready`, `followup_angle_family`, `followup_angle_label`,
-  `followup_context_source`, `followup_blocked_reason`,
-  `followup_blocked_message`.
-- `POST /api/send_followup` now uses the shared planner and returns
-  structured blocked errors instead of sending generic copy.
-- Successful direct sends now record `EVT_FOLLOWUP_SENT`.
-
 **`lead_engine/dashboard_static/index.html`**
 
-- Follow-Up run toast now reports blocked rows when nothing queues.
-- Dry-run console preview now prints both ready rows and blocked rows.
-- Follow-Up cards now show angle/source metadata when copy is ready.
-- Follow-Up cards now show grounded-context blocker text when copy is not ready.
-- Auto-send button is hidden for rows that are not due or do not have safe
-  follow-up copy ready; manual workflow remains available.
+- Queue rows that need refresh now show a dedicated stale action:
+  `Add Obs` when no observation is on file, `Refresh` when one exists.
+- That action opens the existing review panel with refresh intent and focuses the
+  observation textarea so the operator can fix the row immediately.
+- The existing "Refresh before send" panel block now includes direct stale-repair
+  actions:
+  - `Add/Edit observation`
+  - `Regenerate now`
+  - `Next stale` when another stale row exists in the current review set
+- The review flow bar now shows stale-specific actions and adds
+  `Regen + Next Stale` when the current row already has an observation.
+- Review session chrome now surfaces stale-row counts so operators can see how
+  much stale cleanup remains in the current set.
+- Failed regenerate attempts keep the operator on the observation field and show
+  the blocked reason in-panel; successful regenerates can advance directly to the
+  next stale row without closing the panel.
 
 ### What remains intentionally out of scope
 
 - Scheduler timing model and due-date math
-- Existing `compute_followup_status()` timing behavior
+- Send Approved behavior or Gmail/manual send flow
 - Queue schema redesign
-- Generic nurture / sequence automation
+- Auto-generation of observations
+- Hidden or automatic bulk draft rewrites
 - Protected send-path rewrites
 
 ### Verification
 
-- `python` import check: `outreach.followup_draft_agent`,
-  `outreach.followup_scheduler`, and `dashboard_server` all import clean.
 - Dashboard JS extracted and `new vm.Script(...)` parses clean.
-- Flask test client:
-  - `POST /api/run_followups_dry_run` -> `200`, current local queue returns `count=0`
-    and `blocked_count=0` under the existing scheduler timing gates.
-  - `GET /api/followup_queue` -> `200`, current local queue returns `total=50`.
-  - Real blocked send check: `POST /api/send_followup` for current due row
-    `Lars Plumbing` returns `422` with `blocked_reason=insufficient_context`
-    before any email send attempt.
-- Deterministic sample follow-up planning verified for:
-  - step 1 `operational_nudge`
-  - step 2 `timeline_reframe`
+- Live local app endpoints:
+  - `GET /api/status` -> `200`, current draft version `v9`
+  - `GET /api/queue` -> `200`, current local queue `180` rows with `130` stale
+    rows under the existing stale rules
+  - served dashboard HTML contains the new stale-refresh hooks:
+    `openPanelForRefresh`, `panelJumpNextStale`,
+    `panelRegenerateAndNextStale`
+- Real blocked regenerate check on stale row `Integrity Auto Care`:
+  `POST /api/regenerate_draft` -> `400` with
+  `blocked_reason=observation_missing`, confirming observation-led regeneration
+  remains enforced.
 
 ---
 
-## Previous Completed: Pass 49 -- Observation Model Expansion -- `pending`
+## Previous Completed: Pass 50 -- Follow-Up System Rebuild -- `4ab7bd5`
 
-- Added observation grading, obs history, why-this-lead-now, and contact-path recommendation.
+- Added deterministic, context-aware follow-up drafting with explicit angle families and stronger blocking.

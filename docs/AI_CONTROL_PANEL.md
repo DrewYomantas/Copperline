@@ -1,6 +1,6 @@
 # Copperline AI Control Panel
 
-Last Updated: 2026-03-18
+Last Updated: 2026-03-19
 Repository Version: v0.2
 
 ---
@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 50 -- Follow-Up System Rebuild (complete)
+Pass 50a / 51a -- Stale Draft Refresh Workflow (complete)
 
 ## Last Completed Pass
-Pass 50 -- Follow-Up System Rebuild
+Pass 50a / 51a -- Stale Draft Refresh Workflow
 
-Commit: `4ab7bd5`
+Commit: `pending`
 
 ## Next Pass
 Territory heatmap overlay
@@ -70,11 +70,12 @@ track replies, convert to clients, deploy missed-call texting.
 - No build steps - frontend is a single HTML file with CDN dependencies only
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Follow-up drafting now blocks when lead-specific continuation context is weak
+- Stale first-touch rows now have a direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 
 ---
 
-## Lifecycle Event Registry (as of Pass 50)
+## Lifecycle Event Registry (as of Pass 50a / 51a)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

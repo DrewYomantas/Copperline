@@ -1566,6 +1566,7 @@ let panelSaveInFlight = false;
 let panelRowsKeys = [];
 let panelRowKey = '';
 let panelSessionLabel = '';
+let panelOpenIntent = '';
 let _panelMousedownOnBackdrop = false; // Pass 37: drag-close guard
 let status_draft_version = '';
 
@@ -1667,6 +1668,22 @@ function _leadStatusMeta(record) {
 function _leadNeedsDraftRefresh(record) {
   if (!record || record.isSent) return false;
   return !!(record.isStale || (record.subject && !record.observation));
+}
+
+function _rowNeedsDraftRefresh(row) {
+  return _leadNeedsDraftRefresh(_leadRecord(row));
+}
+
+function _panelNextMatchingIndex(rows, startIdx, predicate) {
+  if (!Array.isArray(rows) || !rows.length) return -1;
+  for (let i = startIdx + 1; i < rows.length; i += 1) {
+    if (predicate(rows[i])) return i;
+  }
+  return -1;
+}
+
+function _panelNextStaleIndex(rows, startIdx) {
+  return _panelNextMatchingIndex(rows, startIdx, row => _rowNeedsDraftRefresh(row));
 }
 
 function _leadHistoryWhen(ts) {
@@ -2005,6 +2022,7 @@ function _panelRenderSessionChrome(rows, fi) {
   const stats = _panelSessionStats(rows);
   const total = rows.length;
   const remaining = Math.max(total - fi - 1, 0);
+  const staleCount = rows.filter(row => _rowNeedsDraftRefresh(row)).length;
   titleEl.textContent = panelSessionLabel || _panelFilterLabel(currentFilter);
   metaEl.innerHTML =
     `<span class="panel-session-chip">${total} in set</span>` +
@@ -2012,8 +2030,11 @@ function _panelRenderSessionChrome(rows, fi) {
     `<span class="panel-session-chip">${stats.pending} pending</span>` +
     `<span class="panel-session-chip">${stats.approved} approved</span>` +
     `<span class="panel-session-chip">${stats.scheduled} scheduled</span>` +
+    (staleCount ? `<span class="panel-session-chip">${staleCount} stale</span>` : '') +
     (stats.noEmail ? `<span class="panel-session-chip">${stats.noEmail} no email</span>` : '');
-  shortcutsEl.innerHTML = '←/→ move • A approve • Shift+A approve+next • S schedule • Shift+S schedule+next • U unschedule • N next';
+  shortcutsEl.innerHTML = staleCount
+    ? '←/→ move • A approve • Shift+A approve+next • S schedule • Shift+S schedule+next • U unschedule • N next • stale rows: use Refresh / Regen + Next Stale'
+    : '←/→ move • A approve • Shift+A approve+next • S schedule • Shift+S schedule+next • U unschedule • N next';
 }
 
 function _panelRenderFlowActions(row) {
@@ -2026,10 +2047,25 @@ function _panelRenderFlowActions(row) {
   const record = _leadRecord(row);
   const guidance = _leadControlGuidance(record);
   const hasNext = panelIdx >= 0 && panelIdx < (_panelCurrentRows().length - 1);
+  const nextStaleIdx = _panelNextStaleIndex(_panelCurrentRows(), panelIdx);
   const canApprove = !!((row.to_email || '').trim().includes('@'));
   const isApproved = String(row.approved || '').toLowerCase() === 'true';
   const isScheduled = !!(row.send_after || '').trim();
+  const needsRefresh = _leadNeedsDraftRefresh(record);
+  const hasObservation = !!((row.business_specific_observation || '').trim());
   const buttons = [];
+  if (needsRefresh) {
+    buttons.push(`<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelFocusObservation(${hasObservation ? 'false' : 'true'})">${hasObservation ? 'Edit Observation' : 'Add Observation'}</button>`);
+    if (hasObservation) {
+      buttons.push('<button class="btn btn-secondary" style="font-size:11px;padding:5px 10px" onclick="panelRegenerateDraft()">Regenerate Now</button>');
+      if (nextStaleIdx >= 0) {
+        buttons.push('<button class="btn btn-secondary" style="font-size:11px;padding:5px 10px" onclick="panelRegenerateAndNextStale()">Regen + Next Stale</button>');
+      }
+    }
+    if (nextStaleIdx >= 0) {
+      buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelJumpNextStale()">Next Stale →</button>');
+    }
+  }
   if (!isApproved && canApprove) {
     buttons.push('<button class="btn btn-success" style="font-size:11px;padding:5px 10px" onclick="panelApproveAndNext()">Approve + Next</button>');
   }
@@ -2057,6 +2093,17 @@ function _panelAdvanceAfterAction(doneLabel) {
     return true;
   }
   toast(`${doneLabel} — end of review set`, 'ok');
+  return false;
+}
+
+function _panelAdvanceToIndex(targetIdx, doneLabel, refreshIntent) {
+  const rows = _panelCurrentRows();
+  if (targetIdx >= 0 && targetIdx < rows.length) {
+    if (refreshIntent) panelOpenIntent = 'refresh';
+    openPanel(targetIdx, rows, panelSessionLabel);
+    return true;
+  }
+  toast(doneLabel, 'info');
   return false;
 }
 
@@ -2106,6 +2153,16 @@ async function panelUnapproveAndNext() {
   const isApproved = String(row.approved || '').toLowerCase() === 'true';
   if (wasApproved && !isApproved) return _panelAdvanceAfterAction('Unapproved');
   return false;
+}
+
+async function panelJumpNextStale() {
+  if (_panelHasPendingSave()) {
+    toast('Wait for the current draft save to finish first.', 'info');
+    return false;
+  }
+  const rows = _panelCurrentRows();
+  const nextIdx = _panelNextStaleIndex(rows, panelIdx);
+  return _panelAdvanceToIndex(nextIdx, 'No more stale rows in this review set', true);
 }
 
 function _panelSyncOpenState() {
@@ -2402,6 +2459,8 @@ function renderTable() {
     const actionable = isRowActionable(row);
     const scheduled = isRowScheduled(row);
     const bulkSelectable = isRowBulkSelectable(row);
+    const needsRefresh = _rowNeedsDraftRefresh(row);
+    const refreshLabel = (row.business_specific_observation || '').trim() ? 'Refresh' : 'Add Obs';
     const approveBtn = row.sent_at
       ? `<span style="color:var(--dim);font-size:10px">sent</span>`
       : row.approved === 'true'
@@ -2425,6 +2484,7 @@ function renderTable() {
       <td class="td-actions" onclick="event.stopPropagation()">
         <div class="row-acts">
           ${approveBtn}
+          ${needsRefresh ? `<button class="act act-edit" onclick="event.stopPropagation();openPanelForRefresh(${fi})" title="Open directly to observation + regenerate flow">${refreshLabel}</button>` : ''}
           <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
           ${actionable && !row.send_after ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowSchedule(${gi},${JSON.stringify(row.business_name)})" title="Schedule for tomorrow morning window">🕐</button>` : ''}
           ${scheduled ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowUnschedule(${gi},${JSON.stringify(row.business_name)})" title="Clear schedule">✕Sched</button>` : ''}
@@ -2453,6 +2513,11 @@ function toggleExtraFilters(btn) {
 }
 
 // ── Review Panel ──────────────────────────────────────────────────────────────
+function openPanelForRefresh(fi, rowsCtx, sessionLabel) {
+  panelOpenIntent = 'refresh';
+  openPanel(fi, rowsCtx, sessionLabel);
+}
+
 function openPanel(fi, rowsCtx, sessionLabel) {
   const rows = Array.isArray(rowsCtx) && rowsCtx.length ? rowsCtx : filteredRows;
   panelRowsKeys = _panelSnapshotKeys(rows);
@@ -2471,11 +2536,32 @@ function openPanel(fi, rowsCtx, sessionLabel) {
   document.getElementById('panel-overlay').classList.add('open');
 }
 
+function panelFocusObservation(selectAll) {
+  const obsInput = document.getElementById('panel-obs-input');
+  if (!obsInput || obsInput.disabled) return false;
+  const value = obsInput.value || '';
+  obsInput.focus();
+  obsInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  if (selectAll || !value.trim()) obsInput.select();
+  else obsInput.setSelectionRange(value.length, value.length);
+  return true;
+}
+
+function _panelConsumeOpenIntent(row) {
+  const intent = panelOpenIntent;
+  panelOpenIntent = '';
+  if (intent !== 'refresh') return;
+  window.setTimeout(() => {
+    panelFocusObservation(!((row.business_specific_observation || '').trim()));
+  }, 20);
+}
+
 async function fillPanel(row, fi, totalRows) {
   const rows = _panelCurrentRows();
   const total = totalRows || rows.length || filteredRows.length;
   const record = _leadRecord(row);
   const controlGuidance = _leadControlGuidance(record);
+  const nextStaleIdx = _panelNextStaleIndex(rows, fi);
   document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
   document.getElementById('panel-pos').textContent = `${fi+1} / ${total}`;
   document.getElementById('btn-prev').disabled = fi === 0;
@@ -2546,6 +2632,7 @@ async function fillPanel(row, fi, totalRows) {
 
   // ── Observation field (Pass 36) ───────────────────────────────────────────
   _panelPopulateObs(row);
+  _panelConsumeOpenIntent(row);
 
   // ── Schedule info block ───────────────────────────────────────────────────
   const schedEl = document.getElementById('panel-schedule-info');
@@ -2566,10 +2653,21 @@ async function fillPanel(row, fi, totalRows) {
         `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
       schedEl.style.display = '';
     } else if (needsRefresh && !row.sent_at) {
+      const hasObservation = !!((row.business_specific_observation || '').trim());
+      const refreshButtons = [
+        `<button class="btn-sched-act" onclick="panelFocusObservation(${hasObservation ? 'false' : 'true'})">${hasObservation ? 'Edit observation' : 'Add observation'}</button>`,
+      ];
+      if (hasObservation) {
+        refreshButtons.push('<button class="btn-sched-act" onclick="panelRegenerateDraft()">Regenerate now</button>');
+      }
+      if (nextStaleIdx >= 0) {
+        refreshButtons.push('<button class="btn-sched-act" onclick="panelJumpNextStale()">Next stale</button>');
+      }
       schedEl.className = 'panel-sched-info pending-review';
       schedEl.innerHTML =
         `<span class="sched-time">Refresh before send</span>` +
-        `<div class="sched-sub">${escHtml(record.nextAction || 'Regenerate draft before sending.')} - ${escHtml(queueMeta.detail || 'Draft version is behind current prompt.')}</div>`;
+        `<div class="sched-sub">${escHtml(record.nextAction || 'Regenerate draft before sending.')} - ${escHtml(queueMeta.detail || 'Draft version is behind current prompt.')}</div>` +
+        refreshButtons.join('');
       schedEl.style.display = '';
     } else if (row.approved === 'true' && !row.sent_at) {
       schedEl.className = 'panel-sched-info ready-now';
@@ -2769,6 +2867,7 @@ function closePanel(force) {
   panelRowsKeys = [];
   panelRowKey = '';
   panelSessionLabel = '';
+  panelOpenIntent = '';
 }
 
 // Pass 37 — backdrop close with drag-select guard
@@ -2964,9 +3063,10 @@ function panelObsChanged(value) {
   obsHint.className = 'obs-hint';
 }
 
-async function panelRegenerateDraft() {
+async function panelRegenerateDraft(opts) {
+  const options = opts || {};
   const row = _panelCurrentRow();
-  if (!row) return;
+  if (!row) return false;
 
   const obsInput  = document.getElementById('panel-obs-input');
   const regenBtn  = document.getElementById('panel-regen-btn');
@@ -2979,11 +3079,12 @@ async function panelRegenerateDraft() {
     regenStat.textContent = 'Observation required — add a specific business detail first.';
     regenStat.className   = 'obs-regen-status obs-err';
     obsInput.classList.add('obs-blocked');
-    return;
+    panelFocusObservation(true);
+    return false;
   }
 
   const gi = allRows.indexOf(row);
-  if (gi < 0) { toast('Cannot locate row — refresh queue', 'err'); return; }
+  if (gi < 0) { toast('Cannot locate row — refresh queue', 'err'); return false; }
 
   regenBtn.disabled     = true;
   regenStat.textContent = 'Regenerating…';
@@ -3005,12 +3106,13 @@ async function panelRegenerateDraft() {
         if (obsReqTag) obsReqTag.textContent = 'required for draft';
         obsHint.textContent = res.error || 'Observation is required to generate a draft.';
         obsHint.className   = 'obs-hint obs-hint-blocked';
+        panelFocusObservation(true);
       } else {
         regenStat.textContent = 'Draft invalid: ' + (res.error || 'Unknown error.');
         regenStat.className   = 'obs-regen-status obs-err';
       }
       regenBtn.disabled = false;
-      return;
+      return false;
     }
 
     // Success — update in-memory row and panel fields
@@ -3051,13 +3153,27 @@ async function panelRegenerateDraft() {
     regenStat.className   = 'obs-regen-status obs-ok';
 
     renderTable();
-    toast('Draft rebuilt from observation', 'ok');
+    if (!options.suppressToast) toast('Draft rebuilt from observation', 'ok');
+    return true;
   } catch (err) {
     regenStat.textContent = 'Error: ' + err.message;
     regenStat.className   = 'obs-regen-status obs-err';
+    return false;
+  } finally {
+    regenBtn.disabled = false;
   }
+}
 
-  regenBtn.disabled = false;
+async function panelRegenerateAndNextStale() {
+  const ok = await panelRegenerateDraft({ suppressToast: true });
+  if (!ok) return false;
+  const rows = _panelCurrentRows();
+  const nextIdx = _panelNextStaleIndex(rows, panelIdx);
+  if (_panelAdvanceToIndex(nextIdx, 'Draft rebuilt — no more stale rows in this review set', true)) {
+    toast('Draft rebuilt — moved to next stale row', 'ok');
+    return true;
+  }
+  return false;
 }
 
 // ── Pass 49: Obs history load + toggle ───────────────────────────────────────

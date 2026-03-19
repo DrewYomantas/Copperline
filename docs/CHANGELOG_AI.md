@@ -1,4 +1,64 @@
-﻿### 2026-03-18 - Pass 50: Follow-Up System Rebuild
+﻿### 2026-03-19 - Pass 50a / 51a: Stale Draft Refresh Workflow
+
+**Goal:** Make stale first-touch outreach rows faster to repair from the queue
+and review panel without weakening observation-led drafting rules or changing
+send/scheduler behavior.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`lead_engine/dashboard_static/index.html`:
+- Added a dedicated stale row action in the Outreach queue:
+  - `Add Obs` when the row has no saved observation
+  - `Refresh` when the row already has an observation but still needs rebuild
+- Added `openPanelForRefresh(...)` so stale rows open the existing review panel
+  directly into observation-edit mode instead of forcing extra clicks.
+- Added stale-aware review helpers:
+  - `panelFocusObservation(...)`
+  - `_panelNextStaleIndex(...)`
+  - `panelJumpNextStale()`
+  - `panelRegenerateAndNextStale()`
+- Updated the existing "Refresh before send" panel block to show direct stale
+  actions:
+  - `Add/Edit observation`
+  - `Regenerate now`
+  - `Next stale` when another stale row exists in the current review set
+- Updated the review flow bar so stale rows can use `Regen + Next Stale`
+  without closing the panel.
+- Review session chrome now shows stale-row counts to make cleanup progress
+  visible during review.
+- Regenerate failures now keep the operator focused on the observation field and
+  surface the blocked reason in-panel; no backend-only failure state.
+
+**Design decisions:**
+- Did not change `dashboard_server.py`.
+- Did not change `email_draft_agent.py`.
+- Did not change queue schema order/names.
+- Did not change scheduler timing or due-date math.
+- Did not add auto-observation generation or silent bulk regeneration.
+
+**Verification:**
+- Dashboard JS parses clean via `new vm.Script(...)`.
+- Live local app:
+  - `GET /api/status` -> `200` with current draft version `v9`
+  - `GET /api/queue` -> `200` with `180` rows and `130` stale rows under current rules
+  - served HTML includes `openPanelForRefresh`, `panelJumpNextStale`,
+    and `panelRegenerateAndNextStale`
+- Real stale-row block preserved:
+  `POST /api/regenerate_draft` for `Integrity Auto Care` -> `400` with
+  `blocked_reason=observation_missing`
+
+**Commit:** `pending`
+
+---
+
+### 2026-03-18 - Pass 50: Follow-Up System Rebuild
 
 **Goal:** Rebuild follow-up drafting so follow-ups become grounded, state-aware
 continuation messages tied to the actual lead record, with deterministic blocking

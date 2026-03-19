@@ -1,6 +1,6 @@
 # Copperline Project State
 
-Last Updated: 2026-03-18
+Last Updated: 2026-03-19
 
 ## Copperline Version
 v0.2
@@ -15,36 +15,30 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 50 -- Follow-Up System Rebuild
+Pass 50a / 51a -- Stale Draft Refresh Workflow
 
-- Added `lead_engine/outreach/followup_draft_agent.py`: deterministic follow-up
-  planner with five explicit angle families:
-  `observation_continuation`, `operational_nudge`, `note_reframe`,
-  `timeline_reframe`, `low_pressure_closeout`.
-- Follow-up planning now consumes safe lead context when present:
-  current observation, observation history, timeline event detail,
-  conversation notes / next step, send timing, contact history, and email-path gating.
-- Generic or weak follow-ups now block with structured reasons instead of falling
-  back to reusable sequence copy (`insufficient_context`, `generic_context`,
-  invalid copy reasons).
-- `outreach/followup_scheduler.py` keeps its timing/eligibility flow but now
-  calls the shared planner, counts blocked rows separately, and queues nothing
-  when grounded continuation context is missing.
-- `dashboard_server.py` routes now share the same planner:
-  `/api/run_followups_dry_run`, `/api/followup_queue`, and `/api/send_followup`.
-  `api_send_followup` now records `EVT_FOLLOWUP_SENT` on success.
-- `index.html` Follow-Up tab now shows angle/source metadata when copy is ready,
-  shows grounded-context blockers when it is not, and removes auto-send for rows
-  that are not due or do not have safe follow-up copy ready.
-- No queue schema reorder/rename changes. No `run_lead_engine.py` changes.
-  No email sender core changes. No scheduler timing changes.
+- Kept stale-draft detection and observation-led regeneration rules intact;
+  no scheduler timing, send-path, or queue schema changes.
+- `lead_engine/dashboard_static/index.html` now adds a direct queue-row stale
+  action (`Add Obs` / `Refresh`) that opens the existing review panel straight
+  into the observation field instead of forcing extra panel hops.
+- The review panel stale state now exposes refresh-specific actions inside the
+  existing "Refresh before send" block:
+  `Add/Edit observation`, `Regenerate now`, and `Next stale` when another stale
+  row exists in the current review set.
+- Review-session chrome now surfaces stale-row counts, and stale rows gain a
+  dedicated `Regen + Next Stale` flow action to help operators move through
+  refresh work without weakening approval/send safeguards.
+- Regeneration failures remain blocked by observation-led rules and now keep the
+  operator anchored on the observation field with visible UI error text instead
+  of feeling like a backend-only failure.
 
-Commit: `4ab7bd5`
+Commit: `pending`
 
 ## Previous Completed Pass
-Pass 49 -- Observation Model Expansion
+Pass 50 -- Follow-Up System Rebuild
 
-Commit: pending
+Commit: `4ab7bd5`
 
 ## Next Pass
 Territory heatmap overlay
