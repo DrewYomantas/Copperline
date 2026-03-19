@@ -15,28 +15,27 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 52 -- Territory Heatmap Overlay
+Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
 
-- Added a bounded territory overlay on the discovery map using real persisted
-  search and lead data instead of session-only coverage circles alone.
-- Overlay data is built from stored area-search history, AREA planner rows, and
-  stored prospect coordinates, then rendered as coarse neighborhood guidance
-  cells on the Leaflet map.
-- The map now helps the operator see:
-  where searches have already clustered, where leads are concentrated, and
-  which cells look underworked versus duplicate-heavy.
-- Territory cells stay truthful and coarse:
-  they are guidance for local exploration, not exact neighborhood boundaries.
-- Operator flow remains deliberate:
-  the overlay can set the search circle to a chosen cell, but it does not auto-run
-  discovery or change the underlying discovery pipeline.
+- Fixed observation-candidate recovery when the live dashboard instance is stale
+  or missing the route: the panel now shows a clean operator-facing error or
+  blocked state instead of rendering raw Flask HTML.
+- Hardened discovery request handling so `/api/discover_area` and
+  `/api/discover_area_batch` failures surface their real API error text instead
+  of collapsing into vague "Connection error" messaging.
+- Kept the circle because current discovery endpoints are still radius-based,
+  but demoted it in the map UX so territory cells and "Use Cell" feel like the
+  primary way to choose the next search area.
+- Territory guidance remains truthful and coarse:
+  cells guide where to search next, while the circle remains the working search
+  geometry used by the existing discovery flow.
 
-Commit: `6285e65`
+Commit: `PENDING_COMMIT`
 
 ## Previous Completed Pass
-Pass 51 -- Observation Autowrite + Candidate Approval Layer
+Pass 52 -- Territory Heatmap Overlay
 
-Commit: `aea9452`
+Commit: `6285e65`
 
 ## Next Pass
 Industry saturation view
@@ -53,8 +52,8 @@ Industry saturation view
 
 1. Review the discovery map for coarse territory coverage, lead clustering, and
    underworked versus duplicate-heavy cells
-2. Set the search circle manually or from a territory cell, then run deliberate
-   area discovery
+2. Load a territory cell into the working circle or place the circle manually,
+   then fine-tune radius and run deliberate area discovery
 3. System can generate a grounded observation candidate when real lead evidence
    is strong enough
 4. Operator reviews, uses, or edits the observation candidate, then saves the

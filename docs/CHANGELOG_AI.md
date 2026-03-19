@@ -1755,3 +1755,67 @@ operator can choose the next area to search more deliberately.
 **Commit:** `6285e65`
 
 ---
+### 2026-03-19 - Pass 52a: Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
+
+**Goal:** Fix the observation-candidate panel's raw HTML failure mode, make
+discovery errors surface clearly, and bring the map interaction back in line
+with Pass 52's territory-cell workflow without rewriting discovery itself.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+- `docs/DISCOVERY_MAP_VISION.md`
+
+**What changed:**
+
+`lead_engine/dashboard_static/index.html`:
+- Hardened request/error recovery so observation candidate actions no longer
+  surface raw Flask HTML when the live dashboard instance responds with a
+  non-JSON error page.
+- Root cause fixed:
+  the frontend had been accepting non-JSON `404` HTML bodies from a stale
+  dashboard instance and piping them straight into the observation candidate
+  panel.
+- Observation candidate failures now resolve to clean operator-facing blocked
+  messaging, including route-unavailable wording for stale-route/stale-server
+  cases.
+- Discovery requests now use structured JSON handling for
+  `/api/discover_area` and `/api/discover_area_batch`, so real backend
+  validation or server errors no longer collapse into a vague
+  "Connection error".
+- Grid sweep and visible-area runs still preserve partial progress, but now
+  surface request-issue counts and the latest useful error text in status/toast
+  messaging.
+- Territory overlay copy now makes cells the preferred starting point for area
+  selection, while keeping the circle as the working search geometry used by
+  the current radius-based discovery endpoints.
+- `Use Cell`, reset, and initial map status messaging now reinforce the
+  territory-first workflow instead of the older circle-first framing.
+
+**Design decisions:**
+- Did not change `dashboard_server.py`.
+- Did not change queue schema order/names.
+- Did not change sender, scheduler timing, or send-path behavior.
+- Did not remove the circle because current discovery endpoints are still
+  center/radius-based.
+- Did not add hidden fallback behavior that fakes a successful observation or
+  discovery run.
+
+**Verification:**
+- Dashboard JS parses clean via `new vm.Script(...)`.
+- Flask test client:
+  - `POST /api/generate_observation_candidate` invalid row -> `400` JSON
+  - `POST /api/discover_area` missing coords -> `400` JSON
+  - `POST /api/discover_area_batch` missing coords -> `400` JSON
+  - `GET /api/map_territory_overlay` -> `200`
+- Live local app check on the already-running dashboard instance:
+  - `GET http://127.0.0.1:5000/api/map_territory_overlay` still returned `404`,
+    which matches the stale-server route mismatch this pass now hardens in the
+    UI instead of dumping raw HTML into the observation panel.
+
+**Commit:** `PENDING_COMMIT`
+
+---

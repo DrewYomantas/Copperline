@@ -12,12 +12,12 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 52 -- Territory Heatmap Overlay (complete)
+Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review (complete)
 
 ## Last Completed Pass
-Pass 52 -- Territory Heatmap Overlay
+Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
 
-Commit: `6285e65`
+Commit: `PENDING_COMMIT`
 
 ## Next Pass
 Industry saturation view
@@ -77,19 +77,22 @@ track replies, convert to clients, deploy missed-call texting.
 - Discovery must be intentional - no auto-search on pan or zoom
 - No build steps - frontend is a single HTML file with CDN dependencies only
 - Territory overlay uses coarse stored search centers and stored lead coordinates only - no fake neighborhood precision
+- Territory cells are the preferred guidance layer for area selection; the circle remains the working search geometry used by current discovery endpoints
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Observation-led drafting remains required
 - Generated observations are allowed only when grounded in real available lead context
 - Generated observations remain operator-reviewed by default during hardening
+- Observation candidate failures must surface as clean operator-facing blocked/error states - never raw HTML dumps
 - No hidden bulk observation mutation or auto-accept behavior is in scope
 - Territory cells may guide the operator to the next search area, but do not auto-run discovery
+- Discovery failures should surface the real operator-facing API error where available, not a generic connection label
 - Follow-up drafting blocks when lead-specific continuation context is weak
 - Stale first-touch rows still keep the direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 
 ---
 
-## Lifecycle Event Registry (as of Pass 52)
+## Lifecycle Event Registry (as of Pass 52a)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

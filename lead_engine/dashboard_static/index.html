@@ -1429,11 +1429,11 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <div class="mc-wrap">
   <div class="mc-section-hdr">
     <h2>🗺️ Map Area Search</h2>
-    <span class="mc-muted" style="font-size:12px">Click the map to set center, drag to adjust radius, then search</span>
+    <span class="mc-muted" style="font-size:12px">Start with a territory cell or click the map to place the working circle, then drag to adjust radius before searching</span>
     <span class="mc-muted" style="font-size:11px;display:block;margin-top:4px">Queue and draft creation are authoritative; map markers may be partial when source coordinates are unavailable.</span>
   </div>
   <div class="map-instructions">
-    Click anywhere on the map to place or move the search circle.
+    Start with <strong>Territory Overlay</strong> or <strong>Next Areas</strong> to find underworked cells, then use <strong>Use Cell</strong> or click the map to place the search circle.
     Drag the edge handle to resize the radius.
     Pick an industry and click <strong>Search This Area</strong>.
     Results accumulate across searches — click to reposition without clearing.
@@ -1462,7 +1462,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     <div class="map-grid-top">
       <div>
         <div class="map-grid-title">Search Area Grid</div>
-        <div class="map-grid-note">Runs the current circle as capped 1000m cells across one or more industries with one summarized history item.</div>
+        <div class="map-grid-note">Runs the current working circle as capped 1000m cells across one or more industries with one summarized history item.</div>
       </div>
       <div class="map-grid-actions">
         <span id="map-grid-summary" class="map-grid-summary">Draw a circle and pick industries to estimate the run.</span>
@@ -1653,9 +1653,41 @@ async function api(path, body) {
   const r = await fetch(path, opts);
   if (!r.ok) {
     const text = await r.text().catch(() => '');
-    throw new Error(`API ${path} returned ${r.status}: ${text.slice(0, 120)}`);
+    const contentType = r.headers.get('content-type') || '';
+    const message = _operatorApiError(path, r.status, text, contentType);
+    throw new Error(message);
   }
   return r.json();
+}
+
+function _operatorApiError(path, status, text, contentType) {
+  const raw = (text || '').trim();
+  const looksHtml =
+    /<!doctype html/i.test(raw) ||
+    /<html/i.test(raw) ||
+    /<body/i.test(raw) ||
+    /<title/i.test(raw) ||
+    /<\/[a-z][^>]*>/i.test(raw) ||
+    String(contentType || '').toLowerCase().includes('text/html');
+  if (looksHtml) {
+    if (status === 404) return `Route unavailable (${status}) for ${path}. Refresh the app or restart the dashboard server.`;
+    if (status >= 500) return `Server error (${status}) while calling ${path}. Check the dashboard server and try again.`;
+    return `Unexpected ${status} response from ${path}. Refresh the app and try again.`;
+  }
+  const cleaned = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (cleaned) return cleaned.slice(0, 220);
+  if (status >= 500) return `Server error (${status}) while calling ${path}.`;
+  return `Request failed (${status}) for ${path}.`;
+}
+
+function _operatorRequestError(err, fallback) {
+  const msg = (err && err.message ? String(err.message) : '').replace(/\s+/g, ' ').trim();
+  if (msg) return msg;
+  return fallback || 'Request failed. Check the dashboard server and try again.';
+}
+
+function _mapOperatorError(err, fallback) {
+  return _operatorRequestError(err, fallback);
 }
 
 async function apiJson(path, methodOrBody, maybeBody) {
@@ -1665,11 +1697,13 @@ async function apiJson(path, methodOrBody, maybeBody) {
     : {};
   const r = await fetch(path, opts);
   const text = await r.text().catch(() => '');
+  const contentType = r.headers.get('content-type') || '';
   let data = {};
   if (text) {
     try { data = JSON.parse(text); }
-    catch (_) { data = { ok: false, error: text.slice(0, 200) }; }
+    catch (_) { data = { ok: false, error: _operatorApiError(path, r.status, text, contentType) }; }
   }
+  if (!text && !r.ok) data = { ok: false, error: _operatorApiError(path, r.status, '', contentType) };
   if (typeof data.ok === 'undefined') data.ok = r.ok;
   data._httpStatus = r.status;
   return data;
@@ -3325,7 +3359,7 @@ async function panelGenerateObservationCandidate(opts) {
     row._obsCandidateState = {
       status: 'blocked',
       blocked_reason: 'candidate_error',
-      blocked_message: err.message || 'Candidate generation failed.',
+      blocked_message: _operatorRequestError(err, 'Candidate generation failed.'),
       evidence: [],
       source_labels: [],
     };
@@ -7600,13 +7634,23 @@ async function _mapLoadTerritoryOverlay(force) {
     return _mapTerritoryData;
   }
   try {
-    _mapTerritoryData = await api('/api/map_territory_overlay');
+    const res = await apiJson('/api/map_territory_overlay');
+    if (!res.ok) {
+      const wrap = document.getElementById('map-territory-legend');
+      if (wrap) {
+        wrap.innerHTML = `<div class="mtl-wrap"><div class="mtl-note">${escHtml(res.error || 'Failed to load territory overlay data.')}</div></div>`;
+        wrap.style.display = '';
+      }
+      return null;
+    }
+    _mapTerritoryData = res;
     _mapRenderTerritoryOverlay();
     return _mapTerritoryData;
   } catch (err) {
     const wrap = document.getElementById('map-territory-legend');
+    const message = _mapOperatorError(err, 'Failed to load territory overlay data.');
     if (wrap) {
-      wrap.innerHTML = `<div class="mtl-wrap"><div class="mtl-note">Failed to load territory overlay data.</div></div>`;
+      wrap.innerHTML = `<div class="mtl-wrap"><div class="mtl-note">${escHtml(message)}</div></div>`;
       wrap.style.display = '';
     }
     return null;
@@ -7637,7 +7681,9 @@ function _mapUseTerritoryCell(key) {
   _mapDrawCircle(_mapTerritoryNumber(cell.center_lat), _mapTerritoryNumber(cell.center_lng));
   const nextZoom = Math.max(_mapInstance.getZoom(), 13);
   _mapInstance.setView([cell.center_lat, cell.center_lng], nextZoom);
-  toast('Search circle moved to territory cell', 'ok');
+  const statusEl = document.getElementById('map-status');
+  if (statusEl) statusEl.textContent = 'Territory cell loaded into the working circle. Fine-tune the radius or search now.';
+  toast('Territory cell loaded into the search circle', 'ok');
 }
 
 function _mapAreaLabel(markers) {
@@ -8033,7 +8079,7 @@ function mapCancelAreaGrid() {
 }
 
 async function mapSearchAreaGrid() {
-  if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+  if (!_mapCenter) { toast('Choose a territory cell or place a circle first', 'err'); return; }
   if (_mapGridSweepActive) { toast('Grid sweep already running', 'err'); return; }
   const industries = _mapGridSelectedIndustriesList();
   if (!industries.length) { toast('Select at least one grid industry', 'err'); return; }
@@ -8067,6 +8113,8 @@ async function mapSearchAreaGrid() {
 
   let uniqueFound = 0;
   let callsDone = 0;
+  let requestErrors = 0;
+  let lastError = '';
 
   try {
     for (let cellIdx = 0; cellIdx < plan.cells.length; cellIdx++) {
@@ -8081,13 +8129,19 @@ async function mapSearchAreaGrid() {
         if (statusEl) statusEl.textContent = _mapGridStatus(cellIdx + 1, plan.cells.length, industryIdx + 1, industries.length, label, uniqueFound);
 
         try {
-          const res = await api('/api/discover_area', {
+          const res = await apiJson('/api/discover_area', {
             industry,
             lat: cell.lat,
             lng: cell.lng,
             radius_m: MAP_GRID_CELL_RADIUS_M,
             limit,
           });
+          if (!res.ok) {
+            requestErrors++;
+            lastError = res.error || 'Grid request failed.';
+            console.warn('[mapSearchAreaGrid] request failed', { cellIdx, industryIdx, cell, industry, res });
+            continue;
+          }
 
           if (res.markers && res.markers.length) {
             const fresh = res.markers.filter(biz => {
@@ -8103,6 +8157,8 @@ async function mapSearchAreaGrid() {
             }
           }
         } catch (e) {
+          requestErrors++;
+          lastError = _mapOperatorError(e, 'Grid request failed.');
           console.warn('[mapSearchAreaGrid] request error', { cellIdx, industryIdx, cell, industry, error: e });
         }
 
@@ -8154,11 +8210,18 @@ async function mapSearchAreaGrid() {
     _mapRenderPanel();
 
     if (statusEl) {
+      const issueSuffix = requestErrors ? ` — ${requestErrors} request issue${requestErrors === 1 ? '' : 's'}${lastError ? ` (${lastError})` : ''}` : '';
       statusEl.textContent = cancelled
-        ? `Grid cancelled — ${callsDone}/${plan.totalCalls} calls — ${uniqueFound} unique`
-        : `✓ Grid sweep complete — ${plan.cells.length} cells — ${industries.length} industries — ${uniqueFound} unique`;
+        ? `Grid cancelled — ${callsDone}/${plan.totalCalls} calls — ${uniqueFound} unique${issueSuffix}`
+        : `✓ Grid sweep complete — ${plan.cells.length} cells — ${industries.length} industries — ${uniqueFound} unique${issueSuffix}`;
     }
-    if (!cancelled) toast(`Grid sweep added ${uniqueFound} unique businesses across ${plan.cells.length} cells`, 'ok');
+    if (!cancelled) {
+      const tone = requestErrors ? 'info' : 'ok';
+      const msg = requestErrors
+        ? `Grid sweep added ${uniqueFound} unique businesses across ${plan.cells.length} cells with ${requestErrors} request issue${requestErrors === 1 ? '' : 's'}`
+        : `Grid sweep added ${uniqueFound} unique businesses across ${plan.cells.length} cells`;
+      toast(msg, tone);
+    }
     else toast(`Grid sweep cancelled after ${callsDone} call(s)`, 'info');
   }
 }
@@ -8199,15 +8262,27 @@ async function mapSearchVisible() {
 
   let totalFound = 0;
   let tilesDone  = 0;
+  let requestErrors = 0;
+  let lastError = '';
 
   for (const tile of tiles) {
     if (!_mapVisibleSearchActive) break; // cancelled
 
     statusEl.textContent = `Tile ${tilesDone + 1} / ${tiles.length} — searching ${industry}…`;
     try {
-      const res = await api('/api/discover_area', {
+      const res = await apiJson('/api/discover_area', {
         lat: tile.lat, lng: tile.lng, radius_m: 1000, industry, limit
       });
+      if (!res.ok) {
+        requestErrors++;
+        lastError = res.error || 'Visible-area request failed.';
+        console.warn('[mapSearchVisible] tile request failed', { tile, industry, res });
+        tilesDone++;
+        if (_mapVisibleSearchActive && tilesDone < tiles.length) {
+          await new Promise(r => setTimeout(r, 1200));
+        }
+        continue;
+      }
       if (res.ok && res.markers && res.markers.length) {
         // Filter through seen-keys to avoid duplicate markers
         const fresh = res.markers.filter(biz => {
@@ -8231,7 +8306,8 @@ async function mapSearchVisible() {
         }
       }
     } catch(e) {
-      // Non-fatal: log tile error, continue to next tile
+      requestErrors++;
+      lastError = _mapOperatorError(e, 'Visible-area request failed.');
       console.warn('[mapSearchVisible] tile error at', tile.lat, tile.lng, e);
     }
 
@@ -8261,10 +8337,17 @@ async function mapSearchVisible() {
   await _mapLoadTerritoryOverlay(true);
   btnSV.classList.remove('loading'); btnSV.disabled = !industry;
   if (btnCanc) btnCanc.style.display = 'none';
+  const issueSuffix = requestErrors ? ` — ${requestErrors} request issue${requestErrors === 1 ? '' : 's'}${lastError ? ` (${lastError})` : ''}` : '';
   statusEl.textContent = didCancel
-    ? `Cancelled — ${tilesDone} of ${tiles.length} tiles completed — ${totalFound} total found`
-    : `✓ Visible-area search complete — ${tiles.length} tiles — ${totalFound} total found`;
-  if (!didCancel) toast(`Visible-area search done — ${totalFound} results across ${tiles.length} tiles`, 'ok');
+    ? `Cancelled — ${tilesDone} of ${tiles.length} tiles completed — ${totalFound} total found${issueSuffix}`
+    : `✓ Visible-area search complete — ${tiles.length} tiles — ${totalFound} total found${issueSuffix}`;
+  if (!didCancel) {
+    const tone = requestErrors ? 'info' : 'ok';
+    const msg = requestErrors
+      ? `Visible-area search finished with ${totalFound} results and ${requestErrors} request issue${requestErrors === 1 ? '' : 's'}`
+      : `Visible-area search done — ${totalFound} results across ${tiles.length} tiles`;
+    toast(msg, tone);
+  }
 }
 
 // Step 8 — cancel: flag stops loop after current tile finishes
@@ -8282,7 +8365,7 @@ async function mapSearchExhaust() {
   if (_mapGridSweepActive || _mapVisibleSearchActive) { toast('Another discovery run is already active', 'err'); return; }
   const industry = document.getElementById('map-industry').value;
   if (!industry) { toast('Select an industry first', 'err'); return; }
-  if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+  if (!_mapCenter) { toast('Choose a territory cell or place a circle first', 'err'); return; }
   if (_exhaustSearchActive) { toast('Scan already running', 'err'); return; }
 
   _exhaustSearchActive = true;
@@ -8315,7 +8398,7 @@ async function mapSearchExhaust() {
   }, 4000);
 
   try {
-    const res = await api('/api/discover_area_batch', {
+    const res = await apiJson('/api/discover_area_batch', {
       industry,
       lat:      _mapCenter.lat,
       lng:      _mapCenter.lng,
@@ -8355,13 +8438,15 @@ async function mapSearchExhaust() {
       await loadAll();
       await _mapLoadTerritoryOverlay(true);
     } else {
-      if (statusEl) statusEl.textContent = 'Scan stopped.';
-      toast('Scan error: ' + (res.error || 'unknown'), 'err');
+      const message = res.error || 'Scan stopped.';
+      if (statusEl) statusEl.textContent = message;
+      toast(`Scan error: ${message}`, 'err');
     }
   } catch(e) {
     clearInterval(progressTimer);
-    if (statusEl) statusEl.textContent = 'Connection error.';
-    toast('Connection error during scan', 'err');
+    const message = _mapOperatorError(e, 'Discovery scan failed.');
+    if (statusEl) statusEl.textContent = message;
+    toast(message, 'err');
   } finally {
     _exhaustSearchActive = false;
     _mapUpdateGridControls();
@@ -8432,7 +8517,7 @@ function mapClearCircle() {
   const _btnEx2 = document.getElementById('btnExhaust');
   if (_btnEx2) _btnEx2.disabled = true;
   _mapUpdateGridControls();
-  document.getElementById('map-status').textContent = 'Circle cleared.';
+  document.getElementById('map-status').textContent = 'Circle cleared. Choose a territory cell or click the map to set a new search area.';
   document.getElementById('map-radius-label').textContent = '';
 }
 
@@ -8466,13 +8551,17 @@ function _mapInit() {
     // Results in the panel accumulate across searches; they're only cleared on Reset.
     _mapDrawCircle(e.latlng.lat, e.latlng.lng);
   });
+  const statusEl = document.getElementById('map-status');
+  if (statusEl && !statusEl.textContent.trim()) {
+    statusEl.textContent = 'Tip: start with Territory Overlay or Next Areas, then load a cell or place a circle to search.';
+  }
   setTimeout(() => { _mapInstance.invalidateSize(); console.log('[_mapInit] invalidateSize @50ms, size:', _mapInstance.getSize()); }, 50);
   setTimeout(() => _mapInstance.invalidateSize(), 300);
 }
 
 async function mapSearch() {
   if (_mapGridSweepActive || _mapVisibleSearchActive || _exhaustSearchActive) { toast('Another discovery run is already active', 'err'); return; }
-  if (!_mapCenter) { toast('Click the map to set a search area first','err'); return; }
+  if (!_mapCenter) { toast('Choose a territory cell or click the map to set a search area first','err'); return; }
   const industry = document.getElementById('map-industry').value;
   if (!industry) { toast('Select an industry first','err'); return; }
   const limit = parseInt(document.getElementById('map-limit').value) || 20;
@@ -8481,7 +8570,7 @@ async function mapSearch() {
   const statusEl = document.getElementById('map-status');
   statusEl.textContent = `Searching for ${industry} within ${_mapMetresToMiles(_mapRadiusM)} miles\u2026`;
   try {
-    const res = await api('/api/discover_area', {
+    const res = await apiJson('/api/discover_area', {
       industry, lat: _mapCenter.lat, lng: _mapCenter.lng,
       radius_m: _mapRadiusM, limit
     });
@@ -8517,10 +8606,15 @@ async function mapSearch() {
       _mapRenderHistory();
       await _mapLoadTerritoryOverlay(true);
     } else {
-      toast('Search error: ' + res.error, 'err');
-      statusEl.textContent = res.error || 'Search returned no new results.';
+      const message = res.error || 'Search returned no new results.';
+      toast(`Search error: ${message}`, 'err');
+      statusEl.textContent = message;
     }
-  } catch(e) { toast('Connection error','err'); statusEl.textContent = 'Connection error.'; }
+  } catch(e) {
+    const message = _mapOperatorError(e, 'Discovery search failed.');
+    toast(message, 'err');
+    statusEl.textContent = message;
+  }
   btn.classList.remove('loading'); btn.disabled = !_mapCenter;
 }
 
