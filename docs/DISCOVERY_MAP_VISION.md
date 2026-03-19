@@ -25,7 +25,9 @@ drafts are generated, and markers are placed on the map at their coordinates.
 
 This model keeps discovery deliberate. Territory cells help choose promising
 underworked areas, while the working circle keeps radius-based searches
-explicit and operator-controlled.
+explicit and operator-controlled. The map can now compare industry saturation
+inside the visible territory and the current working area before the operator
+chooses which search to run next.
 
 ---
 
@@ -93,6 +95,11 @@ area-search history, AREA planner rows, and stored prospect coordinates. It is
 coarse by design: the overlay shows territory cells, lead concentration, and
 worked-vs-underworked guidance, but it does not claim exact neighborhood or
 polygon precision.
+
+That territory layer now also drives a bounded industry saturation view. The
+operator can compare visible-territory industry coverage, best-next industry
+suggestions, and the current working-area industry mix using stored search,
+duplicate, planner, and lead counts only.
 
 What remains future-facing is a deeper saturation model, not the presence of
 territory guidance itself. The current system already supports truthful

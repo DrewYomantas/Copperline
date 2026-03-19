@@ -12,18 +12,18 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review (complete)
+Pass 53 -- Industry Saturation View (complete)
 
 ## Last Completed Pass
-Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
+Pass 53 -- Industry Saturation View
 
-Commit: `fdbd2fb`
+Commit: `PENDING_COMMIT`
 
 ## Next Pass
-Industry saturation view
+TBD
 
 ## Upcoming Passes
-- Industry saturation view
+- TBD
 
 ---
 
@@ -78,6 +78,7 @@ track replies, convert to clients, deploy missed-call texting.
 - No build steps - frontend is a single HTML file with CDN dependencies only
 - Territory overlay uses coarse stored search centers and stored lead coordinates only - no fake neighborhood precision
 - Territory cells are the preferred guidance layer for area selection; the circle remains the working search geometry used by current discovery endpoints
+- Industry saturation view uses only stored search, duplicate, planner, and lead counts per territory cell - no fake polygon completion model
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Observation-led drafting remains required
 - Generated observations are allowed only when grounded in real available lead context
@@ -86,13 +87,14 @@ track replies, convert to clients, deploy missed-call texting.
 - No hidden bulk observation mutation or auto-accept behavior is in scope
 - Territory cells may guide the operator to the next search area, but do not auto-run discovery
 - Discovery failures should surface the real operator-facing API error where available, not a generic connection label
+- Industry suggestions may guide the next search choice, but must not auto-run search or silently change territory state
 - Follow-up drafting blocks when lead-specific continuation context is weak
 - Stale first-touch rows still keep the direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 
 ---
 
-## Lifecycle Event Registry (as of Pass 52a)
+## Lifecycle Event Registry (as of Pass 53)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

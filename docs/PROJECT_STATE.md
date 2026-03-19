@@ -15,30 +15,29 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
+Pass 53 -- Industry Saturation View
 
-- Fixed observation-candidate recovery when the live dashboard instance is stale
-  or missing the route: the panel now shows a clean operator-facing error or
-  blocked state instead of rendering raw Flask HTML.
-- Hardened discovery request handling so `/api/discover_area` and
-  `/api/discover_area_batch` failures surface their real API error text instead
-  of collapsing into vague "Connection error" messaging.
-- Kept the circle because current discovery endpoints are still radius-based,
-  but demoted it in the map UX so territory cells and "Use Cell" feel like the
-  primary way to choose the next search area.
-- Territory guidance remains truthful and coarse:
-  cells guide where to search next, while the circle remains the working search
-  geometry used by the existing discovery flow.
+- Added a bounded industry saturation layer inside the discovery map workflow
+  using the existing coarse territory overlay data rather than inventing a new
+  polygon or county model.
+- The map now shows visible-territory industry coverage, best-next industry
+  suggestions, and working-area industry mix built from stored lead, search,
+  duplicate, and planner counts per territory cell.
+- Saturation remains heuristic and truthful:
+  labels are derived from stored area-search history, AREA planner rows, and
+  stored lead coordinates only.
+- Territory cells remain the primary guidance layer and the circle remains the
+  actual working search geometry used by current discovery endpoints.
+
+Commit: `PENDING_COMMIT`
+
+## Previous Completed Pass
+Pass 52a -- Observation Route Recovery + Discovery Connection Hardening + Circle Interaction Review
 
 Commit: `fdbd2fb`
 
-## Previous Completed Pass
-Pass 52 -- Territory Heatmap Overlay
-
-Commit: `6285e65`
-
 ## Next Pass
-Industry saturation view
+TBD
 
 ## Protected Systems
 - `run_lead_engine.py`
@@ -50,10 +49,11 @@ Industry saturation view
 
 ## Core Operator Workflow
 
-1. Review the discovery map for coarse territory coverage, lead clustering, and
-   underworked versus duplicate-heavy cells
+1. Review the discovery map for coarse territory coverage, industry saturation,
+   lead clustering, and underworked versus duplicate-heavy cells
 2. Load a territory cell into the working circle or place the circle manually,
-   then fine-tune radius and run deliberate area discovery
+   compare industry saturation in that area, then fine-tune radius and run
+   deliberate area discovery
 3. System can generate a grounded observation candidate when real lead evidence
    is strong enough
 4. Operator reviews, uses, or edits the observation candidate, then saves the

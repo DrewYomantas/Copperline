@@ -758,6 +758,18 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mtl-row-meta{font-size:10px;color:var(--dim);line-height:1.4}
 .mtl-row-act{border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;background:var(--blue);color:#fff;cursor:pointer;flex-shrink:0}
 .mtl-row-act:hover{background:#1e40af}
+.mtl-row.current{border-color:rgba(79,142,247,.35);background:var(--blue-glow)}
+.msat-section{display:flex;flex-direction:column;gap:6px}
+.msat-head{display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.msat-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.msat-sub{font-size:10px;color:var(--dim);line-height:1.45}
+.msat-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--muted);margin-left:6px}
+.msat-chip.underworked{background:#e9f9ef;border-color:#b8e7c7;color:#127a3f}
+.msat-chip.worked{background:#edf4ff;border-color:#c8dafc;color:#2f69d9}
+.msat-chip.saturated{background:#fff3e3;border-color:#f3d7ac;color:#a05a00}
+.msat-chip.light{background:#f3f4f6;border-color:#d6d8df;color:#4b5563}
+.msat-note{font-size:10px;color:var(--dim);line-height:1.45}
+.msat-empty{font-size:11px;color:var(--muted);padding:8px 10px;border:1px dashed var(--border);border-radius:var(--rs);background:var(--surface2)}
 .map-territory-popup{display:flex;flex-direction:column;gap:6px;min-width:210px}
 .map-territory-popup-title{font-size:12px;font-weight:700;color:#111}
 .map-territory-popup-sub{font-size:11px;color:#555}
@@ -1478,9 +1490,10 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
     <div class="map-territory-actions">
       <button id="btnMapTerritoryToggle" class="btn btn-secondary map-territory-btn active" onclick="mapToggleTerritoryOverlay()">◫ Territory Overlay</button>
       <button id="btnMapTerritoryNext" class="btn btn-ghost map-territory-btn" onclick="mapToggleTerritoryNextOnly()">★ Next Areas</button>
+      <button id="btnMapTerritorySaturation" class="btn btn-ghost map-territory-btn active" onclick="mapToggleIndustrySaturation()">◎ Industry Saturation</button>
       <button id="btnMapTerritoryRefresh" class="btn btn-coverage" onclick="mapReloadTerritoryOverlay()">↻ Refresh Overlay</button>
     </div>
-    <div class="map-territory-note">Coarse territory cells from stored area searches and stored lead coordinates. Use them for neighborhood guidance, not exact boundaries.</div>
+    <div class="map-territory-note">Coarse territory cells from stored area searches and stored lead coordinates. Use them for neighborhood guidance, then compare industries before choosing the next search.</div>
   </div>
   <div id="map-layout">
     <div id="map-container"></div>
@@ -7380,6 +7393,7 @@ let _mapTerritoryData = null;
 let _mapTerritoryLayer = null;
 let _mapTerritoryVisible = true;
 let _mapTerritoryNextOnly = false;
+let _mapTerritorySaturationVisible = true;
 let _mapTerritoryCellsByKey = new Map();
 const MAP_TERRITORY_MIN_LEADS = 2;
 
@@ -7441,6 +7455,165 @@ function _mapTerritoryCellStats(cell, industry) {
   };
 }
 
+function _mapTerritoryIndustryKeys(cell) {
+  return Array.from(new Set(
+    []
+      .concat(Object.keys(cell?.lead_industries || {}))
+      .concat(Object.keys(cell?.search_industries || {}))
+      .concat(Object.keys(cell?.search_ok_by_industry || {}))
+      .concat(Object.keys(cell?.search_duplicate_by_industry || {}))
+      .concat(Object.keys(cell?.search_found_by_industry || {}))
+      .concat(Object.keys(cell?.planner_checked_by_industry || {}))
+      .concat(Object.keys(cell?.planner_leads_by_industry || {}))
+      .map(v => String(v || '').trim().toLowerCase())
+      .filter(Boolean)
+  ));
+}
+
+function _mapTerritoryCellForPoint(lat, lng) {
+  if (!_mapTerritoryData || !Array.isArray(_mapTerritoryData.cells)) return null;
+  const latNum = _mapTerritoryNumber(lat);
+  const lngNum = _mapTerritoryNumber(lng);
+  return _mapTerritoryData.cells.find(cell =>
+    latNum >= _mapTerritoryNumber(cell.min_lat) &&
+    latNum < _mapTerritoryNumber(cell.max_lat) &&
+    lngNum >= _mapTerritoryNumber(cell.min_lng) &&
+    lngNum < _mapTerritoryNumber(cell.max_lng)
+  ) || null;
+}
+
+function _mapVisibleTerritoryCells() {
+  if (!_mapTerritoryData || !Array.isArray(_mapTerritoryData.cells) || !_mapInstance) return [];
+  const bounds = _mapInstance.getBounds();
+  return _mapTerritoryData.cells.filter(cell => {
+    const stats = _mapTerritoryCellStats(cell, '');
+    return _mapTerritoryCellRelevant(cell, stats) && _mapTerritoryIntersects(cell, bounds);
+  });
+}
+
+function _mapIndustrySaturationTone(row) {
+  // Aggregate visible-cell evidence into a coarse industry label. This stays
+  // truthful by using only stored lead, search, duplicate, and planner counts.
+  const leadSignals = row.leadSignals;
+  const thinYield = row.searchCount >= 3 && row.foundCount <= 1;
+  const duplicateHeavy = row.duplicateCount >= Math.max(2, Math.ceil(row.searchCount / 2));
+  if (row.nextCells >= 2 || (row.nextCells >= 1 && leadSignals >= 4 && row.workedCount <= 3)) {
+    return {
+      key: 'underworked',
+      label: 'Underworked',
+      note: 'Lead signals are present, but this industry has only light territory coverage here.',
+      score: (row.nextCells * 6) + leadSignals - (row.saturatedCells * 3) - row.duplicateCount,
+    };
+  }
+  if (row.saturatedCells >= 2 || (duplicateHeavy && thinYield) || (row.workedCount >= 5 && row.foundCount <= 2)) {
+    return {
+      key: 'saturated',
+      label: 'Saturated',
+      note: 'Search effort is repeating with thin or duplicate-heavy yield in the visible territory.',
+      score: -((row.saturatedCells * 5) + row.duplicateCount + row.searchCount),
+    };
+  }
+  if (row.workedCount > 0 || row.foundCount > 0 || leadSignals > 0) {
+    return {
+      key: 'worked',
+      label: 'Actively worked',
+      note: 'This industry already has meaningful search or planner coverage in the visible territory.',
+      score: (row.nextCells * 4) + leadSignals - (row.duplicateCount * 2),
+    };
+  }
+  return {
+    key: 'light',
+    label: 'Light signal',
+    note: 'Only light evidence is stored for this industry in the visible territory.',
+    score: leadSignals - row.searchCount,
+  };
+}
+
+function _mapIndustryToneRank(key) {
+  return { underworked: 4, worked: 3, light: 2, saturated: 1 }[key] || 0;
+}
+
+function _mapCollectIndustrySaturation(cells) {
+  const rows = new Map();
+  (cells || []).forEach(cell => {
+    _mapTerritoryIndustryKeys(cell).forEach(industry => {
+      const stats = _mapTerritoryCellStats(cell, industry);
+      if (!_mapTerritoryCellRelevant(cell, stats)) return;
+      const tone = _mapTerritoryTone(stats);
+      if (!rows.has(industry)) {
+        rows.set(industry, {
+          industry,
+          visibleCells: 0,
+          nextCells: 0,
+          workedCells: 0,
+          saturatedCells: 0,
+          quietCells: 0,
+          leadCount: 0,
+          plannerLeads: 0,
+          leadSignals: 0,
+          searchCount: 0,
+          searchOkCount: 0,
+          duplicateCount: 0,
+          foundCount: 0,
+          plannerChecked: 0,
+          workedCount: 0,
+        });
+      }
+      const row = rows.get(industry);
+      row.visibleCells += 1;
+      row.leadCount += stats.leadCount;
+      row.plannerLeads += stats.plannerLeads;
+      row.leadSignals += stats.leadCount + stats.plannerLeads;
+      row.searchCount += stats.searchCount;
+      row.searchOkCount += stats.searchOkCount;
+      row.duplicateCount += stats.duplicateCount;
+      row.foundCount += stats.foundCount;
+      row.plannerChecked += stats.plannerChecked;
+      row.workedCount += stats.workedCount;
+      if (tone.key === 'next') row.nextCells += 1;
+      else if (tone.key === 'worked') row.workedCells += 1;
+      else if (tone.key === 'saturated') row.saturatedCells += 1;
+      else row.quietCells += 1;
+    });
+  });
+  return Array.from(rows.values())
+    .map(row => ({ ...row, tone: _mapIndustrySaturationTone(row) }))
+    .sort((a, b) =>
+      _mapIndustryToneRank(b.tone.key) - _mapIndustryToneRank(a.tone.key) ||
+      (b.tone.score - a.tone.score) ||
+      (b.leadSignals - a.leadSignals) ||
+      (a.searchCount - b.searchCount) ||
+      a.industry.localeCompare(b.industry)
+    );
+}
+
+function _mapCurrentWorkingCellRows() {
+  if (!_mapCenter) return { cell: null, rows: [] };
+  const cell = _mapTerritoryCellForPoint(_mapCenter.lat, _mapCenter.lng);
+  if (!cell) return { cell: null, rows: [] };
+  const rows = _mapTerritoryIndustryKeys(cell)
+    .map(industry => {
+      const stats = _mapTerritoryCellStats(cell, industry);
+      if (!_mapTerritoryCellRelevant(cell, stats)) return null;
+      const tone = _mapTerritoryTone(stats);
+      return {
+        industry,
+        stats,
+        tone,
+        leadSignals: stats.leadCount + stats.plannerLeads,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      _mapIndustryToneRank(b.tone.key === 'next' ? 'underworked' : b.tone.key) -
+      _mapIndustryToneRank(a.tone.key === 'next' ? 'underworked' : a.tone.key) ||
+      (b.leadSignals - a.leadSignals) ||
+      (a.stats.searchCount - b.stats.searchCount) ||
+      a.industry.localeCompare(b.industry)
+    );
+  return { cell, rows };
+}
+
 function _mapTerritoryTone(stats) {
   const leadSignals = stats.leadCount + stats.plannerLeads;
   if (leadSignals >= 3 && stats.workedCount <= 1) {
@@ -7493,9 +7666,53 @@ function _mapTerritoryIntersects(cell, bounds) {
   );
 }
 
+function _mapSetIndustryFromSaturation(industry) {
+  const nextIndustry = String(industry || '').trim().toLowerCase();
+  const select = document.getElementById('map-industry');
+  if (!nextIndustry || !select) return;
+  const hasOption = Array.from(select.options || []).some(opt => String(opt.value || '').trim().toLowerCase() === nextIndustry);
+  if (!hasOption) {
+    toast('That industry is not available in the current search selector.', 'err');
+    return;
+  }
+  select.value = nextIndustry;
+  _mapUpdateIndustryControls();
+  const label = _mapIndustryLabel(nextIndustry);
+  const statusEl = document.getElementById('map-status');
+  if (statusEl) {
+    statusEl.textContent = _mapCenter
+      ? `${label} selected for the current working area. Search here when ready.`
+      : `${label} selected. Load a territory cell or place a circle to search.`;
+  }
+  toast(`${label} loaded into the industry selector`, 'ok');
+}
+
+function _mapIndustrySaturationRow(row, opts) {
+  const options = opts || {};
+  const currentIndustry = _mapTerritorySelectedIndustry();
+  const isCurrent = currentIndustry === row.industry;
+  const meta = options.mode === 'cell'
+    ? `${row.stats.leadCount} leads • ${row.stats.searchCount} searches • ${row.stats.plannerChecked} planner checks • ${row.stats.duplicateCount} duplicate-heavy`
+    : `${row.nextCells} next cells • ${row.searchCount} searches • ${row.duplicateCount} duplicate-heavy • ${row.leadSignals} lead signals`;
+  const note = options.mode === 'cell'
+    ? row.tone.note
+    : row.tone.note;
+  return (
+    `<div class="mtl-row${isCurrent ? ' current' : ''}">` +
+      `<div class="mtl-row-main">` +
+        `<div class="mtl-row-title">${escHtml(_mapTerritoryIndustryLabel(row.industry))}<span class="msat-chip ${escHtml(row.tone.key === 'next' ? 'underworked' : row.tone.key)}">${escHtml(row.tone.label)}</span></div>` +
+        `<div class="mtl-row-meta">${escHtml(meta)}</div>` +
+        `<div class="msat-note">${escHtml(note)}</div>` +
+      `</div>` +
+      `<button class="mtl-row-act" onclick="_mapSetIndustryFromSaturation('${escHtml(row.industry)}')">Set Industry</button>` +
+    `</div>`
+  );
+}
+
 function _mapRefreshTerritoryButtons() {
   const btnToggle = document.getElementById('btnMapTerritoryToggle');
   const btnNext = document.getElementById('btnMapTerritoryNext');
+  const btnSat = document.getElementById('btnMapTerritorySaturation');
   if (btnToggle) {
     btnToggle.classList.toggle('active', _mapTerritoryVisible);
     btnToggle.textContent = _mapTerritoryVisible ? '◫ Territory Overlay' : '◫ Overlay Off';
@@ -7503,6 +7720,10 @@ function _mapRefreshTerritoryButtons() {
   if (btnNext) {
     btnNext.classList.toggle('warn-active', _mapTerritoryNextOnly);
     btnNext.textContent = _mapTerritoryNextOnly ? '★ Next Areas Only' : '★ Next Areas';
+  }
+  if (btnSat) {
+    btnSat.classList.toggle('active', _mapTerritorySaturationVisible);
+    btnSat.textContent = _mapTerritorySaturationVisible ? '◎ Industry Saturation' : '◎ Saturation Off';
   }
 }
 
@@ -7537,6 +7758,11 @@ function _mapRenderTerritoryLegend(summary) {
   const filterText = _mapTerritorySelectedIndustry()
     ? `Filtered to ${_mapTerritoryIndustryLabel(_mapTerritorySelectedIndustry())}`
     : 'Showing all industries';
+  const visibleCells = _mapVisibleTerritoryCells();
+  const saturationRows = _mapCollectIndustrySaturation(visibleCells);
+  const coverageRows = saturationRows.slice(0, 8);
+  const bestNextRows = saturationRows.filter(row => row.tone.key === 'underworked').slice(0, 5);
+  const workingArea = _mapCurrentWorkingCellRows();
   const nextRows = (summary.nextRows || []).slice(0, 5).map(row =>
     `<div class="mtl-row">` +
       `<div class="mtl-row-main">` +
@@ -7546,6 +7772,33 @@ function _mapRenderTerritoryLegend(summary) {
       `<button class="mtl-row-act" onclick="_mapUseTerritoryCell('${row.cell.key}')">Use Cell</button>` +
     `</div>`
   ).join('');
+  const saturationHtml = _mapTerritorySaturationVisible
+    ? (
+      `<div class="msat-section">` +
+        `<div class="msat-head">` +
+          `<div>` +
+            `<div class="msat-title">Industry Saturation</div>` +
+            `<div class="msat-sub">Underworked = lead signal with light area coverage. Saturated = repeat search effort with duplicate-heavy or thin yield.</div>` +
+          `</div>` +
+          `<div class="msat-sub">Visible cells: ${visibleCells.length}</div>` +
+        `</div>` +
+        (coverageRows.length
+          ? `<div class="msat-head"><div><div class="msat-title">Visible Industry Coverage</div><div class="msat-sub">Current territory picture across the visible map area.</div></div></div>` +
+            `<div class="mtl-list">${coverageRows.map(row => _mapIndustrySaturationRow(row, { mode: 'visible' })).join('')}</div>`
+          : `<div class="msat-empty">No industry saturation evidence is available in the current map view yet.</div>`) +
+        (bestNextRows.length
+          ? `<div class="msat-head"><div><div class="msat-title">Best Next Industries</div><div class="msat-sub">These industries have stored lead signal but comparatively light coverage in view.</div></div></div>` +
+            `<div class="mtl-list">${bestNextRows.map(row => _mapIndustrySaturationRow(row, { mode: 'visible' })).join('')}</div>`
+          : '') +
+        (workingArea.cell
+          ? `<div class="msat-head"><div><div class="msat-title">Working Area Industry Mix</div><div class="msat-sub">${escHtml(_mapTerritoryCellLabel(workingArea.cell))} • current circle cell</div></div></div>` +
+            (workingArea.rows.length
+              ? `<div class="mtl-list">${workingArea.rows.slice(0, 6).map(row => _mapIndustrySaturationRow(row, { mode: 'cell' })).join('')}</div>`
+              : `<div class="msat-empty">This working cell does not have enough stored industry evidence yet.</div>`)
+          : `<div class="msat-empty">Load a territory cell or place the working circle on a stored-signal area to compare industries here.</div>`) +
+      `</div>`
+    )
+    : '';
   wrap.innerHTML =
     `<div class="mtl-wrap">` +
       `<div class="mtl-top">` +
@@ -7560,6 +7813,7 @@ function _mapRenderTerritoryLegend(summary) {
       (nextRows
         ? `<div class="mtl-list">${nextRows}</div>`
         : '') +
+      saturationHtml +
       `<div class="mtl-note">Territory cells are coarse neighborhood guides built from persisted area-search centers, AREA planner records, and stored lead coordinates. Use a suggested cell to move the search circle there.</div>` +
     `</div>`;
   wrap.style.display = '';
@@ -7664,6 +7918,11 @@ function mapToggleTerritoryOverlay() {
 
 function mapToggleTerritoryNextOnly() {
   _mapTerritoryNextOnly = !_mapTerritoryNextOnly;
+  _mapRenderTerritoryOverlay();
+}
+
+function mapToggleIndustrySaturation() {
+  _mapTerritorySaturationVisible = !_mapTerritorySaturationVisible;
   _mapRenderTerritoryOverlay();
 }
 
