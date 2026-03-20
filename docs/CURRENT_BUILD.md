@@ -1,44 +1,44 @@
 # Current Build Pass
 
 ## Active System
-Pass 62 -- Voice Rewrite, Consultation Positioning
+Pass 63 -- Boundary Territory Selector + Map Overhaul
 
 ## Status
-Pass 62 complete.
+Pass 63 complete.
 
 ---
 
-## Completed: Pass 62 -- Voice Rewrite, Consultation Positioning
+## Completed: Pass 63 -- Boundary Territory Selector + Map Overhaul
 
-- `lead_engine/outreach/email_draft_agent.py` (v16 -> v17)
+Files changed:
+- `lead_engine/dashboard_server.py`
+- `lead_engine/dashboard_static/index.html`
 
 ### What changed
 
-Completely rewrote body generation to match Drew's actual writing voice and
-reposition the offer away from product-feature language toward one-on-one
-personalized consultation.
+**`dashboard_server.py`**
+- Added `GET /api/boundary_search` — proxies Nominatim, returns GeoJSON polygon + bbox +
+  center + estimated tile count for any US city or county. No API key. CORS-safe.
 
-Structure changed from one run-on paragraph to 4 short paragraphs with line
-breaks between each:
-- P1: "My name is Drew. Saw [observation]." — direct, present tense, no "I noticed that"
-- P2: Consequence — hedged with "probably", natural trailing thought, observation-specific
-- P3: Offer — "I work one on one with owners to find where things like that are slipping
-  and put something together specific to how they run things." No product pitch, no feature
-  list. Sells the person and the process.
-- P4: Real close question — "Worth a quick call?" Not "happy to", not "worth a look"
+**`index.html`**
+- Added boundary selector bar (`bnd-bar`) above the map with a search input that
+  queries `/api/boundary_search`, renders the polygon on the Leaflet map as a blue
+  dashed boundary layer, and shows active territory name + tile estimate.
+- `bndSearchTerritory()` — tiles the boundary bbox into 800m circles and runs
+  `/api/discover_area` sequentially across each tile (max 60). Progress shown inline.
+  Cancel button stops after current tile.
+- Simplified toolbar — removed dense multi-button layout, replaced with two clean rows.
+  All existing functionality preserved (Search Here, Search Visible Area, Exhaust Circle,
+  Reset, Clear Coverage).
+- Grid bar hidden until a circle is placed (`_mapDrawCircle` / `mapClearCircle`).
+- Map instructions updated to lead with the boundary workflow.
+- Results panel: `weak` / `needs-contact` / `closed` groups now collapsed by default
+  in workflow view with click-to-expand. `ready` and `maybe` groups highlighted.
 
-Killed permanently: "happy to", "worth a look", "i help owners [verb] the [noun] side",
-"the fix is usually", "doesn't have to be complicated", "came across your site",
-"i was checking out your site", em-dash transitions, run-on sentences.
-
-Added `_build_observation_opener`, `_build_consequence_sentence`, `_build_offer_sentence`,
-`_build_close_sentence` — all voice-matched to Drew's actual writing patterns.
-
-### Verification
-- 10/10 drafts clean across all angle types
-- All blocking rules holding
-- Reads like a person, not a system
+### What is unchanged
+- Queue schema, run_lead_engine.py, sender/scheduler, follow-up system.
+- All existing discover_area / discover_area_batch / territory overlay logic.
 
 ---
 
-## Previous: Pass 61 -- Fully Reactive Offer, Close, Opener Variety
+## Previous: Pass 62 -- Voice Rewrite, Consultation Positioning

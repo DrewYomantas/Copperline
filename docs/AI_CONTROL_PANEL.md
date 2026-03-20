@@ -12,10 +12,10 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 62 -- Voice Rewrite, Consultation Positioning (complete)
+Pass 63 -- Boundary Territory Selector + Map Overhaul (complete)
 
 ## Last Completed Pass
-Pass 62 -- Voice Rewrite, Consultation Positioning (`60dbc47`)
+Pass 63 -- Boundary Territory Selector + Map Overhaul (`a410bb4`)
 
 ## Next Pass
 UNKNOWN / TBD
