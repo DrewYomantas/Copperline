@@ -12,18 +12,16 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 54 -- On-Demand Observation Evidence Refresh (complete)
+Pass 55 -- First-Touch Service Positioning Hardening (complete)
 
 ## Last Completed Pass
-Pass 54 -- On-Demand Observation Evidence Refresh
-
-Commit: `8ad0e99`
+Pass 55 -- First-Touch Service Positioning Hardening
 
 ## Next Pass
-TBD
+UNKNOWN / TBD
 
 ## Upcoming Passes
-- TBD
+- UNKNOWN / TBD
 
 ---
 
@@ -82,6 +80,13 @@ track replies, convert to clients, deploy missed-call texting.
 - Industry saturation view uses only stored search, duplicate, planner, and lead counts per territory cell - no fake polygon completion model
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Observation-led drafting remains required
+- First-touch drafts must stay observation-led, short, and grounded in real
+  service-business bottlenecks
+- First-touch positioning should sound like one-on-one owner/operator workflow
+  help, not generic consulting or agency copy
+- First-touch drafts may name practical fixes like missed-call text back,
+  after-hours response, estimate follow-up, callback recovery, contact routing,
+  or simple lead tracking when the observation supports them
 - Generated observations are allowed only when grounded in real available lead context
 - Generated observations remain operator-reviewed by default during hardening
 - Observation evidence refresh is operator-triggered and single-lead only
@@ -98,7 +103,7 @@ track replies, convert to clients, deploy missed-call texting.
 
 ---
 
-## Lifecycle Event Registry (as of Pass 54)
+## Lifecycle Event Registry (as of Pass 55)
 
 | Constant | Event | Hook point | Status |
 |---|---|---|---|

@@ -1,21 +1,17 @@
 # Current Build Pass
 
 ## Active System
-Pass 54 -- On-Demand Observation Evidence Refresh
+Pass 55 -- First-Touch Service Positioning Hardening
 
 ## Status
-Pass 54 complete. Repo is ready for the next product pass.
+Pass 55 complete. Repo is ready for the next product pass.
 
 ---
 
-## Completed: Pass 54 -- On-Demand Observation Evidence Refresh -- `8ad0e99`
+## Completed: Pass 55 -- First-Touch Service Positioning Hardening
 
 Product changes in:
-- `lead_engine/dashboard_server.py`
-- `lead_engine/dashboard_static/index.html`
-- `lead_engine/intelligence/website_scan_agent.py`
-- `lead_engine/intelligence/observation_evidence_agent.py`
-- `lead_engine/outreach/observation_candidate_agent.py`
+- `lead_engine/outreach/email_draft_agent.py`
 
 Docs updated in:
 - `docs/PROJECT_STATE.md`
@@ -24,91 +20,58 @@ Docs updated in:
 - `docs/AI_CONTROL_PANEL.md`
 
 No queue schema reorder/rename changes. No `run_lead_engine.py` changes.
-No email sender core changes. No scheduler timing changes. No send-path changes.
+No email sender core changes. No scheduler timing/core changes.
+No send-path changes. No follow-up system changes.
 
 ### Problem addressed
 
-Observation-led drafting could still stall when the saved lead evidence was too
-weak for a safe candidate, which forced manual human observation writing even
-when the operator intent was simply to re-check the business site and contact
-signals.
+Observation-led first-touch drafts were still at risk of sounding vague,
+category-generic, or loosely "random observation" driven instead of sounding
+like a believable one-person operator helping service businesses fix real lead
+handling bottlenecks.
 
 ### What was added
 
-**`lead_engine/dashboard_server.py`**
+**`lead_engine/outreach/email_draft_agent.py`**
 
-- Added `POST /api/refresh_observation_evidence` for a single lead.
-- The route refreshes website/contact evidence, writes safe lead-side updates,
-  then reruns observation candidate generation before responding.
-- Refresh stays bounded:
-  no observation auto-save, no auto-regenerate/send, no scheduler/send-path
-  changes.
-
-**`lead_engine/intelligence/observation_evidence_agent.py`**
-
-- Added a deterministic single-lead evidence refresh helper that reuses the
-  existing website fallback, contact extraction, and website scan paths.
-- Added bounded site-signal extraction for concrete operational evidence such
-  as specialty/service, emergency or same-day language, estimate/booking
-  language, and explicit service-area coverage.
-- Added specific blocked reasons for:
-  `no_retrievable_source`, `fetch_failed`,
-  `generic_template_language`, and `no_concrete_business_signal`.
-
-**`lead_engine/intelligence/website_scan_agent.py`**
-
-- Extended the bounded site scan to keep a capped text corpus so the refresh
-  helper can derive deterministic observation evidence without a second fetch
-  loop.
-
-**`lead_engine/outreach/observation_candidate_agent.py`**
-
-- Added support for fresh site evidence already saved on the lead.
-- The normal candidate generator can now reuse refreshed insight fields after a
-  successful refresh, not just the immediate refresh response.
-
-**`lead_engine/dashboard_static/index.html`**
-
-- Added a `Refresh Evidence` action in the review panel.
-- Refresh now updates the lead insight section, candidate box, and operator
-  status text in place.
-- The panel now shows clean ready/blocked states after refresh instead of
-  forcing manual observation entry first.
+- Bumped `DRAFT_VERSION` from `v9` to `v10` so stale detection can treat the
+  new first-touch positioning as a real copy revision.
+- Replaced the old controlled families with deterministic angle-based first-touch
+  framing:
+  after-hours response, estimate follow-up, service requests, inquiry routing,
+  callback recovery, and a general owner-workflow fallback.
+- Each first-touch draft now follows the same bounded structure:
+  observation -> concrete operational consequence -> what Drew actually helps
+  with -> soft ask.
+- Added deterministic language controls to block vague positioning like
+  `workflow gap`, `another set of eyes`, or `business side` drift.
+- Added validation that a first-touch draft must mention a concrete
+  service-business bottleneck or fix, not just a generic observation.
 
 ### What remains intentionally out of scope
 
-- Bulk evidence refresh
-- Hidden background evidence mutation
-- Observation auto-save or auto-accept
+- Observation generation or evidence refresh logic
 - Queue/send/scheduler changes
 - `run_lead_engine.py` changes
-- Persisting fallback websites into lead identity fields during this pass
+- Follow-up drafting
+- Discovery/map work
+- Hidden bulk regeneration or auto-send behavior
 
 ### Verification
 
-- Python compile checks:
-  - `lead_engine/intelligence/website_scan_agent.py`
-  - `lead_engine/intelligence/observation_evidence_agent.py`
-  - `lead_engine/outreach/observation_candidate_agent.py`
-  - `lead_engine/dashboard_server.py`
-- Dashboard JS parses clean via `new vm.Script(...)`.
-- Flask test client against temporary fixtures built from real repo rows:
-  - `POST /api/refresh_observation_evidence` for `Massie Heating and Air Conditioning` -> `200`
-    with candidate:
-    `site is pretty explicit about ductless mini-split work and emergency service.`
-  - `POST /api/refresh_observation_evidence` for `Premier Auto Repairs` -> `200`
-    with candidate:
-    `site is pretty explicit about brake work and service scheduling.`
-  - `POST /api/refresh_observation_evidence` for `Dunham Plumbing LLC` -> `200`
-    with refresh blocked reason `no_retrievable_source`, while the route still
-    returned the existing phone-only candidate path truthfully.
-  - After refresh, a normal `POST /api/generate_observation_candidate` on the
-    refreshed `Massie Heating and Air Conditioning` fixture reused the stored
-    fresh insight sentence/signals and returned the same candidate.
+- Python compile check:
+  - `lead_engine/outreach/email_draft_agent.py`
+- Direct draft-agent verification:
+  - missing observation still blocks
+  - generic observation still blocks
+  - vague positioning and banned sales language now block deterministically
+  - multiple example first-touch drafts now mention believable service-business
+    fixes tied to the observation instead of generic consulting language
 
 ---
 
-## Previous Completed: Pass 53 -- Industry Saturation View -- `f2ac842`
+## Previous Completed: Pass 54 -- On-Demand Observation Evidence Refresh
 
-- Added a truthful industry saturation layer to the territory overlay workflow
-  without changing the discovery backend or replacing the working circle.
+- Added a bounded single-lead evidence refresh path that can re-check business
+  evidence and retry observation candidate generation without auto-saving the
+  observation.

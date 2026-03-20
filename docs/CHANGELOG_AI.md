@@ -1950,3 +1950,55 @@ observation-led drafting rules.
 **Commit:** `8ad0e99`
 
 ---
+### 2026-03-19 - Pass 55: First-Touch Service Positioning Hardening
+
+**Goal:** Tighten first-touch outreach so drafts stay observation-led while
+positioning Drew's real offer as practical owner/operator workflow help, not
+generic consulting or hypey automation copy.
+
+**Files changed:**
+- `lead_engine/outreach/email_draft_agent.py`
+- `docs/PROJECT_STATE.md`
+- `docs/CURRENT_BUILD.md`
+- `docs/AI_CONTROL_PANEL.md`
+- `docs/CHANGELOG_AI.md`
+
+**What changed:**
+
+`lead_engine/outreach/email_draft_agent.py`:
+- Bumped `DRAFT_VERSION` from `v9` to `v10`.
+- Replaced the old first-touch body families with deterministic offer angles:
+  `after_hours_response`, `estimate_follow_up`, `service_requests`,
+  `inquiry_routing`, `callback_recovery`, and `owner_workflow`.
+- First-touch body construction now follows one bounded pattern:
+  observation -> operational consequence -> what Drew helps with -> soft ask.
+- Added deterministic offer language so drafts can mention believable practical
+  fixes like missed-call text back, after-hours response, estimate follow-up,
+  contact routing, callback recovery, intake capture, or simple lead tracking
+  when the observation supports that direction.
+- Added new deterministic validation guards that block vague positioning like
+  `workflow gap`, `another set of eyes`, or `business side`, and require at
+  least one concrete service-business bottleneck/fix signal in the final draft.
+- Kept observation-required drafting intact; no observation still blocks and
+  generic observation still blocks.
+
+**Design decisions:**
+- Did not change `run_lead_engine.py`.
+- Did not change queue schema order/naming.
+- Did not change the email sender, pending email pipeline, or send path.
+- Did not change follow-up drafting or scheduler timing/core logic.
+- Did not bundle discovery, map, or observation-refresh work into this pass.
+
+**Verification:**
+- Python compile check passed for `lead_engine/outreach/email_draft_agent.py`.
+- Direct draft-agent verification passed:
+  - missing observation blocks
+  - generic observation blocks
+  - vague positioning blocks
+  - banned sales language blocks
+- Example first-touch outputs now produce concrete service-positioned copy for:
+  - `Massie Heating and Air Conditioning`
+  - `Premier Auto Repairs`
+  - `Acme Plumbing`
+
+---

@@ -15,32 +15,25 @@ V2 Stage 2 - Unified Lead Workspace Backbone
 Copperline = Service Business Operations
 
 ## Last Completed Pass
-Pass 54 -- On-Demand Observation Evidence Refresh
+Pass 55 -- First-Touch Service Positioning Hardening
 
-- Added an operator-triggered single-lead evidence refresh path from the review
-  panel.
-- The system can now re-check website/contact evidence for one lead, update the
-  stored lead insight/contact fields, and immediately retry observation
-  candidate generation.
-- Fresh site evidence is stored on the lead via existing insight/contact
-  fields; the observation itself is still not auto-saved or auto-accepted.
-- Refresh stays bounded and truthful:
-  if no retrievable source exists, fetch fails, only generic template language
-  is found, or no concrete business-specific signal appears, the panel stays
-  blocked with a specific reason instead of fabricating evidence.
-- Identity-sensitive lead keys remain stable during refresh:
-  fallback websites may be used for the scan, but they are not silently written
-  back to lead identity fields in this pass.
-
-Commit: `8ad0e99`
+- Rebuilt first-touch email and DM body construction around deterministic
+  operational offer angles instead of vague "workflow gap" style copy.
+- Observation-led drafting still remains required, but the offer now stays tied
+  to what Drew actually does:
+  identify where calls, estimate requests, callbacks, intake, or follow-up are
+  breaking down and suggest practical fixes that fit how the shop already runs.
+- First-touch drafts now use short concrete positioning like missed-call text
+  back, after-hours response, estimate follow-up, callback recovery, contact
+  routing, or simple lead tracking when the observation supports that angle.
+- Deterministic validation now blocks vague consulting filler that drifts away
+  from real service-business bottlenecks or practical fixes.
 
 ## Previous Completed Pass
-Pass 53 -- Industry Saturation View
-
-Commit: `f2ac842`
+Pass 54 -- On-Demand Observation Evidence Refresh
 
 ## Next Pass
-TBD
+UNKNOWN / TBD
 
 ## Protected Systems
 - `run_lead_engine.py`
@@ -67,7 +60,8 @@ TBD
 6. Observation-led first-touch drafting still blocks when there is no valid
    saved observation
 7. System generates observation-led first-touch drafts from the approved/saved
-   observation
+   observation, framing the message around a believable owner/operator offer
+   instead of generic consulting language
 8. Operator reviews, approves, or schedules for tomorrow morning
 9. Emails are sent manually via Gmail
 10. Follow-up drafting only proceeds when the lead record has grounded
