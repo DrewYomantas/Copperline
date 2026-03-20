@@ -1,14 +1,14 @@
 # Current Build Pass
 
 ## Active System
-Pass 63 -- Boundary Territory Selector + Map Overhaul
+Pass 64 -- Click-to-Boundary, Reverse Geocoding, Zoom Drill-Down
 
 ## Status
-Pass 63 complete.
+Pass 64 complete.
 
 ---
 
-## Completed: Pass 63 -- Boundary Territory Selector + Map Overhaul
+## Completed: Pass 64 -- Click-to-Boundary, Reverse Geocoding, Zoom Drill-Down
 
 Files changed:
 - `lead_engine/dashboard_server.py`
@@ -17,28 +17,33 @@ Files changed:
 ### What changed
 
 **`dashboard_server.py`**
-- Added `GET /api/boundary_search` — proxies Nominatim, returns GeoJSON polygon + bbox +
-  center + estimated tile count for any US city or county. No API key. CORS-safe.
+- Added `GET /api/reverse_boundary?lat=&lng=&zoom=` — Nominatim reverse proxy.
+  Maps Leaflet zoom to Nominatim zoom: 8=county, 10=city, 13=neighborhood.
+  Returns same shape as /api/boundary_search plus short_name and zoom_used.
 
 **`index.html`**
-- Added boundary selector bar (`bnd-bar`) above the map with a search input that
-  queries `/api/boundary_search`, renders the polygon on the Leaflet map as a blue
-  dashed boundary layer, and shows active territory name + tile estimate.
-- `bndSearchTerritory()` — tiles the boundary bbox into 800m circles and runs
-  `/api/discover_area` sequentially across each tile (max 60). Progress shown inline.
-  Cancel button stops after current tile.
-- Simplified toolbar — removed dense multi-button layout, replaced with two clean rows.
-  All existing functionality preserved (Search Here, Search Visible Area, Exhaust Circle,
-  Reset, Clear Coverage).
-- Grid bar hidden until a circle is placed (`_mapDrawCircle` / `mapClearCircle`).
-- Map instructions updated to lead with the boundary workflow.
-- Results panel: `weak` / `needs-contact` / `closed` groups now collapsed by default
-  in workflow view with click-to-expand. `ready` and `maybe` groups highlighted.
+- Map click now calls `_mapClickSelectBoundary(lat, lng)` instead of placing a circle.
+  Reverse geocodes to appropriate boundary based on current zoom level.
+  Renders copper-colored boundary polygon on map, places circle at boundary center,
+  auto-activates the territory for Search Territory.
+- Shift+click still places a manual circle for override.
+- `_mapBoundaryPopulateSidebar()` — finds existing queue leads within boundary bbox,
+  updates tile count label with lead count, shows sent/ready breakdown in status bar.
+- `_mapUpdateZoomHint()` — shows "Click = county (zoom 9)" in status bar, updates on zoom.
+- `_mapUpdateZoomHint` called on init and on every moveend/zoomend.
+- `mapClearCircle` override clears click boundary and text-search boundary together.
+- Map fix: staggered invalidateSize (50ms/200ms/600ms) + min-height on container.
+  `requestAnimationFrame` + double invalidateSize on tab switch.
 
-### What is unchanged
-- Queue schema, run_lead_engine.py, sender/scheduler, follow-up system.
-- All existing discover_area / discover_area_batch / territory overlay logic.
+### Drill-down behavior
+- Leaflet zoom =7  ? Nominatim zoom 6  ? state boundary
+- Leaflet zoom 8-9 ? Nominatim zoom 8  ? county boundary
+- Leaflet zoom 10-12 ? Nominatim zoom 10 ? city boundary
+- Leaflet zoom 13+ ? Nominatim zoom 13 ? neighborhood/suburb boundary
+
+Operator zooms in, clicks, gets the relevant boundary highlighted. Zooms further,
+clicks again, gets a finer boundary. No manual typing required for known areas.
 
 ---
 
-## Previous: Pass 62 -- Voice Rewrite, Consultation Positioning
+## Previous: Pass 63 -- Boundary Territory Selector + Map Overhaul

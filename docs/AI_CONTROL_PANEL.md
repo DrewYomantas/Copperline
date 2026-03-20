@@ -12,10 +12,10 @@ Lead Acquisition Engine
 V2 Stage 2 - Unified Lead Workspace Backbone
 
 ## Current Build Pass
-Pass 63 -- Boundary Territory Selector + Map Overhaul (complete)
+Pass 64 -- Click-to-Boundary, Reverse Geocoding, Zoom Drill-Down (complete)
 
 ## Last Completed Pass
-Pass 63 -- Boundary Territory Selector + Map Overhaul (`a410bb4`)
+Pass 64 -- Click-to-Boundary, Reverse Geocoding, Zoom Drill-Down (`a81567e`)
 
 ## Next Pass
 UNKNOWN / TBD
