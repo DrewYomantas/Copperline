@@ -1,14 +1,14 @@
 # Current Build Pass
 
 ## Active System
-Pass 59 -- First-Touch Subject Semantic Precision
+Pass 60 -- Observation-Reactive Consequence Sentence
 
 ## Status
-Pass 59 complete. Repo is ready for the next product pass.
+Pass 60 complete. Repo is ready for the next product pass.
 
 ---
 
-## Completed: Pass 59 -- First-Touch Subject Semantic Precision
+## Completed: Pass 60 -- Observation-Reactive Consequence Sentence
 
 Product changes in:
 - `lead_engine/outreach/email_draft_agent.py`
@@ -19,66 +19,60 @@ Docs updated in:
 - `docs/CHANGELOG_AI.md`
 - `docs/AI_CONTROL_PANEL.md`
 
-No queue schema reorder/rename changes. No `run_lead_engine.py` changes.
-No email sender core changes. No scheduler timing/core changes.
-No send-path changes. No follow-up system changes.
+No queue schema changes. No `run_lead_engine.py` changes.
+No sender/scheduler/follow-up changes.
 
 ### Problem addressed
 
-First-touch subjects were better distributed after Pass 58, but some could
-still feel broader or less exact than the underlying observation/body angle.
-"call handling" led the callback pool, "question about X" appeared in multiple
-angle families, and the owner_workflow fallback always returned the same generic
-trio regardless of what the observation actually said.
+First-touch bodies had a rigid structure: specific observation in S1, then
+immediately generic angle-pool sentence in S2 ("usually the hard part is not
+the work itself..."). Every draft in the batch used the same skeleton regardless
+of what was specifically noticed. The S2 pattern was a clear template fingerprint.
 
-### What was added
+### What was changed
 
-**`lead_engine/outreach/email_draft_agent.py`**
+**`lead_engine/outreach/email_draft_agent.py`** (v14 -> v15)
 
-- Bumped `DRAFT_VERSION` from `v13` to `v14`.
-- Rewrote `_subject_options_for_angle` to be observation-aware within each
-  angle family. Subject pool options are now filtered/ordered toward the actual
-  observation emphasis before the deterministic pick runs.
-- `after_hours_response`: three sub-pools — emergency-first, weekend-first,
-  general after-hours. No longer always offers "question about emergency calls".
-- `estimate_follow_up`: quote-heavy observations now lead with "quote requests";
-  estimate-heavy observations lead with "estimate follow-up". Dropped
-  "estimate follow-up question" phrasing.
-- `service_requests`: appointment/booking observations now lead with
-  "appointment requests"; scheduling observations lead with "scheduling follow-up".
-  Dead-code duplicate branch removed.
-- `inquiry_routing`: contact-form observations get form-specific pool; text/chat
-  observations get message-specific pool; general gets inquiry pool.
-- `callback_recovery`: now leads with "missed calls" instead of "call handling".
-  Voicemail/dispatch observations get voicemail-specific pool.
-- `owner_workflow` fallback: routes by observation signal (phone/callback ?
-  missed-calls pool; estimate/quote ? estimate pool; form/inquiry ? inquiry pool;
-  true no-signal ? `["missed calls", "new inquiries", "follow-up timing"]`).
-  "call handling" fully removed from all pools.
+- Removed `_consequence_options(angle)` pool entirely.
+- Added `_build_reactive_consequence(obs, angle)`: reads the observation text
+  directly across 13 prioritized signal patterns and returns a consequence
+  sentence that logically extends the specific thing noticed.
+  Signal patterns covered: no-confirmation, voicemail/dispatch, phone-as-only-path,
+  estimate-form-as-CTA, quote-buttons-every-page, 24/7-emergency,
+  after-hours/weekend, chat-widget/text-back, online-booking-widget,
+  proposal-request. Falls back to a short plain angle-keyed sentence (not a
+  pool) when no specific signal is found.
+- "usually the hard part is not the work itself..." pattern fully eliminated.
+- Updated `_build_first_touch_body` to call `_build_reactive_consequence`
+  directly. Body-fit fallback still works; consequence is never trimmed.
+- Freshened `_offer_options` openers: "i help owners X", "worth a look at Y",
+  "i work directly with owners on Z" so the same skeleton does not repeat
+  across a batch.
+- Added "sit", "stack up", "pile up", "slip", "fall through" to
+  `_CONCRETE_SERVICE_SIGNALS` so reactive consequence sentences pass the
+  concrete-signal validator.
+- DRAFT_VERSION bumped v14 -> v15.
 
 ### What remains intentionally out of scope
 
-- Observation generation or evidence refresh logic
+- Observation generation or evidence refresh
 - Queue/send/scheduler changes
 - `run_lead_engine.py` changes
-- Follow-up drafting
-- Discovery/map work
+- Follow-up drafting, discovery/map work
 
 ### Verification
 
-- AST parse clean, all public functions present, DRAFT_VERSION=v14
-- 25 first-touch outputs across callback, after-hours (emergency/weekend/general),
-  estimate, quote, contact-form, scheduling/appointment, voicemail, text/chat,
-  and fallback observations — 23/25 generated; 2 fired expected pre-existing
-  validation blocks (banned phrases in observation text)
-- 8/8 before/after subject comparisons showed tighter semantic fit
-- All blocking rules still hold (missing obs, short obs, generic obs,
-  missing business_name)
-- "call handling" confirmed absent from all subject pools
+- AST parse clean. DRAFT_VERSION=v15. All public functions present.
+- 22/22 drafts generated cleanly across all angle families.
+- 13/22 unique consequence sentences (expected — some observation patterns
+  share the same precise consequence by design).
+- 8/8 before/after comparisons: every v15 consequence is specific to the
+  actual observation. Generic pool pattern fully gone.
+- All blocking rules confirmed holding.
 
 ---
 
-## Previous Completed: Pass 58 -- First-Touch Batch Variation Distribution
+## Previous Completed: Pass 59 -- First-Touch Subject Semantic Precision
 
-- Split first-touch variation selection across subject, opener, consequence,
-  offer, and CTA components so batches feel less templated.
+- Rewrote `_subject_options_for_angle` to be observation-aware within each
+  angle family. "call handling" and "question about X" eliminated from all pools.
