@@ -680,7 +680,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-group-toggle{cursor:pointer;user-select:none;font-size:10px;color:var(--dim)}
 
 display:flex;gap:0;align-items:stretch;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
-#map-container{flex:1;height:480px;min-width:0;overflow:hidden}
+#map-container{flex:1;height:480px;min-height:480px;min-width:0;overflow:hidden}
 #map-results-panel{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:none;flex-direction:column;height:480px}
 #map-results-panel.visible{display:flex}
 .mrp-hdr{padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
@@ -4926,6 +4926,9 @@ function _runPageHooks(name) {
       _mapInit();
       _mapPopulateIndustries();
       _mapLoadTerritoryOverlay();
+      // Force Leaflet to recalculate dimensions after tab is visible
+      setTimeout(() => { if (_mapInstance) { _mapInstance.invalidateSize(true); } }, 100);
+      setTimeout(() => { if (_mapInstance) { _mapInstance.invalidateSize(true); } }, 400);
     });
   }
 }
@@ -9177,6 +9180,10 @@ function _mapInit() {
   console.log('[_mapInit] tile layer added');
   _mapClusterGroup = L.markerClusterGroup();
   _mapInstance.addLayer(_mapClusterGroup);
+  // Staggered invalidateSize to handle tab-visibility timing
+  setTimeout(() => { _mapInstance.invalidateSize(true); console.log('[_mapInit] invalidateSize @50ms'); }, 50);
+  setTimeout(() => { _mapInstance.invalidateSize(true); }, 200);
+  setTimeout(() => { _mapInstance.invalidateSize(true); }, 600);
   console.log('[_mapInit] cluster group initialized');
   _mapInstance.on('moveend zoomend', () => _mapRenderTerritoryOverlay());
   _mapInstance.on('click', (e) => {
@@ -9186,10 +9193,8 @@ function _mapInit() {
   });
   const statusEl = document.getElementById('map-status');
   if (statusEl && !statusEl.textContent.trim()) {
-    statusEl.textContent = 'Tip: start with Territory Overlay or Next Areas, then load a cell or place a circle to search.';
+    statusEl.textContent = 'Tip: type a city or county above and click Search Territory, or click the map to place a circle.';
   }
-  setTimeout(() => { _mapInstance.invalidateSize(); console.log('[_mapInit] invalidateSize @50ms, size:', _mapInstance.getSize()); }, 50);
-  setTimeout(() => _mapInstance.invalidateSize(), 300);
 }
 
 async function mapSearch() {
