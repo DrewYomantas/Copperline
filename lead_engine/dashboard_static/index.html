@@ -679,9 +679,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-group-collapsed .mrp-item{display:none}
 .mrp-group-toggle{cursor:pointer;user-select:none;font-size:10px;color:var(--dim)}
 
-display:flex;gap:0;align-items:stretch;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
-#map-container{flex:1;height:480px;min-height:480px;min-width:0;overflow:hidden}
-#map-results-panel{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:none;flex-direction:column;height:480px}
+#map-layout{display:flex;gap:0;align-items:stretch;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;height:500px}
+#map-container{flex:1;height:100%;min-height:480px;min-width:0;overflow:hidden}
+#map-results-panel{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:none;flex-direction:column;height:100%}
 #map-results-panel.visible{display:flex}
 .mrp-hdr{padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
 .mrp-list{flex:1;overflow-y:auto;}
@@ -4929,9 +4929,10 @@ function _runPageHooks(name) {
       _mapInit();
       _mapPopulateIndustries();
       _mapLoadTerritoryOverlay();
-      // Force Leaflet to recalculate dimensions after tab is visible
-      setTimeout(() => { if (_mapInstance) { _mapInstance.invalidateSize(true); } }, 100);
-      setTimeout(() => { if (_mapInstance) { _mapInstance.invalidateSize(true); } }, 400);
+      // Force layout recalculation after tab becomes visible
+      setTimeout(() => { if (_mapInstance) { _mapInstance.invalidateSize(true); _mapUpdateZoomHint(); } }, 50);
+      setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(true); }, 250);
+      setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(true); }, 600);
     });
   }
 }
@@ -9318,35 +9319,29 @@ function mapClearCircle() {
 }
 
 function _mapInit() {
-  console.log('[_mapInit] called. _mapInstance:', !!_mapInstance, '| L defined:', typeof L !== 'undefined');
   if (_mapInstance) {
-    setTimeout(() => _mapInstance.invalidateSize(), 50);
+    // Map already created — just fix sizing on tab re-visit
+    setTimeout(() => { _mapInstance.invalidateSize(true); _mapUpdateZoomHint(); }, 50);
+    setTimeout(() => { _mapInstance.invalidateSize(true); }, 300);
     return;
   }
   if (typeof L === 'undefined') {
-    console.warn('[_mapInit] L not yet defined — retrying in 100ms');
     setTimeout(_mapInit, 100);
     return;
   }
   const container = document.getElementById('map-container');
-  console.log('[_mapInit] container:', container, '| offsetHeight:', container?.offsetHeight);
   if (!container) return;
   _mapInstance = L.map('map-container', { zoomControl: true }).setView([MAP_DEFAULT_LAT, MAP_DEFAULT_LNG], 12);
-  console.log('[_mapInit] map created:', !!_mapInstance);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 18,
   }).addTo(_mapInstance);
-  console.log('[_mapInit] tile layer added');
   _mapClusterGroup = L.markerClusterGroup();
   _mapInstance.addLayer(_mapClusterGroup);
   // Staggered invalidateSize to handle tab-visibility timing
   setTimeout(() => { _mapInstance.invalidateSize(true); }, 50);
   setTimeout(() => { _mapInstance.invalidateSize(true); }, 200);
-  setTimeout(() => { _mapInstance.invalidateSize(true); }, 600);
-  // Pass 64: show zoom hint immediately
-  setTimeout(() => _mapUpdateZoomHint(), 100);
-  console.log('[_mapInit] cluster group initialized');
+  setTimeout(() => { _mapInstance.invalidateSize(true); _mapUpdateZoomHint(); }, 600);
   _mapInstance.on('moveend zoomend', () => {
     _mapRenderTerritoryOverlay();
     // Pass 64: update zoom-level hint so operator knows click granularity
