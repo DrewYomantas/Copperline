@@ -2334,7 +2334,7 @@ def api_bulk_regenerate():
             # Step 1: get or use existing observation
             obs = (row.get("business_specific_observation") or "").strip()
             if len(obs) < 10:
-                # Generate observation candidate
+                # Try to generate observation candidate
                 prospect_row = _find_matching_prospect(row, prospect_rows)
                 memory_record = _lm.get_record(row)
                 try:
@@ -2342,17 +2342,12 @@ def api_bulk_regenerate():
                         row, memory_record=memory_record, prospect_row=prospect_row,
                     )
                     obs = candidate.candidate_text.strip()
-                    if not obs:
-                        results.append({"index": idx, "name": name, "status": "skipped_no_candidate"})
-                        skipped += 1
-                        continue
-                    # Save observation to row
-                    rows[idx]["business_specific_observation"] = obs
-                    rows[idx]["obs_source"] = "auto_bulk"
+                    if obs:
+                        rows[idx]["business_specific_observation"] = obs
+                        rows[idx]["obs_source"] = "auto_bulk"
                 except ObservationCandidateBlockedError:
-                    results.append({"index": idx, "name": name, "status": "skipped_blocked"})
-                    skipped += 1
-                    continue
+                    # No observation available — fallback draft will handle it
+                    obs = ""
 
             # Step 2: regenerate draft
             prospect_row = _find_matching_prospect(row, prospect_rows)
@@ -2366,6 +2361,7 @@ def api_bulk_regenerate():
             rows[idx]["contact_form_message"]      = new_social.get("contact_form_message", "")
             rows[idx]["social_dm_text"]            = new_social.get("facebook_dm", "")
             rows[idx]["draft_version"]             = "v18"
+            rows[idx]["draft_type"]                = "observation" if obs else "industry_fallback"
             rows[idx]["draft_regenerated_at"]      = __import__("datetime").datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
             results.append({"index": idx, "name": name, "status": "ok"})

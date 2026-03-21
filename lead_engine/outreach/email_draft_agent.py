@@ -7,6 +7,116 @@ from typing import Dict, List, Optional, Tuple
 DRAFT_VERSION = "v18"
 
 # ---------------------------------------------------------------------------
+# Industry-keyed fallback drafts (no observation available)
+# Written in Drew's voice — specific to the trade, not generic.
+# ---------------------------------------------------------------------------
+
+_INDUSTRY_FALLBACK_BODIES: Dict[str, List[str]] = {
+    "plumbing": [
+        "I work with a lot of plumbing shops and the thing that comes up almost every time is that the phone is the whole business — when it's covered, things run fine, but when it's not, jobs and callbacks just disappear.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+        "I've been working with service businesses on the gap between getting a call and actually closing the job. For most plumbing shops it's not a volume problem — it's a follow-through problem.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWould it be worth a quick conversation?",
+    ],
+    "hvac": [
+        "I work with a lot of HVAC owners and the pattern I see most is that the busy season creates a backlog that never fully clears — and by the time things slow down, the leads from the peak are already gone somewhere else.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+        "I've been working with HVAC shops on the operational side — specifically the part where new calls come in while the crew is already stretched and things start slipping between the cracks.\n\nI work one on one with owners to look at the full picture and build something around how they actually operate.\n\nWould it be worth a quick conversation?",
+    ],
+    "electrical": [
+        "I work with electrical contractors pretty regularly and the thing that comes up most is scheduling — jobs run long, new calls stack up, and by the time someone gets back to an estimate request it's usually too late.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+        "I've been working with electrical shops on the gap between incoming work and actual capacity. Most of the time it's not a sales problem — it's a coordination problem.\n\nI work one on one with owners to look at the full picture and build something around how they actually operate.\n\nWould it be worth a quick conversation?",
+    ],
+    "roofing": [
+        "I work with roofing contractors and the pattern I see most is that storm season creates a volume problem that the follow-up process wasn't built for — estimates go out and nobody knows which ones are still live.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+        "I've been working with roofing shops on the estimate follow-up side — most are leaving jobs on the table not because the price is wrong but because the follow-up timing is.\n\nI work one on one with owners to look at the full picture and build something around how they actually operate.\n\nWould it be worth a quick conversation?",
+    ],
+    "towing": [
+        "I work with towing companies and the thing I see most is that dispatch is the whole bottleneck — when it's tight, calls get missed or returned too late and the job goes to whoever picked up.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "auto": [
+        "I work with auto shops and the thing that comes up almost every time is that the front desk is doing five things at once — and the calls that don't get answered during a busy afternoon usually don't come back.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "landscaping": [
+        "I work with landscaping companies and the pattern I see most is that spring creates more demand than the process was built to handle — estimates pile up, follow-ups slip, and a lot of good jobs just don't close.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "painting": [
+        "I work with painting contractors and the thing I see most is that the estimate side is solid but the follow-up isn't — most jobs that don't close are ones where no one circled back within a few days.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "cleaning": [
+        "I work with cleaning businesses and the pattern I see most is that recurring clients are easy to keep but new ones are hard to convert because the inquiry process is slow.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "concrete": [
+        "I work with concrete contractors and the thing I see most is that the estimate-to-job gap is long and most of that time is just waiting — and the jobs that go cold are usually the ones where nobody followed up in the first week.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "tree_service": [
+        "I work with tree service companies and the pattern I see most is that storm work creates a volume spike the process wasn't built for — and a lot of good leads just disappear between the estimate and the call back.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "flooring": [
+        "I work with flooring contractors and the thing I see most is that showroom visits don't always turn into jobs — usually because the follow-up after the estimate is inconsistent.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "appliance_repair": [
+        "I work with appliance repair shops and the thing that comes up most is same-day calls — when the schedule is full and the phone still rings, those jobs usually just go to whoever can get there first.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "moving": [
+        "I work with moving companies and the pattern I see most is that quote requests come in and the response time is what decides the job — not the price.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "pressure_washing": [
+        "I work with pressure washing businesses and the thing I see most is that spring and summer create more demand than the scheduling process was built for — and a lot of jobs just go to whoever responds first.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "construction": [
+        "I work with general contractors and the pattern I see most is that the estimate pipeline gets backed up when the crew is full — and by the time there's bandwidth to follow up, the homeowner has already moved on.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+    "pest_control": [
+        "I work with pest control companies and the thing I see most is that the scheduling side works fine for recurring accounts but new calls get treated like walk-ins — and a lot of those just go cold.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    ],
+}
+
+# Generic fallback for any industry not specifically mapped
+_GENERIC_FALLBACK_BODIES: List[str] = [
+    "I work with service business owners pretty regularly and the thing that comes up most is that the operational side — keeping up with new work, following up on estimates, staying on top of incoming calls — is harder to manage than the work itself.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+    "I've been working with small business owners on the gap between the work they're doing and the work they could be closing. Most of the time it's not a marketing problem — it's a process problem.\n\nI work one on one with owners to look at the full picture and build something around how they actually operate.\n\nWould it be worth a quick conversation?",
+    "I work with owners who are doing the work, running the business, and handling everything in between — and usually the thing that's hardest to stay on top of is the follow-up side.\n\nI work one on one with owners to look at the full operation and build something specific to how they run things.\n\nWorth a quick call to look at it together?",
+]
+
+_FALLBACK_SUBJECTS: List[str] = [
+    "quick question",
+    "had a question for you",
+    "wanted to ask you something",
+    "a question about your business",
+    "quick question for you",
+]
+
+
+def _build_no_obs_draft(
+    prospect: Dict[str, str],
+    channel: str = "email",
+) -> str:
+    """
+    Build a draft when no observation is available.
+    Industry-specific, in Drew's voice, no generic filler.
+    Feels like Drew knows the trade — just not this specific business yet.
+    """
+    industry = detect_industry(
+        prospect.get("business_name", ""),
+        prospect.get("industry", ""),
+    )
+    bodies = _INDUSTRY_FALLBACK_BODIES.get(industry, _GENERIC_FALLBACK_BODIES)
+    # Deterministic variant pick
+    name_hash = int(hashlib.md5(
+        (prospect.get("business_name", "") + industry).encode()
+    ).hexdigest(), 16)
+    body = bodies[name_hash % len(bodies)]
+    name = (prospect.get("business_name") or "").strip()
+    city = (prospect.get("city") or "").strip()
+
+    if channel == "dm":
+        p1 = f"Hey{chr(10)}{chr(10)}My name is Drew."
+    else:
+        p1 = "My name is Drew."
+
+    return f"{p1}\n\n{body}"
+
+
+
+# ---------------------------------------------------------------------------
 # Industry detection (pipeline-compatible, unchanged)
 # ---------------------------------------------------------------------------
 
@@ -612,7 +722,24 @@ def draft_email(
         raise ValueError(f"Cannot draft email for {business_name} without city.")
 
     raw_obs = observation or prospect.get("business_specific_observation") or ""
-    obs = _require_observation(raw_obs)
+    obs_clean = raw_obs.strip()
+
+    # No observation — use industry-keyed fallback draft
+    if not obs_clean or _is_generic_observation(obs_clean):
+        industry = detect_industry(
+            prospect.get("business_name", ""),
+            prospect.get("industry", ""),
+        )
+        name_hash = int(hashlib.md5(
+            (prospect.get("business_name", "") + industry).encode()
+        ).hexdigest(), 16)
+        subject = _FALLBACK_SUBJECTS[name_hash % len(_FALLBACK_SUBJECTS)]
+        body    = _build_no_obs_draft(prospect, channel="email")
+        body    = enforce_human_style(body) + _SIGN_OFF
+        validate_subject(subject)
+        return subject, body
+
+    obs = _require_observation(obs_clean)
     if _is_generic_observation(obs):
         raise ObservationMissingError(
             "Observation is too generic. Write something specific to this business."
@@ -644,7 +771,15 @@ def draft_social_messages(
     observation: Optional[str] = None,
 ) -> Tuple[str, str, str]:
     raw_obs = observation or prospect.get("business_specific_observation") or ""
-    obs = _require_observation(raw_obs)
+    obs_clean = raw_obs.strip()
+
+    # No observation — use industry-keyed fallback
+    if not obs_clean or _is_generic_observation(obs_clean):
+        dm_body = _build_no_obs_draft(prospect, channel="dm")
+        dm_body = enforce_human_style(dm_body)
+        return dm_body, dm_body, dm_body
+
+    obs = _require_observation(obs_clean)
     if _is_generic_observation(obs):
         raise ObservationMissingError("Observation is too generic for DM generation.")
     dm_body = _build_dm_body(prospect, obs)
