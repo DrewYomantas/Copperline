@@ -1,39 +1,50 @@
 # Current Build Pass
 
 ## Active System
-Pass 65 -- US Sales Regions + Visual Makeover
+Pass 72 -- Territory Tab Fixes, Stale Warning Fix, Docs Cleanup
 
 ## Status
-Pass 65 complete.
+Pass 72 complete.
 
 ---
 
-## Completed: Pass 65 -- US Sales Regions + Visual Makeover
+## Completed: Pass 72 -- Territory Tab Fixes + Stale Warning Fix
 
-Files: `lead_engine/dashboard_server.py`, `lead_engine/dashboard_static/index.html`
+Files: `lead_engine/dashboard_static/index.html`
 
-### US Sales Regions
-- Map now starts at full US view (lat 39.5, lng -98.35, zoom 4)
-- `US_SALES_REGIONS` � 6 baked-in regions (Northeast, Southeast, Midwest,
-  South Central, Mountain West, Pacific West) as colored clickable rectangles
-- `_mapShowRegions()` renders at zoom =5 with colored labels
-- `_mapSelectRegion()` zooms into region, enables county-level clicking
-- `_mapHandleZoomRegions()` auto-shows/hides on zoom events
-- Map click guard at zoom =5 lets region polygons handle their own clicks
-- `/api/reverse_boundary` backend endpoint added for click-to-county
+### Territory Tab — buttons now work
+Root cause: `JSON.stringify(city)` inside onclick HTML attributes produced
+`"Rockford"` with double quotes that broke the HTML attribute parser, silently
+preventing all button clicks. Fixed in four places:
+- `_tpCityCard`: cj/sj now use `'"' + escHtml(value) + '"'`
+- `_tpIndRow`: same fix for cj/sj/ij
+- `tpToggle` inject section: same fix
+- Card header toggle: now uses `data-tp-key` attribute + `this.dataset.tpKey`
+  instead of inline JSON string argument
 
-### Visual Makeover
-- Deeper dark background: `--bg:#080a0f` (was `#0e0f12`)
-- Gradient header with copper-branded Copperline title (webkit gradient text)
-- Gradient buttons with drop shadows (`--btn-shadow`, `--card-shadow`)
-- Cards use subtle top-to-bottom gradients
-- Nav bars use layered gradient backgrounds
-- Map container taller: 560px (was 500px)
-- Results panel wider: 340px (was 320px)
-- Deeper panel shadow on review panel
-- Map instructions styled as blue-tinted info card
-- Territory and grid toolbars use darker gradient backgrounds
+### Stale warning suppressed for fallback drafts
+`_leadNeedsDraftRefresh` now checks `record._qrow.draft_type === 'industry_fallback'`
+and returns false — fallback drafts are intentionally observation-free and
+should not trigger the "Refresh before send" warning.
 
 ---
 
-## Previous: Pass 64 -- Click-to-Boundary, Reverse Geocoding, Zoom Drill-Down
+## Recent passes (66–71):
+
+**Pass 71** — Industry fallback drafts (17 trades mapped, no obs = no problem)
+**Pass 70** — Bulk regenerate: `/api/bulk_regenerate` + "Regen Stale" button
+**Pass 69** — v18 voice: proper grammar, direct consequence, confident close,
+              auto-regen row-key fix (object ref → key comparison)
+**Pass 68** — Auto-regen on panel open, panel layout overhaul (body first),
+              22 industries, 404 scan warnings suppressed
+**Pass 67** — Region zoom fix, coverage fill clarity, map full-height,
+              territory display "Map Area", dropdown fix
+**Pass 66** — Command bar, coverage fill layer, hover tooltips, 400 fix
+              (tile radius 800→1000m)
+
+---
+
+## Previous major passes:
+**Pass 65** — US Sales Regions + Visual Makeover
+**Pass 64** — Click-to-boundary, reverse geocoding, zoom drill-down
+**Pass 63** — Boundary territory selector, simplified toolbar

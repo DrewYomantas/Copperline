@@ -1925,6 +1925,8 @@ function _leadStatusMeta(record) {
 
 function _leadNeedsDraftRefresh(record) {
   if (!record || record.isSent) return false;
+  // Industry fallback drafts are intentionally observation-free — not stale
+  if ((record._qrow || {}).draft_type === 'industry_fallback') return false;
   return !!(record.isStale || (record.subject && !record.observation));
 }
 
@@ -5249,8 +5251,8 @@ function _tpCityCard(c) {
     ? '<span style="font-size:10px;color:var(--muted)">Next: <strong style="color:var(--text)">' + escHtml(nextInd.industry) + '</strong></span>'
     : '';
 
-  const cj = JSON.stringify(c.city);
-  const sj = JSON.stringify(c.state);
+  const cj = '"' + escHtml(c.city) + '"';
+  const sj = '"' + escHtml(c.state) + '"';
 
   const indContent = isOpen ? (
     '<table class="tp-ind-table"><thead><tr><th>Industry</th><th>Status</th><th>Leads</th><th>Last Run</th><th style=\"text-align:right\">Actions</th></tr></thead><tbody>'
@@ -5265,7 +5267,7 @@ function _tpCityCard(c) {
   ) : '';
 
   return '<div class="' + cardCls + openCls + '" id="tp-card-' + key.replace(/[^a-z0-9]/g, '-') + '">'
-    + '<div class="tp-card-hdr" onclick="tpToggle(' + JSON.stringify(key) + ')">'
+    + '<div class="tp-card-hdr" data-tp-key="' + escHtml(key) + '" onclick="tpToggle(this.dataset.tpKey)">'
     + '<div style="display:flex;flex-direction:column;gap:3px">'
     + '<div class="tp-city-name">' + _tpCityDisplay(c.city, c.state) + ' ' + statusHtml + '</div>'
     + '<div class="tp-city-meta">' + (c.leads_found||0) + ' leads \u00B7 Last: ' + _tpFmt(c.last_checked_at) + ' \u00B7 Next: ' + _tpFmt(c.next_check_at) + ' \u00B7 ' + (c.tier||'mid') + '</div>'
@@ -5283,7 +5285,7 @@ function _tpCityCard(c) {
 function _tpIndRow(city, r) {
   const sm = { never_checked:['tp-s-never','\u25CF Not run'], checked:['tp-s-checked','\u2713 Done'], due:['tp-s-due','\u26A0 Due'], skipped:['tp-s-skipped','\u2014 Skipped'], exhausted:['tp-s-exhausted','\u2717 Exhausted'] };
   const [cls, label] = sm[r.status] || ['tp-s-never', r.status];
-  const cj = JSON.stringify(city.city), sj = JSON.stringify(city.state), ij = JSON.stringify(r.industry);
+  const cj = '"' + escHtml(city.city) + '"', sj = '"' + escHtml(city.state) + '"', ij = '"' + escHtml(r.industry) + '"';
   const runBtn = r.status !== 'exhausted'
     ? '<button class="tp-btn tp-btn-run" onclick="tpRunIndustry(' + cj + ',' + sj + ',' + ij + ',this)"><span class="tp-spin" style="display:none"></span>\u26A1 Run</button>'
     : '';
@@ -5336,8 +5338,8 @@ function tpToggle(key) {
 
   // If now open, inject the industry table + footer
   if (isNowOpen) {
-    const cj = JSON.stringify(c.city);
-    const sj = JSON.stringify(c.state);
+    const cj = '"' + escHtml(c.city) + '"';
+    const sj = '"' + escHtml(c.state) + '"';
     const indHtml = '<table class="tp-ind-table"><thead><tr>'
       + '<th>Industry</th><th>Status</th><th>Leads</th><th>Last Run</th>'
       + '<th style="text-align:right">Actions</th>'
