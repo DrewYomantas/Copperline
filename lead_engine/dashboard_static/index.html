@@ -1306,7 +1306,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 
       <!-- ── ZONE 1: The draft — what you're actually deciding on ───────── -->
       <!-- Auto-regen status (Pass 68) — shown briefly during background regen -->
-      <div id="panel-autoregen-status" style="display:none;padding:6px 10px;border-radius:var(--rs);background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">
+      <div id="panel-autoregen-status" style="display:none;padding:6px 10px;border-radius:var(--rs);background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);font-size:11px;color:var(--muted);align-items:center;gap:8px">
         <span style="width:8px;height:8px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;display:inline-block"></span>
         <span id="panel-autoregen-msg">Refreshing draft…</span>
       </div>
@@ -3700,41 +3700,42 @@ async function panelSaveObservation() {
 // Called when a stale lead panel opens. Does the full observation → regen
 // chain in the background. User lands on a ready draft without clicking.
 async function _panelAutoRegenOnOpen(row) {
-  // Bail if panel moved to a different row while we were waiting
-  if (_panelCurrentRow() !== row) return;
+  // Use key comparison — object reference may change after async operations
+  const rowKey = _panelMakeKey(row);
+  function _stillOnThisRow() {
+    const cur = _panelCurrentRow();
+    return cur && _panelMakeKey(cur) === rowKey;
+  }
+
+  if (!_stillOnThisRow()) return;
   if (row.sent_at) return;
 
   const regenStat = document.getElementById('panel-regen-status');
   const hasObs = (row.business_specific_observation || '').trim().length > 10;
 
   if (!hasObs) {
-    // Step 1: generate observation candidate automatically
-    if (regenStat) { regenStat.textContent = 'Auto-scanning for observation…'; regenStat.className = 'obs-regen-status'; }
+    if (regenStat) { regenStat.textContent = 'Auto-scanning…'; regenStat.className = 'obs-regen-status'; }
     const candidateOk = await panelGenerateObservationCandidate({ auto: true });
-    if (_panelCurrentRow() !== row) return; // panel moved
+    if (!_stillOnThisRow()) return;
     if (candidateOk) {
-      // Step 2: apply candidate to obs field
       panelUseObservationCandidate();
     } else {
-      // No candidate available — can't auto-regen, surface the issue quietly
-      if (regenStat) { regenStat.textContent = 'Need observation — no evidence found automatically.'; regenStat.className = 'obs-regen-status obs-err'; }
+      if (regenStat) { regenStat.textContent = 'No observation found — add one manually.'; regenStat.className = 'obs-regen-status obs-err'; }
       return;
     }
   }
 
-  // Step 3: regenerate the draft silently
-  if (_panelCurrentRow() !== row) return;
+  if (!_stillOnThisRow()) return;
   if (regenStat) { regenStat.textContent = 'Refreshing draft…'; regenStat.className = 'obs-regen-status'; }
   const regenOk = await panelRegenerateDraft({ suppressToast: true, auto: true });
-  if (_panelCurrentRow() !== row) return;
+  if (!_stillOnThisRow()) return;
 
   if (regenOk) {
     if (regenStat) { regenStat.textContent = ''; regenStat.className = 'obs-regen-status'; }
-    // Scroll panel to top so user sees the fresh email immediately
     const panelBody = document.querySelector('.panel-body');
     if (panelBody) panelBody.scrollTop = 0;
   } else {
-    if (regenStat) { regenStat.textContent = 'Auto-refresh failed — check observation.'; regenStat.className = 'obs-regen-status obs-err'; }
+    if (regenStat) { regenStat.textContent = 'Auto-refresh failed — open Observation below to fix.'; regenStat.className = 'obs-regen-status obs-err'; }
   }
 }
 

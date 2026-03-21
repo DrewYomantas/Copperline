@@ -4,7 +4,7 @@ import hashlib
 import re
 from typing import Dict, List, Optional, Tuple
 
-DRAFT_VERSION = "v17"
+DRAFT_VERSION = "v18"
 
 # ---------------------------------------------------------------------------
 # Industry detection (pipeline-compatible, unchanged)
@@ -318,49 +318,86 @@ def _pick_offer_angle(prospect: Dict[str, str], observation: str) -> str:
 
 def _build_observation_opener(obs: str) -> str:
     """
-    Convert the stored observation into a natural 'Saw you...' sentence.
-    Direct, present tense, no 'I noticed that' or 'I was checking out'.
+    Convert the stored observation into a clean grammatically correct sentence.
+    Always produces: "I noticed [something specific about you/your business]."
     """
+    import re as _re
     o = obs.strip().rstrip(".")
-    o_lower = o.lower()
 
-    # Strip redundant openers the operator may have typed
-    o = re.sub(
-        r"^(saw that|noticed that|saw |noticed |looks like |came across —?\s*)",
-        "", o, flags=re.IGNORECASE,
-    ).strip()
-
-    # Normalize third-person site references to second-person
+    # Run replacements BEFORE stripping opener prefixes, so "your site pushes"
+    # gets converted to "you're pushing" while it's still intact
     replacements = [
-        ("your site has ", "you have "),
+        ("your site is very focused on ", "your site is very focused on "),
+        ("your site is pretty explicit about ", "your site is very focused on "),
+        ("your site is explicit about ", "your site is focused on "),
+        ("your site focuses heavily on ", "you're focused heavily on "),
         ("your site lists ", "you're listing "),
         ("your site pushes ", "you're pushing "),
         ("your site advertises ", "you're advertising "),
         ("your site keeps ", "you keep "),
         ("your site splits ", "you split "),
-        ("your site leans ", "you lean "),
-        ("your site is ", "your setup is "),
+        ("your site leans ", "you lean toward "),
+        ("your site has ", "you have "),
         ("your homepage has ", "you have "),
         ("your homepage centers ", "you're centering "),
-        ("you put a lot of emphasis on ", "you're pushing "),
+        ("site is pretty explicit about ", "your site is very focused on "),
+        ("site is explicit about ", "your site is focused on "),
+        ("site pushes ", "you're pushing "),
+        ("site lists ", "you're listing "),
+        ("site has ", "you have "),
+        ("site advertises ", "you're advertising "),
     ]
+    o_lower = o.lower()
     for old, new in replacements:
-        if o.lower().startswith(old):
+        if o_lower.startswith(old):
             o = new + o[len(old):]
+            o_lower = o.lower()
             break
 
-    # Lowercase first char
+    # Now strip any explicit opener the operator or agent may have typed
+    o = _re.sub(
+        r"^(saw that\s*|noticed that\s*|i noticed\s*|i saw\s*|saw\s*|noticed\s*"
+        r"|looks like\s*|came across\s*[-—]?\s*)",
+        "", o, flags=_re.IGNORECASE,
+    ).strip()
+
+    # Ensure observations starting with a bare noun phrase get a natural lead-in
+    # e.g. "estimate form is..." → "your estimate form is..."
+    o_lower = o.lower()
+    needs_your = (
+        "estimate form", "contact form", "quote form", "request form",
+        "booking widget", "chat widget", "scheduling widget", "website ",
+        "homepage ", "main page ",
+    )
+    starts_with_noun_verb = any(o_lower.startswith(n) for n in needs_your)
+    if starts_with_noun_verb and not o_lower.startswith("your ") and not o_lower.startswith("you"):
+        o = "your " + o[0].lower() + o[1:]
+        o_lower = o.lower()
+
+    # Bare noun with no verb — add natural connector
+    first_words = o_lower.split()[:4]
+    has_early_verb = any(w in first_words for w in (
+        "is", "are", "was", "were", "has", "have", "had",
+        "does", "do", "did", "shows", "uses", "lists", "pushes",
+        "advertises", "offers", "includes", "focuses", "keeps",
+    ))
+    if not has_early_verb:
+        if any(o_lower.startswith(n) for n in ("dispatch number", "voicemail box", "voicemail only")):
+            o = "you're relying on " + o[0].lower() + o[1:]
+        elif any(o_lower.startswith(n) for n in ("phone number",)):
+            o = "you have " + o[0].lower() + o[1:]
+
+    # Ensure first character is lowercase for clean sentence assembly
     if o and o[0].isalpha():
         o = o[0].lower() + o[1:]
 
-    return f"Saw {o}."
+    return f"I noticed {o}."
 
 
 def _build_consequence_sentence(obs: str, angle: str) -> str:
     """
-    One short natural sentence about what that specific thing probably means.
-    Hedged with 'probably' or 'usually' — not stated as fact.
-    Drew's pattern: 'A lot of those probably...' or 'When that happens...'
+    One direct sentence about what that specific detail probably means for their business.
+    Specific, grounded, not vague. Avoids 'a lot of those probably' as a crutch.
     """
     o = obs.lower()
 
@@ -368,110 +405,102 @@ def _build_consequence_sentence(obs: str, angle: str) -> str:
         "no confirmation", "no immediate", "nothing back",
         "no next step", "no acknowledgment", "unclear",
     )) and any(p in o for p in ("form", "submit", "contact", "inquiry")):
-        return "They fill it out and have no idea if anyone saw it. A lot of those just go cold."
+        return "When there's no confirmation after a form submission, most people assume it didn't go through and move on."
 
     if any(p in o for p in ("voicemail", "dispatch number", "dispatch line")):
-        return "A lot of those probably don't get returned until the next morning and by then most people have already moved on."
+        return "Most people who hit voicemail on a service call don't leave a message — they call the next number on the list."
 
     if any(p in o for p in (
         "only contact", "only way", "no other contact",
         "just a phone", "single phone", "phone is the main", "phone number prominently",
     )):
-        return "When you're out on a job and a call comes in, a lot of those just go cold before anyone gets back to them."
+        return "If that number goes unanswered while you're on a job, that lead is usually gone before you can call back."
 
     if any(p in o for p in ("24/7", "24 7", "emergency service", "same-day response", "same day response")):
-        return "That's a tough commitment to keep when you're short staffed or mid job. A lot of those after hours calls probably go unanswered more than people realize."
+        return "That's a real commitment to back up operationally — most businesses that advertise it can't consistently deliver it."
 
     if any(p in o for p in ("after-hours", "after hours", "weekend", "nights")):
-        return "A lot of those probably don't get followed up until the next morning and by then most people have already moved on."
+        return "After-hours requests that don't get a same-day response almost never convert — people make a decision and move on quickly."
 
     if any(p in o for p in (
         "estimate request form", "estimate form", "primary call to action",
         "free estimate", "quote request form", "free quote",
     )):
-        return "A lot of those probably just sit there until someone has time to get to them and by then people have already gone somewhere else."
+        return "Quote requests that sit for more than a few hours usually end up going to whoever responds first."
 
     if any(p in o for p in ("quote button", "quote on every page", "push free quote")):
-        return "A lot of those requests probably sit until someone gets around to following up, which is usually too late."
+        return "When there's a quote request and no fast follow-up, most people have already contacted someone else by the time you get back to them."
 
     if any(p in o for p in (
         "proposal request", "proposal form", "free in-home",
     )):
-        return "A lot of those probably go cold while someone is waiting to hear back."
+        return "Proposal requests that don't get a quick acknowledgment tend to go cold — people interpret silence as disinterest."
 
     if any(p in o for p in ("chat widget", "text-back", "text back", "few different places", "couple different")):
-        return "When messages are coming in from a few places at once, a lot of them probably fall through."
+        return "When inquiries are coming in through multiple channels, it's easy for things to fall through between the cracks."
 
     if any(p in o for p in ("online booking", "booking widget", "scheduling widget")):
-        return "The booking side looks covered but requests that come in outside of that usually just sit until someone notices them."
+        return "Online bookings that don't get a quick confirmation call tend to generate no-shows — people aren't sure if it actually went through."
 
-    if any(p in o for p in ("scheduling link", "pick a service window")):
-        return "A lot of people probably book and then don't hear anything back, which tends to create no-shows."
+    if any(p in o for p in ("water heater", "financing", "explicit about")):
+        return "Businesses that are very focused on one service sometimes have a harder time converting customers who want the full picture upfront."
 
-    # Angle fallbacks — short, hedged, natural
+    # Angle fallbacks — direct, not passive
     fallbacks = {
         "after_hours_response":
-            "A lot of those after hours calls probably go unanswered more than people realize.",
+            "After-hours requests that don't get a fast response almost never convert.",
         "estimate_follow_up":
-            "A lot of those probably just sit there until someone gets around to them.",
+            "Slow estimate follow-up is usually the difference between winning and losing the job.",
         "service_requests":
-            "New requests tend to pile up faster than it looks, especially once the schedule fills.",
+            "New service requests that sit unacknowledged for more than a few hours rarely turn into customers.",
         "inquiry_routing":
-            "A lot of those probably fall through when things get busy.",
+            "Inquiries that fall through without a quick response are usually already talking to someone else.",
         "callback_recovery":
-            "When you're out on a job and a call comes in, a lot of those just go cold.",
+            "Missed calls that don't get a callback within the hour rarely convert.",
         "owner_workflow":
-            "A lot of those probably slip through when everyone is focused on the work in front of them.",
+            "When the owner is also running operations, things that need attention tend to stack up faster than they get resolved.",
     }
     return fallbacks.get(angle, fallbacks["owner_workflow"])
 
 
 def _build_offer_sentence(obs: str, angle: str, variant: int) -> str:
     """
-    Drew's actual positioning: one on one, looks at the full picture,
+    Drew's positioning: one on one, looks at the full picture,
     builds something specific to how they run things.
-    Three variants that all say the same thing differently.
-    No product pitch. No feature description.
+    Confident. No hedging. No product pitch.
     """
     variants = [
-        "I work one on one with owners to find where things like that are slipping and put something together specific to how they run things.",
-        "I work one on one with owners to look at the full picture and build something around how they actually run their business.",
-        "I work one on one with owners to look at where things are falling through and put something in place that actually fits their setup.",
+        "I work one on one with owners to look at the full operation and build something specific to how they run their business.",
+        "I work one on one with owners to find where the gaps are and put something in place that actually fits how they work.",
+        "I work one on one with owners to look at the whole picture and build a system around how they actually operate.",
     ]
     return variants[variant % len(variants)]
 
 
 def _build_close_sentence(obs: str, angle: str, variant: int, channel: str) -> str:
     """
-    Real question. Not permission. Not 'happy to'. Not 'worth a look'.
-    Drew closes with a direct soft question that invites a reply.
+    Direct soft question. Not permission-seeking. Not vague.
+    Drew closes with a real question that assumes the conversation is worth having.
     """
     o = obs.lower()
 
-    # Contextually specific closes based on observation
     if any(p in o for p in ("24/7", "emergency", "same-day", "same day")):
         closes = [
-            "Worth a quick call to talk through it?",
-            "Would it be worth jumping on a quick call?",
-            "Curious if that's something worth talking through?",
-        ]
-    elif any(p in o for p in ("dental", "medical", "clinic", "practice", "doctor")):
-        closes = [
-            "Would it be worth a quick conversation?",
-            "Worth a call to look at it together?",
-            "Curious if that's worth a quick conversation?",
+            "Would it be worth a quick call to talk through it?",
+            "Worth getting on a call to look at it together?",
+            "Want to get on a quick call and walk through how that's working?",
         ]
     elif channel == "dm":
         closes = [
             "Worth a quick conversation?",
-            "Curious if that's worth talking through?",
-            "Would it be worth a quick chat?",
+            "Want to jump on a quick call about it?",
+            "Would it be worth a short conversation?",
         ]
     else:
         closes = [
-            "Worth a quick call?",
-            "Would it be worth a quick conversation?",
-            "Curious if that's worth talking through?",
+            "Worth a quick call to look at it together?",
+            "Would it be worth getting on a call to walk through it?",
+            "Want to get on a quick call and see if there's something worth addressing?",
         ]
 
     return closes[variant % len(closes)]
