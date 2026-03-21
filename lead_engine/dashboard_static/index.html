@@ -1017,6 +1017,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       <option value="name_desc">Name Z–A</option>
     </select>
     <button class="btn btn-ghost" onclick="approveAll()">✓ Approve All</button>
+    <button id="btnBulkRegen" class="btn btn-ghost" onclick="bulkRegenStale()" title="Regenerate all stale drafts using the observation agent — runs automatically in the background"><span class="spin"></span>↻ Regen Stale</button>
     <button id="btnSendLive" class="btn btn-success" onclick="confirmSend()"><span class="spin"></span>▶ Send Approved</button>
     <!-- Secondary actions: low-frequency utilities collapsed behind More -->
     <div style="position:relative;display:inline-block" id="outreach-more-wrap">
@@ -4418,6 +4419,50 @@ async function deleteRow(gi) {
   if (!confirm('Remove this lead?')) return;
   const res = await api('/api/delete_row',{index:gi});
   if (res.ok) { await loadAll(); toast('Deleted','info'); }
+}
+
+async function bulkRegenStale() {
+  const btn = document.getElementById('btnBulkRegen');
+  if (!btn) return;
+  // Count stale rows so user knows what they're running
+  const staleCount = (allRows || []).filter(r =>
+    !r.sent_at &&
+    r.do_not_contact !== 'true' &&
+    (String(r.draft_version || '').trim() !== 'v18' ||
+      (r.subject && !(r.business_specific_observation || '').trim()))
+  ).length;
+
+  if (staleCount === 0) {
+    toast('No stale drafts found — everything is current', 'info');
+    return;
+  }
+
+  if (!confirm(`Regenerate ${staleCount} stale draft${staleCount === 1 ? '' : 's'}?\n\nThe agent will generate a fresh observation and new email for each one. This may take a minute.`)) return;
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  const startToast = document.createElement('div');
+  startToast.className = 'toast-msg info';
+  startToast.textContent = `Regenerating ${staleCount} drafts…`;
+  document.getElementById('toast').appendChild(startToast);
+
+  try {
+    const res = await apiJson('/api/bulk_regenerate', { mode: 'stale' });
+    startToast.remove();
+    if (res.ok) {
+      await loadAll();
+      const msg = `Done — ${res.regenerated} regenerated, ${res.skipped} skipped, ${res.errors} errors`;
+      toast(msg, res.errors > 0 ? 'info' : 'ok');
+    } else {
+      toast('Bulk regen failed — check server logs', 'err');
+    }
+  } catch(e) {
+    startToast.remove();
+    toast('Bulk regen error: ' + String(e), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
 }
 
 async function approveAll() {

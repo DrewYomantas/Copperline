@@ -2282,6 +2282,118 @@ def api_obs_history():
     })
 
 
+@app.route("/api/bulk_regenerate", methods=["POST"])
+def api_bulk_regenerate():
+    """
+    Regenerate drafts for all stale queue rows (or a supplied list of indices).
+    For each row: generate observation candidate → apply → regenerate draft.
+    Skips rows that are sent, do-not-contact, or blocked from candidate generation.
+
+    Input:  { indices?: [int, ...], mode?: "stale" | "all_unsent" }
+            If indices not provided, defaults to mode="stale" (all rows needing draft refresh).
+    Output: { ok, total, regenerated, skipped, errors, results: [{index, name, status}] }
+    """
+    from outreach.email_draft_agent import (
+        draft_email, draft_social_messages,
+        ObservationMissingError, DraftInvalidError,
+    )
+    from intelligence.observation_candidate_agent import (
+        build_observation_candidate, ObservationCandidateBlockedError,
+    )
+
+    d       = request.json or {}
+    mode    = d.get("mode", "stale")
+    indices = d.get("indices")  # optional explicit list
+
+    rows = _read_pending()
+    prospect_rows = _read_prospects()
+
+    # Build target list
+    if indices is not None:
+        targets = [(i, rows[i]) for i in indices if 0 <= i < len(rows)]
+    elif mode == "all_unsent":
+        targets = [(i, r) for i, r in enumerate(rows) if not r.get("sent_at") and r.get("to_email")]
+    else:  # stale — needs draft refresh
+        def _needs_refresh(row):
+            if row.get("sent_at"): return False
+            if row.get("do_not_contact") == "true": return False
+            is_stale = str(row.get("draft_version", "")).strip() != "v18"
+            has_no_obs = not (row.get("business_specific_observation") or "").strip()
+            has_subject = bool((row.get("subject") or "").strip())
+            return is_stale or (has_subject and has_no_obs)
+        targets = [(i, r) for i, r in enumerate(rows) if _needs_refresh(r)]
+
+    results = []
+    regenerated = 0
+    skipped = 0
+    errors = 0
+
+    for idx, row in targets:
+        name = (row.get("business_name") or "").strip()
+        try:
+            # Step 1: get or use existing observation
+            obs = (row.get("business_specific_observation") or "").strip()
+            if len(obs) < 10:
+                # Generate observation candidate
+                prospect_row = _find_matching_prospect(row, prospect_rows)
+                memory_record = _lm.get_record(row)
+                try:
+                    candidate = build_observation_candidate(
+                        row, memory_record=memory_record, prospect_row=prospect_row,
+                    )
+                    obs = candidate.candidate_text.strip()
+                    if not obs:
+                        results.append({"index": idx, "name": name, "status": "skipped_no_candidate"})
+                        skipped += 1
+                        continue
+                    # Save observation to row
+                    rows[idx]["business_specific_observation"] = obs
+                    rows[idx]["obs_source"] = "auto_bulk"
+                except ObservationCandidateBlockedError:
+                    results.append({"index": idx, "name": name, "status": "skipped_blocked"})
+                    skipped += 1
+                    continue
+
+            # Step 2: regenerate draft
+            prospect_row = _find_matching_prospect(row, prospect_rows)
+            new_email    = draft_email(rows[idx], obs)
+            new_social   = draft_social_messages(rows[idx], obs)
+
+            rows[idx]["subject"]                   = new_email["subject"]
+            rows[idx]["body"]                      = new_email["body"]
+            rows[idx]["facebook_dm_draft"]         = new_social.get("facebook_dm", "")
+            rows[idx]["instagram_dm_draft"]        = new_social.get("instagram_dm", "")
+            rows[idx]["contact_form_message"]      = new_social.get("contact_form_message", "")
+            rows[idx]["social_dm_text"]            = new_social.get("facebook_dm", "")
+            rows[idx]["draft_version"]             = "v18"
+            rows[idx]["draft_regenerated_at"]      = __import__("datetime").datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+
+            results.append({"index": idx, "name": name, "status": "ok"})
+            regenerated += 1
+
+        except (ObservationMissingError, DraftInvalidError) as exc:
+            results.append({"index": idx, "name": name, "status": f"blocked: {exc}"})
+            errors += 1
+        except Exception as exc:
+            log.error("bulk_regenerate row %d %s: %s", idx, name, exc, exc_info=True)
+            results.append({"index": idx, "name": name, "status": f"error: {exc}"})
+            errors += 1
+
+    # Write all changes in one pass
+    _write_pending(rows)
+
+    log.info("bulk_regenerate: total=%d regenerated=%d skipped=%d errors=%d",
+             len(targets), regenerated, skipped, errors)
+    return jsonify({
+        "ok": True,
+        "total": len(targets),
+        "regenerated": regenerated,
+        "skipped": skipped,
+        "errors": errors,
+        "results": results,
+    })
+
+
 @app.route("/api/regenerate_draft", methods=["POST"])
 def api_regenerate_draft():
     """
