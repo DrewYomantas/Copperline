@@ -37,6 +37,364 @@
         "new_leads_last_run": 14,
         "status": "checked"
       }
+    },
+    "display_name": "West Chicago"
+  },
+  {
+    "city": "42.8741,-88.2367",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T14:44:53.790539+00:00",
+    "next_check_at": "2026-03-24T14:44:53.790549+00:00",
+    "leads_found": 17,
+    "industries": {
+      "plumbing": {
+        "leads_found": 17,
+        "last_checked_at": "2026-03-17T14:44:53.790539+00:00",
+        "new_leads_last_run": 17,
+        "status": "checked"
+      }
+    },
+    "display_name": "Village of Vernon"
+  },
+  {
+    "city": "42.6759,-88.2875",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T14:45:44.446757+00:00",
+    "next_check_at": "2026-03-24T14:45:44.446768+00:00",
+    "leads_found": 14,
+    "industries": {
+      "plumbing": {
+        "leads_found": 14,
+        "last_checked_at": "2026-03-17T14:45:44.446757+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      }
+    },
+    "display_name": "Burlington"
+  },
+  {
+    "city": "42.6789,-88.1035",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:27:07.008627+00:00",
+    "next_check_at": "2026-03-24T15:27:07.008637+00:00",
+    "leads_found": 79,
+    "industries": {
+      "plumbing": {
+        "leads_found": 6,
+        "last_checked_at": "2026-03-17T14:49:38.286500+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "auto": {
+        "leads_found": 21,
+        "last_checked_at": "2026-03-17T15:21:58.563720+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:23:40.585777+00:00",
+        "new_leads_last_run": 20,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:26:01.856805+00:00",
+        "new_leads_last_run": 20,
+        "status": "checked"
+      },
+      "garage_door": {
+        "leads_found": 12,
+        "last_checked_at": "2026-03-17T15:27:07.008627+00:00",
+        "new_leads_last_run": 12,
+        "status": "checked"
+      }
+    },
+    "display_name": "Town of Dover"
+  },
+  {
+    "city": "42.7001,-88.0870",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:29:34.068367+00:00",
+    "next_check_at": "2026-03-24T15:29:34.068376+00:00",
+    "leads_found": 0,
+    "industries": {
+      "hvac": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-17T15:29:34.068367+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Town of Dover"
+  },
+  {
+    "city": "42.8630,-88.0568",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:30:55.444274+00:00",
+    "next_check_at": "2026-03-24T15:30:55.444285+00:00",
+    "leads_found": 0,
+    "industries": {
+      "hvac": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-17T15:30:55.444274+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Franklin"
+  },
+  {
+    "city": "42.8268,-88.0829",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:43:08.207697+00:00",
+    "next_check_at": "2026-03-24T15:43:08.207707+00:00",
+    "leads_found": 120,
+    "industries": {
+      "auto": {
+        "leads_found": 13,
+        "last_checked_at": "2026-03-17T15:31:38.061419+00:00",
+        "new_leads_last_run": 13,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 8,
+        "last_checked_at": "2026-03-17T15:32:08.884474+00:00",
+        "new_leads_last_run": 8,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 11,
+        "last_checked_at": "2026-03-17T15:32:49.068019+00:00",
+        "new_leads_last_run": 11,
+        "status": "checked"
+      },
+      "garage_door": {
+        "leads_found": 7,
+        "last_checked_at": "2026-03-17T15:33:22.513847+00:00",
+        "new_leads_last_run": 7,
+        "status": "checked"
+      },
+      "hvac": {
+        "leads_found": 1,
+        "last_checked_at": "2026-03-17T15:34:35.046856+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      },
+      "locksmith": {
+        "leads_found": 14,
+        "last_checked_at": "2026-03-17T15:35:17.308845+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      },
+      "pest_control": {
+        "leads_found": 16,
+        "last_checked_at": "2026-03-17T15:36:44.355145+00:00",
+        "new_leads_last_run": 16,
+        "status": "checked"
+      },
+      "plumbing": {
+        "leads_found": 9,
+        "last_checked_at": "2026-03-17T15:37:49.477715+00:00",
+        "new_leads_last_run": 9,
+        "status": "checked"
+      },
+      "roofing": {
+        "leads_found": 21,
+        "last_checked_at": "2026-03-17T15:41:49.350576+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      },
+      "towing": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:43:08.207697+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Town of Norway"
+  },
+  {
+    "city": "42.8046,-87.9401",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:43:26.988141+00:00",
+    "next_check_at": "2026-03-24T15:43:26.988150+00:00",
+    "leads_found": 4,
+    "industries": {
+      "towing": {
+        "leads_found": 4,
+        "last_checked_at": "2026-03-17T15:43:26.988141+00:00",
+        "new_leads_last_run": 4,
+        "status": "checked"
+      }
+    },
+    "display_name": "Caledonia"
+  },
+  {
+    "city": "41.7108,-87.7560",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-19T00:40:43.795172+00:00",
+    "next_check_at": "2026-03-26T00:40:43.795182+00:00",
+    "leads_found": 0,
+    "industries": {
+      "plumbing": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-19T00:40:43.795172+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Oak Lawn"
+  },
+  {
+    "city": "41.5649,-87.2381",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-19T00:41:01.415116+00:00",
+    "next_check_at": "2026-03-26T00:41:01.415126+00:00",
+    "leads_found": 0,
+    "industries": {
+      "construction": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-19T00:41:01.415116+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Hobart"
+  },
+  {
+    "city": "42.2746,-89.0614",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-19T05:37:21.424668+00:00",
+    "next_check_at": "2026-03-26T05:37:21.424683+00:00",
+    "leads_found": 0,
+    "industries": {
+      "plumbing": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-19T05:37:21.424668+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    },
+    "display_name": "Rockford"
+  },
+  {
+    "city": "Loves Park",
+    "state": "IL",
+    "tier": "mid",
+    "last_checked_at": "2026-03-21T13:19:15.741622+00:00",
+    "next_check_at": "2026-03-28T13:19:15.741632+00:00",
+    "leads_found": 151,
+    "industries": {
+      "plumbing": {
+        "leads_found": 4,
+        "last_checked_at": "2026-03-21T13:04:19.794327+00:00",
+        "new_leads_last_run": 4,
+        "status": "checked"
+      },
+      "hvac": {
+        "leads_found": 2,
+        "last_checked_at": "2026-03-21T13:04:22.004852+00:00",
+        "new_leads_last_run": 2,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 4,
+        "last_checked_at": "2026-03-21T13:04:35.049265+00:00",
+        "new_leads_last_run": 4,
+        "status": "checked"
+      },
+      "roofing": {
+        "leads_found": 16,
+        "last_checked_at": "2026-03-21T13:06:50.805772+00:00",
+        "new_leads_last_run": 16,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 7,
+        "last_checked_at": "2026-03-21T13:07:59.656325+00:00",
+        "new_leads_last_run": 7,
+        "status": "checked"
+      },
+      "landscaping": {
+        "leads_found": 12,
+        "last_checked_at": "2026-03-21T13:08:45.769124+00:00",
+        "new_leads_last_run": 12,
+        "status": "checked"
+      },
+      "painting": {
+        "leads_found": 13,
+        "last_checked_at": "2026-03-21T13:09:54.575632+00:00",
+        "new_leads_last_run": 13,
+        "status": "checked"
+      },
+      "tree_service": {
+        "leads_found": 18,
+        "last_checked_at": "2026-03-21T13:11:40.090299+00:00",
+        "new_leads_last_run": 18,
+        "status": "checked"
+      },
+      "cleaning": {
+        "leads_found": 9,
+        "last_checked_at": "2026-03-21T13:12:35.111361+00:00",
+        "new_leads_last_run": 9,
+        "status": "checked"
+      },
+      "auto": {
+        "leads_found": 11,
+        "last_checked_at": "2026-03-21T13:14:13.372887+00:00",
+        "new_leads_last_run": 11,
+        "status": "checked"
+      },
+      "flooring": {
+        "leads_found": 18,
+        "last_checked_at": "2026-03-21T13:16:51.558140+00:00",
+        "new_leads_last_run": 18,
+        "status": "checked"
+      },
+      "concrete": {
+        "leads_found": 13,
+        "last_checked_at": "2026-03-21T13:17:51.851521+00:00",
+        "new_leads_last_run": 13,
+        "status": "checked"
+      },
+      "towing": {
+        "leads_found": 11,
+        "last_checked_at": "2026-03-21T13:18:27.749784+00:00",
+        "new_leads_last_run": 11,
+        "status": "checked"
+      },
+      "appliance_repair": {
+        "leads_found": 6,
+        "last_checked_at": "2026-03-21T13:18:39.159276+00:00",
+        "new_leads_last_run": 6,
+        "status": "checked"
+      },
+      "pressure_washing": {
+        "leads_found": 7,
+        "last_checked_at": "2026-03-21T13:19:15.741622+00:00",
+        "new_leads_last_run": 7,
+        "status": "checked"
+      }
     }
+  },
+  {
+    "city": "Rockford",
+    "state": "IL",
+    "tier": "mid",
+    "last_checked_at": null,
+    "next_check_at": null,
+    "leads_found": 0,
+    "industries": {}
   }
 ]

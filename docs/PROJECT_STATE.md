@@ -15,9 +15,12 @@ Discovery command center, automated outreach pipeline, daily workflow efficiency
 Copperline = One-on-one workflow consulting for small service business owners
 
 ## Last Completed Pass
-Pass 76 -- Email/Lead Search, Global Lead Finder (Ctrl+K)
+Pass 82 -- Command Center unified layout
 
 ## Recent Passes
+Pass 82 -- Pipeline merged into Command Center: map-dominant layout, right queue rail, bottom command bar, CC default tab
+Pass 81 -- Add Obs button now shows for fallback drafts; schedule block shows add obs CTA
+Pass 80 -- lead_quality_score added to schema; CARTO voyager tiles; region outline-only w/ hover dash
 Pass 76 -- Email search in pipeline + Ctrl+K global lead finder
 Pass 75 -- Command Center: map + territory combined split-pane view
 Pass 74 -- MX validation before send (prevents scrape-error bounces)

@@ -1,7 +1,7 @@
 # Copperline AI Control Panel
 
-Last Updated: 2026-03-20
-Repository Version: v0.2
+Last Updated: 2026-03-21
+Repository Version: v0.3
 
 ---
 
@@ -9,19 +9,21 @@ Repository Version: v0.2
 Lead Acquisition Engine
 
 ## Current Focus
-V2 Stage 2 - Unified Lead Workspace Backbone
+Command Center as unified operational surface — map + queue rail + command bar
 
 ## Current Build Pass
-Pass 69 -- v18 Voice, Auto-Regen Fix, Grammar (complete)
+Pass 82 -- Command Center unified layout (complete)
 
 ## Last Completed Pass
-Pass 69 -- v18 Voice, Auto-Regen Fix, Grammar (`b0e97b9`)
+Pass 82 -- Pipeline merged into Command Center: map-dominant, right queue rail, bottom command bar
 
 ## Next Pass
-UNKNOWN / TBD
+Pass 83 -- Visual QA: browser test, layout sizing fixes
 
 ## Upcoming Passes
-- UNKNOWN / TBD
+- Pass 83 -- Visual QA: browser test, fix map height / rail overflow / cmd bar on smaller screens
+- Pass 84 -- Territory-to-queue sync: map county click filters rail to that city's leads
+- Pass 85 -- Pipeline tab simplification or redirect to CC as canonical home
 
 ---
 
@@ -80,31 +82,15 @@ track replies, convert to clients, deploy missed-call texting.
 - Industry saturation view uses only stored search, duplicate, planner, and lead counts per territory cell - no fake polygon completion model
 - Email sending is manual/operator-reviewed - auto-send must not drift into generic nurture behavior
 - Observation-led drafting remains required
-- First-touch drafts must stay observation-led, short, and grounded in real
-  service-business bottlenecks
-- First-touch positioning should sound like one-on-one owner/operator workflow
-  help, not generic consulting or agency copy
-- First-touch subject lines must stay short, calm, owner-readable, and matched
-  to the actual body angle without drifting into clickbait or sales language
-- First-touch batch generation must stay deterministic while spreading subject,
-  opener, consequence, offer, and CTA phrasing more evenly across similar rows
-- First-touch wording should prefer plain-English problem language like missed
-  calls, slow follow-up, and inquiries slipping through over internal tool
-  labels or jargon
-- First-touch drafts may name practical fixes like missed-call text back,
-  after-hours response, estimate follow-up, callback recovery, contact routing,
-  or simple lead tracking when the observation supports them
+- First-touch drafts must stay observation-led, short, and grounded in real service-business bottlenecks
+- First-touch positioning should sound like one-on-one owner/operator workflow help, not generic consulting or agency copy
+- First-touch subject lines must stay short, calm, owner-readable, and matched to the actual body angle without drifting into clickbait or sales language
 - Generated observations are allowed only when grounded in real available lead context
 - Generated observations remain operator-reviewed by default during hardening
 - Observation evidence refresh is operator-triggered and single-lead only
-- Evidence refresh may update lead-side contact/insight fields, but it must not auto-save the observation
-- Observation candidate failures must surface as clean operator-facing blocked/error states - never raw HTML dumps
 - No hidden bulk observation mutation or auto-accept behavior is in scope
-- Fallback websites may be used to scan live evidence, but this pass does not silently rewrite lead identity fields with them
 - Territory cells may guide the operator to the next search area, but do not auto-run discovery
 - Discovery failures should surface the real operator-facing API error where available, not a generic connection label
-- Industry suggestions may guide the next search choice, but must not auto-run search or silently change territory state
-- Follow-up drafting blocks when lead-specific continuation context is weak
 - Stale first-touch rows still keep the direct refresh path from queue row -> observation field -> regenerate -> next stale row
 - Suppressed/contacted leads filtered from all discovery entry points by default
 

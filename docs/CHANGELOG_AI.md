@@ -1,5 +1,70 @@
 ﻿### 2026-03-19 - Pass 50a / 51a: Stale Draft Refresh Workflow
 
+### 2026-03-21 - Pass 82: Command Center Unified Layout
+
+**Goal:** Merge Pipeline into Command Center — map-dominant layout, right queue rail, persistent bottom command bar. Command Center becomes the default landing tab.
+
+**Files changed:**
+- `lead_engine/dashboard_static/index.html`
+
+**What changed:**
+
+CSS additions:
+- `.cc-wrap` → flex-direction:column so rail + cmd bar stack below map row
+- `.cc-main-row` → new flex row containing map pane + territory pane (70/30 natural flex)
+- `.cc-queue-rail` → 360px right rail with header, stat strip, filter chips, scrollable row list
+- `.cc-qrow*` classes → compact lead row cards with left-border status indicator
+- `.cc-cmd-bar` → persistent bottom bar with grouped discovery / queue / send controls
+- `.cc-cmd-btn*`, `.cc-cmd-input`, `.cc-cmd-select`, `.cc-cmd-sep`, `.cc-cmd-label` → command bar component styles
+
+HTML structure changes:
+- `cc-wrap` content wrapped in `cc-main-row` div
+- Queue rail DOM added after `cc-main-row` inside `page-command-center`
+- Bottom command bar DOM added after queue rail
+- Command Center (`page-command-center`) set as default active page
+- Pipeline Outreach page (`page-outreach`) removed from active state
+- Discovery sub-tab set visible and active at boot
+- Boot nav updated to show Discovery sub-tabs by default
+
+JS additions (all new functions, no existing logic changed):
+- `ccQueueRender()` — renders compact rows from `allRows` using rail's own filter state
+- `ccQueueFilter(f, el)` — sets rail filter, re-renders
+- `_ccQueueFilterRow(row)` — filter predicate (active/approved/pending/stale/replied/all)
+- `_ccRowBadge(row)` / `_ccRowClass(row)` — derive status display from row state
+- `ccQueueUpdateStats()` — updates the 4 stat chips (approved/pending/sent/replied)
+- `ccQueueOpenRow(gi)` — opens existing review panel for a rail row; falls back to setFilter('all')
+- `ccCmdDiscover()` — syncs city/state/industry to Pipeline inputs, calls existing discoverLeads()
+- `_ccSyncIndustryDropdown()` — copies industry options from Pipeline select to command bar select
+
+Hooks into existing system (additive only):
+- `renderTable()` now calls `ccQueueRender()` — rail stays in sync with every queue update
+- `loadIndustries()` now calls `_ccSyncIndustryDropdown()` — command bar gets industry list on load
+- Boot DOMContentLoaded now shows discovery sub-tabs and sets command-center active
+
+**What was NOT changed:**
+- No protected systems touched
+- Queue schema unchanged
+- pending_emails.csv pipeline unchanged
+- Email sender unchanged
+- Follow-up scheduler unchanged
+- safe_autopilot_eligible logic unchanged
+- All existing Pipeline tab functionality preserved and still accessible via Full View → button
+- Panel/review behavior unchanged
+- All existing API endpoints unchanged
+- No new backend files or routes
+
+**Verification:**
+- div open/close balance: 766/766 = 0 diff
+- CC chunk balance: 135/135 = 0 diff
+- All required elements present: cc-main-row, cc-queue-rail, cc-cmd-bar, ccQueueRender, ccCmdDiscover, _ccQueueFilter
+
+**Recommended next passes:**
+- Pass 83 — Visual QA pass: test in browser, fix any layout/sizing issues (map height, rail overflow, cmd bar wrapping on smaller screens)
+- Pass 84 — Territory-to-queue sync: clicking a county on the map filters the queue rail to that city's leads
+- Pass 85 — Pipeline clarity pass: simplify old Pipeline tab or redirect to CC as canonical home
+- Pass 86 — Panel as bottom drawer: wire the review panel to open from the bottom of CC instead of as a side overlay
+
+
 **Goal:** Make stale first-touch outreach rows faster to repair from the queue
 and review panel without weakening observation-led drafting rules or changing
 send/scheduler behavior.

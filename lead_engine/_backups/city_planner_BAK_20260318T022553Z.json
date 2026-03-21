@@ -1,0 +1,232 @@
+[
+  {
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T05:47:34.760989+00:00",
+    "next_check_at": "2026-03-24T05:47:34.760998+00:00",
+    "leads_found": 80,
+    "industries": {
+      "towing": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T05:27:02.583335+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "plumbing": {
+        "leads_found": 19,
+        "last_checked_at": "2026-03-17T05:46:25.075195+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "pest_control": {
+        "leads_found": 16,
+        "last_checked_at": "2026-03-17T05:43:06.780234+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "locksmith": {
+        "leads_found": 11,
+        "last_checked_at": "2026-03-17T05:46:33.109785+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "hvac": {
+        "leads_found": 14,
+        "last_checked_at": "2026-03-17T05:47:34.760989+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.8741,-88.2367",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T14:44:53.790539+00:00",
+    "next_check_at": "2026-03-24T14:44:53.790549+00:00",
+    "leads_found": 17,
+    "industries": {
+      "plumbing": {
+        "leads_found": 17,
+        "last_checked_at": "2026-03-17T14:44:53.790539+00:00",
+        "new_leads_last_run": 17,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.6759,-88.2875",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T14:45:44.446757+00:00",
+    "next_check_at": "2026-03-24T14:45:44.446768+00:00",
+    "leads_found": 14,
+    "industries": {
+      "plumbing": {
+        "leads_found": 14,
+        "last_checked_at": "2026-03-17T14:45:44.446757+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.6789,-88.1035",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:27:07.008627+00:00",
+    "next_check_at": "2026-03-24T15:27:07.008637+00:00",
+    "leads_found": 79,
+    "industries": {
+      "plumbing": {
+        "leads_found": 6,
+        "last_checked_at": "2026-03-17T14:49:38.286500+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "auto": {
+        "leads_found": 21,
+        "last_checked_at": "2026-03-17T15:21:58.563720+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:23:40.585777+00:00",
+        "new_leads_last_run": 20,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:26:01.856805+00:00",
+        "new_leads_last_run": 20,
+        "status": "checked"
+      },
+      "garage_door": {
+        "leads_found": 12,
+        "last_checked_at": "2026-03-17T15:27:07.008627+00:00",
+        "new_leads_last_run": 12,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.7001,-88.0870",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:29:34.068367+00:00",
+    "next_check_at": "2026-03-24T15:29:34.068376+00:00",
+    "leads_found": 0,
+    "industries": {
+      "hvac": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-17T15:29:34.068367+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.8630,-88.0568",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:30:55.444274+00:00",
+    "next_check_at": "2026-03-24T15:30:55.444285+00:00",
+    "leads_found": 0,
+    "industries": {
+      "hvac": {
+        "leads_found": 0,
+        "last_checked_at": "2026-03-17T15:30:55.444274+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.8268,-88.0829",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:43:08.207697+00:00",
+    "next_check_at": "2026-03-24T15:43:08.207707+00:00",
+    "leads_found": 120,
+    "industries": {
+      "auto": {
+        "leads_found": 13,
+        "last_checked_at": "2026-03-17T15:31:38.061419+00:00",
+        "new_leads_last_run": 13,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 8,
+        "last_checked_at": "2026-03-17T15:32:08.884474+00:00",
+        "new_leads_last_run": 8,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 11,
+        "last_checked_at": "2026-03-17T15:32:49.068019+00:00",
+        "new_leads_last_run": 11,
+        "status": "checked"
+      },
+      "garage_door": {
+        "leads_found": 7,
+        "last_checked_at": "2026-03-17T15:33:22.513847+00:00",
+        "new_leads_last_run": 7,
+        "status": "checked"
+      },
+      "hvac": {
+        "leads_found": 1,
+        "last_checked_at": "2026-03-17T15:34:35.046856+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      },
+      "locksmith": {
+        "leads_found": 14,
+        "last_checked_at": "2026-03-17T15:35:17.308845+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      },
+      "pest_control": {
+        "leads_found": 16,
+        "last_checked_at": "2026-03-17T15:36:44.355145+00:00",
+        "new_leads_last_run": 16,
+        "status": "checked"
+      },
+      "plumbing": {
+        "leads_found": 9,
+        "last_checked_at": "2026-03-17T15:37:49.477715+00:00",
+        "new_leads_last_run": 9,
+        "status": "checked"
+      },
+      "roofing": {
+        "leads_found": 21,
+        "last_checked_at": "2026-03-17T15:41:49.350576+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      },
+      "towing": {
+        "leads_found": 20,
+        "last_checked_at": "2026-03-17T15:43:08.207697+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      }
+    }
+  },
+  {
+    "city": "42.8046,-87.9401",
+    "state": "AREA",
+    "tier": "mid",
+    "last_checked_at": "2026-03-17T15:43:26.988141+00:00",
+    "next_check_at": "2026-03-24T15:43:26.988150+00:00",
+    "leads_found": 4,
+    "industries": {
+      "towing": {
+        "leads_found": 4,
+        "last_checked_at": "2026-03-17T15:43:26.988141+00:00",
+        "new_leads_last_run": 4,
+        "status": "checked"
+      }
+    }
+  }
+]

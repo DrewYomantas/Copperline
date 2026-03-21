@@ -1,0 +1,4947 @@
+﻿'use strict';
+// â”€â”€ Operator config â€” update these before sending live outreach â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const COPPERLINE_LINKS = {
+  demo:      'https://REPLACE_WITH_DEMO_LINK',
+  booking:   'https://REPLACE_WITH_BOOKING_LINK',
+  caseStudy: 'https://REPLACE_WITH_CASE_STUDY_LINK',
+};
+function _clinkOr(url, fallback) {
+  return url && !url.includes('REPLACE_WITH') ? url : fallback;
+}
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+let allRows = [];
+let filteredRows = [];
+let currentFilter = 'active';
+let panelIdx = -1;
+let panelSaveTimer = null;
+let panelSaveInFlight = false;
+let panelRowsKeys = [];
+let panelRowKey = '';
+let panelSessionLabel = '';
+let status_draft_version = '';
+
+async function api(path, body) {
+  const opts = body !== undefined
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    : {};
+  const r = await fetch(path, opts);
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    throw new Error(`API ${path} returned ${r.status}: ${text.slice(0, 120)}`);
+  }
+  return r.json();
+}
+
+function _panelMakeKey(row) {
+  if (!row) return '';
+  return [
+    row.business_name || '',
+    row.city || '',
+    row.state || '',
+    row.website || '',
+    row.to_email || '',
+    row.subject || '',
+  ].map(v => String(v).trim().toLowerCase()).join('|');
+}
+
+function _panelFindRowByKey(key) {
+  if (!key || !Array.isArray(allRows) || !allRows.length) return null;
+  return allRows.find(row => _panelMakeKey(row) === key) || null;
+}
+
+function _panelSnapshotKeys(rows) {
+  return (Array.isArray(rows) ? rows : []).map(_panelMakeKey).filter(Boolean);
+}
+
+function _panelCurrentRows() {
+  const rows = panelRowsKeys.map(_panelFindRowByKey).filter(Boolean);
+  return rows.length ? rows : filteredRows;
+}
+
+function _panelCurrentRow() {
+  const rows = _panelCurrentRows();
+  if (panelIdx < 0 || panelIdx >= rows.length) return null;
+  const row = rows[panelIdx];
+  panelRowKey = _panelMakeKey(row);
+  return row;
+}
+
+function _panelHasPendingSave() {
+  return !!panelSaveTimer || panelSaveInFlight;
+}
+
+function _panelFilterLabel(name) {
+  const labels = {
+    active: 'Actionable queue',
+    pending: 'Pending queue',
+    approved: 'Approved queue',
+    scheduled: 'Scheduled queue',
+    sent: 'Done queue',
+    replied: 'Replied queue',
+    stale: 'Stale draft queue',
+    no_email: 'No-email queue',
+    high_score: 'High-score queue',
+    all: 'All queue',
+  };
+  return labels[name || currentFilter] || 'Review queue';
+}
+
+function _panelDefaultSessionLabel(rowsCtx) {
+  if (panelSessionLabel) return panelSessionLabel;
+  if (Array.isArray(rowsCtx) && rowsCtx.length && rowsCtx !== filteredRows) return 'Review subset';
+  return _panelFilterLabel(currentFilter);
+}
+
+function _panelSessionStats(rows) {
+  const sessionRows = Array.isArray(rows) ? rows : [];
+  return sessionRows.reduce((acc, row) => {
+    const isSent = !!(row.sent_at || '').trim();
+    const isScheduled = !!(row.send_after || '').trim() && !isSent;
+    const isApproved = String(row.approved || '').toLowerCase() === 'true';
+    const hasEmail = !!((row.to_email || '').trim().includes('@'));
+    if (isSent) acc.sent += 1;
+    else if (isScheduled) acc.scheduled += 1;
+    else if (isApproved) acc.approved += 1;
+    else acc.pending += 1;
+    if (!hasEmail) acc.noEmail += 1;
+    return acc;
+  }, { pending: 0, approved: 0, scheduled: 0, sent: 0, noEmail: 0 });
+}
+
+function _panelRenderSessionChrome(rows, fi) {
+  const titleEl = document.getElementById('panel-session-title');
+  const metaEl = document.getElementById('panel-session-meta');
+  const shortcutsEl = document.getElementById('panel-session-shortcuts');
+  if (!titleEl || !metaEl || !shortcutsEl) return;
+  const stats = _panelSessionStats(rows);
+  const total = rows.length;
+  const remaining = Math.max(total - fi - 1, 0);
+  titleEl.textContent = panelSessionLabel || _panelFilterLabel(currentFilter);
+  metaEl.innerHTML =
+    `<span class="panel-session-chip">${total} in set</span>` +
+    `<span class="panel-session-chip">${remaining} after this</span>` +
+    `<span class="panel-session-chip">${stats.pending} pending</span>` +
+    `<span class="panel-session-chip">${stats.approved} approved</span>` +
+    `<span class="panel-session-chip">${stats.scheduled} scheduled</span>` +
+    (stats.noEmail ? `<span class="panel-session-chip">${stats.noEmail} no email</span>` : '');
+  shortcutsEl.innerHTML = 'â†/â†’ move â€¢ A approve â€¢ Shift+A approve+next â€¢ S schedule â€¢ Shift+S schedule+next â€¢ U unschedule â€¢ N next';
+}
+
+function _panelRenderFlowActions(row) {
+  const flowEl = document.getElementById('panel-flow-bar');
+  if (!flowEl) return;
+  if (!row || row.sent_at) {
+    flowEl.innerHTML = '<span class="panel-flow-note">Use Prev / Next to move through this review set.</span>';
+    return;
+  }
+  const hasNext = panelIdx >= 0 && panelIdx < (_panelCurrentRows().length - 1);
+  const canApprove = !!((row.to_email || '').trim().includes('@'));
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  const isScheduled = !!(row.send_after || '').trim();
+  const buttons = [];
+  if (!isApproved && canApprove) {
+    buttons.push('<button class="btn btn-success" style="font-size:11px;padding:5px 10px" onclick="panelApproveAndNext()">Approve + Next</button>');
+  }
+  if (!isScheduled) {
+    buttons.push('<button class="btn btn-secondary" style="font-size:11px;padding:5px 10px" onclick="panelScheduleTomorrowAndNext()">Schedule + Next</button>');
+  } else {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelUnscheduleAndNext()">Unschedule + Next</button>');
+  }
+  if (isApproved) {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelUnapproveAndNext()">Undo + Next</button>');
+  }
+  if (hasNext) {
+    buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelSkipNext()">Skip â†’</button>');
+  }
+  flowEl.innerHTML =
+    `<span class="panel-flow-note">${hasNext ? 'Keep moving through this review set without closing the panel.' : 'Last row in this review set.'}</span>` +
+    buttons.join('');
+}
+
+function _panelAdvanceAfterAction(doneLabel) {
+  const rows = _panelCurrentRows();
+  const nextIdx = panelIdx + 1;
+  if (nextIdx >= 0 && nextIdx < rows.length) {
+    openPanel(nextIdx, rows, panelSessionLabel);
+    return true;
+  }
+  toast(`${doneLabel} â€” end of review set`, 'ok');
+  return false;
+}
+
+async function panelSkipNext() {
+  if (_panelHasPendingSave()) {
+    toast('Wait for the current draft save to finish first.', 'info');
+    return false;
+  }
+  return _panelAdvanceAfterAction('Skipped');
+}
+
+async function panelApproveAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const wasApproved = String(row.approved || '').toLowerCase() === 'true';
+  await panelApprove();
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  if (!wasApproved && isApproved) return _panelAdvanceAfterAction('Approved');
+  return false;
+}
+
+async function panelScheduleTomorrowAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const before = (row.send_after || '').trim();
+  await panelScheduleTomorrow();
+  const after = (row.send_after || '').trim();
+  if ((!before && after) || (before !== after && !!after)) return _panelAdvanceAfterAction('Scheduled');
+  return false;
+}
+
+async function panelUnscheduleAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const before = (row.send_after || '').trim();
+  await panelUnschedule();
+  const after = (row.send_after || '').trim();
+  if (before && !after) return _panelAdvanceAfterAction('Unscheduled');
+  return false;
+}
+
+async function panelUnapproveAndNext() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  const wasApproved = String(row.approved || '').toLowerCase() === 'true';
+  await panelUnapprove();
+  const isApproved = String(row.approved || '').toLowerCase() === 'true';
+  if (wasApproved && !isApproved) return _panelAdvanceAfterAction('Unapproved');
+  return false;
+}
+
+function _panelSyncOpenState() {
+  const overlay = document.getElementById('panel-overlay');
+  if (!overlay || !overlay.classList.contains('open') || panelIdx < 0) return;
+  const rows = _panelCurrentRows();
+  if (!rows.length) {
+    closePanel(true);
+    return;
+  }
+  if (panelRowKey) {
+    const foundIdx = rows.findIndex(row => _panelMakeKey(row) === panelRowKey);
+    if (foundIdx >= 0) panelIdx = foundIdx;
+    else if (panelIdx >= rows.length) panelIdx = rows.length - 1;
+  } else if (panelIdx >= rows.length) {
+    panelIdx = rows.length - 1;
+  }
+  const row = rows[panelIdx];
+  if (row) fillPanel(row, panelIdx, rows.length);
+}
+
+async function loadAll() {
+  try {
+    const [status, queue] = await Promise.all([api('/api/status'), api('/api/queue')]);
+    document.getElementById('s-prospects').textContent = status.prospects_loaded ?? 'â€”';
+    document.getElementById('s-drafted').textContent   = status.total_drafted ?? 'â€”';
+    document.getElementById('s-pending').textContent   = status.pending_approval ?? 'â€”';
+    document.getElementById('s-approved').textContent  = status.approved_unsent ?? 'â€”';
+    document.getElementById('s-sent').textContent      = status.sent ?? 'â€”';
+    document.getElementById('s-logged').textContent    = status.sent_logged_only ?? 'â€”';
+    _updateRepliedStat(status.replied ?? 0);
+    document.getElementById('s-stale').textContent = status.stale_drafts ?? 'â€”';
+    status_draft_version = status.current_draft_version ?? '';
+    // Background badge fetch â€” doesn't block queue load
+    _refreshNavBadges();
+    allRows = Array.isArray(queue) ? queue : [];
+    if (!Array.isArray(queue)) console.error('Queue API returned non-array:', queue);
+    renderTable();
+    _panelSyncOpenState();
+  } catch(err) {
+    console.error('loadAll failed:', err);
+    toast('Failed to load queue â€” check server is running', 'err');
+  }
+}
+
+async function loadStats() {
+  const s = await api('/api/status');
+  document.getElementById('s-prospects').textContent = s.prospects_loaded ?? 'â€”';
+  document.getElementById('s-drafted').textContent   = s.total_drafted ?? 'â€”';
+  document.getElementById('s-pending').textContent   = s.pending_approval ?? 'â€”';
+  document.getElementById('s-approved').textContent  = s.approved_unsent ?? 'â€”';
+  document.getElementById('s-sent').textContent      = s.sent ?? 'â€”';
+  document.getElementById('s-logged').textContent    = s.sent_logged_only ?? 'â€”';
+  _updateRepliedStat(s.replied ?? 0);
+  document.getElementById('s-stale').textContent = s.stale_drafts ?? 'â€”';
+}
+
+function _updateRepliedStat(count) {
+  document.getElementById('s-replied').textContent = count;
+  const pulse = document.getElementById('reply-pulse');
+  if (pulse) pulse.style.display = count > 0 ? 'inline-block' : 'none';
+}
+
+function isRowActionable(row) {
+  const terminal = new Set(['replied','not_interested','bad_lead','no_contact_route','closed']);
+  // A row is actionable if: not sent, not terminal, AND either no schedule OR schedule is past-due.
+  // row.is_ready is computed by /api/queue: true when send_after <= now (local time).
+  const scheduledButNotReady = row.send_after && !row.is_ready;
+  return !row.sent_at && !scheduledButNotReady && !terminal.has(row.contact_result || '');
+}
+
+function isRowScheduled(row) {
+  return !!(row && row.send_after && !row.sent_at);
+}
+
+function isRowBulkSelectable(row) {
+  return isRowActionable(row) || isRowScheduled(row);
+}
+
+function applyFiltersAndSort() {
+  let rows = [...allRows];
+  const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+
+  if (currentFilter === 'active') {
+    // Default view: unsent, unscheduled leads that aren't terminal â€” actionable now
+    rows = rows.filter(r => isRowActionable(r));
+  } else if (currentFilter === 'pending')  rows = rows.filter(r => isRowActionable(r) && r.approved !== 'true');
+  else if (currentFilter === 'approved')   rows = rows.filter(r => isRowActionable(r) && r.approved === 'true');
+  else if (currentFilter === 'sent')       rows = rows.filter(r => !!r.sent_at);
+  else if (currentFilter === 'replied')    rows = rows.filter(r => r.replied === 'true');
+  else if (currentFilter === 'stale')      rows = rows.filter(r => !r.sent_at && r.draft_version !== status_draft_version);
+  else if (currentFilter === 'has_email')  rows = rows.filter(r => r.to_email && r.to_email.includes('@'));
+  else if (currentFilter === 'no_email')   rows = rows.filter(r => !r.to_email || !r.to_email.includes('@'));
+  else if (currentFilter === 'high_score') rows = rows.filter(r => parseInt(r.final_priority_score) >= 4);
+
+  else if (currentFilter === 'all')  {
+    // Keep actionable work at the top, then scheduled, then done history.
+    rows.sort((a,b) => {
+      const bucket = (r) => isRowActionable(r) ? 0 : ((r.send_after && !r.sent_at) ? 1 : 2);
+      return bucket(a) - bucket(b);
+    });
+  }
+  else if (currentFilter === 'scheduled')  {
+    rows = rows.filter(r => r.send_after && !r.sent_at);
+    rows.sort((a, b) => (a.send_after || '').localeCompare(b.send_after || ''));
+  }
+
+  if (q) rows = rows.filter(r =>
+    (r.business_name||'').toLowerCase().includes(q) ||
+    (r.city||'').toLowerCase().includes(q) ||
+    (r.subject||'').toLowerCase().includes(q));
+
+  if (sort === 'opp_desc')   rows.sort((a,b) => (b.opp_score||parseInt(b.opportunity_score)||0) - (a.opp_score||parseInt(a.opportunity_score)||0));
+  else if (sort === 'score_desc') rows.sort((a,b) => (parseInt(b.final_priority_score)||0)-(parseInt(a.final_priority_score)||0));
+  else if (sort === 'score_asc')  rows.sort((a,b) => (parseInt(a.final_priority_score)||0)-(parseInt(b.final_priority_score)||0));
+  else if (sort === 'name_asc')   rows.sort((a,b) => (a.business_name||'').localeCompare(b.business_name||''));
+  else if (sort === 'name_desc')  rows.sort((a,b) => (b.business_name||'').localeCompare(a.business_name||''));
+  else {
+    // default: opp score desc
+    rows.sort((a,b) =>
+      (b.opp_score||parseInt(b.opportunity_score)||0) -
+      (a.opp_score||parseInt(a.opportunity_score)||0)
+    );
+  }
+
+  filteredRows = rows;
+}
+
+const SCORE_LABELS = {5:'High Opportunity',4:'Good Fit',3:'Possible',2:'Weak',1:'Skip'};
+function scoreClass(s) { return 'sc-' + Math.max(1, Math.min(5, parseInt(s)||3)); }
+function scoreTip(s) { const n=Math.max(1,Math.min(5,parseInt(s)||3)); return `${n} â€” ${SCORE_LABELS[n]||''}`; }
+
+function statusBadge(row) {
+  if (row.replied === 'true') return '<span class="badge badge-replied">â˜… Replied</span>';
+  if (row.sent_at) return '<span class="badge badge-sent">âœ“ Sent</span>';
+  if (!row.sent_at && status_draft_version && row.draft_version !== status_draft_version)
+    return '<span class="badge badge-stale" title="Old copy â€” regenerate before sending">âš  Stale</span>';
+  if (row.send_after && !row.sent_at) return `<span class="badge badge-scheduled" title="Scheduled: ${escHtml(row.send_after)}">ðŸ• Scheduled</span>`;
+  if (row.approved === 'true') return '<span class="badge badge-approved">â— Approved</span>';
+  return '<span class="badge badge-pending">â—‹ Pending</span>';
+}
+
+// Pass 10 â€” human-readable schedule time label
+function _formatSendAfter(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  // Compare calendar dates in local time
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const target   = new Date(d); target.setHours(0,0,0,0);
+  // Format time as 12h (e.g. 7:30am)
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  const timeStr = m === 0 ? `${h}${ampm}` : `${h}:${String(m).padStart(2,'0')}${ampm}`;
+  if (target.getTime() === today.getTime())    return `Today Â· ${timeStr}`;
+  if (target.getTime() === tomorrow.getTime()) return `Tomorrow Â· ${timeStr}`;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()} Â· ${timeStr}`;
+}
+
+function _formatSendAfterExact(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  const timeStr = m === 0 ? `${h} ${ampm}` : `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} at ${timeStr} local time`;
+}
+
+function _queueStateMeta(row) {
+  const isReplied = row.replied === 'true';
+  const isSent = !!row.sent_at;
+  const isStale = !isSent && status_draft_version && row.draft_version !== status_draft_version;
+  const isScheduled = !!(row.send_after && !row.sent_at);
+  const isReadyScheduled = !!(isScheduled && row.is_ready);
+  const isApproved = row.approved === 'true';
+  const relative = isScheduled ? _formatSendAfter(row.send_after) : '';
+  const exact = isScheduled ? _formatSendAfterExact(row.send_after) : '';
+
+  if (isReplied) {
+    return { badgeClass: 'badge-replied', label: 'Replied', title: 'Reply received', subline: 'Conversation active', detail: 'No send action needed', tone: 'info' };
+  }
+  if (isSent) {
+    return { badgeClass: 'badge-sent', label: 'Sent', title: 'Already sent', subline: 'Completed send', detail: 'No further queue action', tone: 'info' };
+  }
+  if (isStale) {
+    return { badgeClass: 'badge-stale', label: 'Stale', title: 'Old copy - regenerate before sending', subline: 'Needs refresh before send', detail: 'Draft version is behind current prompt', tone: 'wait' };
+  }
+  if (isScheduled && !isReadyScheduled) {
+    return {
+      badgeClass: 'badge-scheduled',
+      label: 'Scheduled',
+      title: `Scheduled for ${exact || row.send_after}`,
+      subline: `Waits until ${relative || row.send_after}`,
+      detail: `${exact} - not in Send Approved yet`,
+      tone: 'wait',
+    };
+  }
+  if (isReadyScheduled) {
+    return {
+      badgeClass: 'badge-ready',
+      label: 'Ready Now',
+      title: `Scheduled window reached at ${exact || row.send_after}`,
+      subline: 'Scheduled time reached',
+      detail: `${exact} - included in Send Approved now`,
+      tone: 'ready',
+    };
+  }
+  if (isApproved) {
+    return {
+      badgeClass: 'badge-approved',
+      label: 'Approved',
+      title: 'Approved and ready to send now',
+      subline: 'Ready to send now',
+      detail: 'Included in Send Approved immediately',
+      tone: 'ready',
+    };
+  }
+  return {
+    badgeClass: 'badge-pending',
+    label: 'Pending',
+    title: 'Still needs operator approval',
+    subline: 'Needs approval before send',
+    detail: 'Not in Send Approved yet',
+    tone: 'info',
+  };
+}
+
+function statusCellHtml(row) {
+  const meta = _queueStateMeta(row);
+  return `<div class="status-stack">` +
+    `<span class="badge ${meta.badgeClass}" title="${escHtml(meta.title || meta.label)}">${escHtml(meta.label)}</span>` +
+    `<div class="status-sub ${meta.tone || 'info'}">${escHtml(meta.subline || '')}</div>` +
+    (meta.detail ? `<div class="status-sub exact">${escHtml(meta.detail)}</div>` : '') +
+    `</div>`;
+}
+
+function _queueTimelineNoteHtml() {
+  const futureScheduled = allRows.filter(r => !!(r.send_after && !r.sent_at) && !r.is_ready).length;
+  const readyScheduled = allRows.filter(r => !!(r.send_after && !r.sent_at) && r.is_ready).length;
+  if (currentFilter === 'scheduled') {
+    return {
+      tone: 'scheduled',
+      html: `<strong>Scheduled queue:</strong> future rows wait here until their send window. "Tomorrow morning" uses the backend's industry send time. ${futureScheduled} future-scheduled â€¢ ${readyScheduled} window-reached row(s) still carry schedule timing.`,
+    };
+  }
+  if (currentFilter === 'approved') {
+    return {
+      tone: 'ready',
+      html: `<strong>Approved queue:</strong> these rows are ready to send now. Future-scheduled rows stay out until their time arrives; once a scheduled window is reached, the row is send-ready again.`,
+    };
+  }
+  if (currentFilter === 'active') {
+    return {
+      tone: 'ready',
+      html: `<strong>Actionable queue:</strong> work you can handle right now. Future-scheduled rows stay out of this view until their scheduled time arrives.`,
+    };
+  }
+  if (currentFilter === 'pending') {
+    return {
+      tone: 'pending',
+      html: `<strong>Pending queue:</strong> drafts still need approval before they can send or be meaningfully scheduled.`,
+    };
+  }
+  if (currentFilter === 'all') {
+    return {
+      tone: 'scheduled',
+      html: `<strong>All queue:</strong> ready-now work appears first, then future-scheduled rows, then history. ${futureScheduled} future-scheduled â€¢ ${readyScheduled} scheduled row(s) have reached their send window.`,
+    };
+  }
+  return null;
+}
+
+function _renderQueueTimelineNote() {
+  const el = document.getElementById('queue-timeline-note');
+  if (!el) return;
+  const note = _queueTimelineNoteHtml();
+  if (!note) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.className = `queue-note queue-note-${note.tone}`;
+  el.innerHTML = note.html;
+  el.style.display = '';
+}
+
+function oppScoreBadge(row) {
+  const score = parseInt(row.opp_score ?? row.opportunity_score) || 0;
+  const lbl   = row.opp_priority || (score >= 60 ? 'High' : score >= 30 ? 'Medium' : 'Low');
+  const cls   = lbl === 'High' ? 'opp-high' : lbl === 'Medium' ? 'opp-mid' : 'opp-low';
+  if (!score) return '<span style="color:var(--dim);font-size:11px">â€”</span>';
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+    <span class="opp-badge ${cls}">${lbl}</span>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${score}</span>
+  </div>`;
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTable() {
+  applyFiltersAndSort();
+  _renderQueueTimelineNote();
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('row-count').textContent = filteredRows.length + ' rows';
+
+  if (!filteredRows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filteredRows.map((row, fi) => {
+    const gi = allRows.indexOf(row);
+    const sc = parseInt(row.final_priority_score) || 3;
+    const sentClass = row.sent_at ? 'row-sent' : '';
+    const repliedClass = row.replied === 'true' ? 'row-replied' : '';
+    const scheduledClass = (row.send_after && !row.sent_at) ? 'row-scheduled' : '';
+    const emailHtml = row.to_email
+      ? `<div class="email-cell">${escHtml(row.to_email)}</div>`
+      : `<div class="email-missing">no email</div>`;
+    const channelBadges = channelBadgesInline(row);
+    const scanNote = row.scan_note ? `<div class="scan-note">${escHtml(row.scan_note)}</div>` : '';
+    const siteLink = row.website ? `<span><a href="${escHtml(row.website)}" target="_blank">ðŸŒ site</a></span>` : '';
+    const phoneHtml = row.phone ? `<span>ðŸ“ž ${escHtml(row.phone)}</span>` : '';
+    const replySnip = row.replied === 'true' && row.reply_snippet
+      ? `<div class="reply-snippet">â†© ${escHtml(row.reply_snippet.substring(0,80))}</div>` : '';
+
+    const actionable = isRowActionable(row);
+    const scheduled = isRowScheduled(row);
+    const bulkSelectable = isRowBulkSelectable(row);
+    const approveBtn = row.sent_at
+      ? `<span style="color:var(--dim);font-size:10px">sent</span>`
+      : row.approved === 'true'
+        ? `<button class="act act-unapprove" onclick="event.stopPropagation();unapproveRow(${gi})">Undo</button>`
+        : `<button class="act act-approve" onclick="event.stopPropagation();approveRow(${gi})">Approve</button>`;
+
+    return `<tr class="${sentClass} ${repliedClass} ${scheduledClass}" onclick="openPanel(${fi})">
+      <td class="td-chk" onclick="event.stopPropagation()">
+        ${bulkSelectable ? `<input type="checkbox" class="row-chk" data-gi="${gi}" onchange="updateBulkBar()">` : `<span style="color:var(--dim);font-size:10px">â€”</span>`}
+      </td>
+      <td class="td-biz">
+        <span class="biz-name">${escHtml(row.business_name)}</span>
+        <div class="biz-meta">${escHtml(row.city)}, ${escHtml(row.state)}</div>
+        <div class="biz-meta" style="display:flex;gap:8px">${phoneHtml}${siteLink}</div>
+      </td>
+      <td class="td-email">${emailHtml}${channelBadges}${scanNote}</td>
+      <td class="td-subject"><div class="subj-text">${escHtml(row.subject)}</div>${replySnip}</td>
+      <td class="td-score"><div class="score-chip ${scoreClass(row.final_priority_score)}" data-tip="${scoreTip(row.final_priority_score)}">${sc}</div></td>
+      <td>${oppScoreBadge(row)}</td>
+      <td class="td-status">${statusCellHtml(row)}</td>
+      <td class="td-actions" onclick="event.stopPropagation()">
+        <div class="row-acts">
+          ${approveBtn}
+          <button class="act act-edit" onclick="openPanel(${fi})">Edit</button>
+          ${actionable && !row.send_after ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowSchedule(${gi},${JSON.stringify(row.business_name)})" title="Schedule for tomorrow morning window">ðŸ•</button>` : ''}
+          ${scheduled ? `<button class="act" style="background:rgba(245,166,35,.13);color:var(--amber);border:none" onclick="rowUnschedule(${gi},${JSON.stringify(row.business_name)})" title="Clear schedule">âœ•Sched</button>` : ''}
+          ${actionable ? `<button class="act act-del" onclick="deleteRow(${gi})">Del</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  updateBulkSafety();
+}
+
+
+function setFilter(name, el) {
+  currentFilter = name;
+  document.querySelectorAll('.filter-tabs .ftab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateBulkSafety();
+  renderTable();
+}
+
+function toggleExtraFilters(btn) {
+  const tabs = document.querySelector('.filter-tabs');
+  if (!tabs) return;
+  const on = tabs.classList.toggle('show-aux');
+  if (btn) btn.textContent = on ? 'â‹¯ Less' : 'â‹¯ More';
+}
+
+// â”€â”€ Review Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function openPanel(fi, rowsCtx, sessionLabel) {
+  const rows = Array.isArray(rowsCtx) && rowsCtx.length ? rowsCtx : filteredRows;
+  panelRowsKeys = _panelSnapshotKeys(rows);
+  panelSessionLabel = sessionLabel || _panelDefaultSessionLabel(rowsCtx);
+  const panelRows = _panelCurrentRows();
+  if (!panelRows.length) return;
+  panelIdx = Math.max(0, Math.min(fi, panelRows.length - 1));
+  const row = panelRows[panelIdx];
+  if (!row) return;
+  panelRowKey = _panelMakeKey(row);
+  const activeKey = _mapPanelActiveKeyForRow(row);
+  if (activeKey) _mapPanelActiveKey = activeKey;
+  fillPanel(row, panelIdx, panelRows.length);
+  const body = document.querySelector('#review-panel .panel-body');
+  if (body) body.scrollTop = 0;
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+async function fillPanel(row, fi, totalRows) {
+  const rows = _panelCurrentRows();
+  const total = totalRows || rows.length || filteredRows.length;
+  document.getElementById('panel-biz-title').textContent = row.business_name || 'Review';
+  document.getElementById('panel-pos').textContent = `${fi+1} / ${total}`;
+  document.getElementById('btn-prev').disabled = fi === 0;
+  document.getElementById('btn-next').disabled = fi === total - 1;
+  _panelRenderSessionChrome(rows, fi);
+
+  const parts = [];
+  if (row.city) parts.push(`<span>ðŸ“ ${escHtml(row.city)}, ${escHtml(row.state)}</span>`);
+  if (row.phone) parts.push(`<span>ðŸ“ž ${escHtml(row.phone)}</span>`);
+  if (row.website) parts.push(`<span>ðŸŒ <a href="${escHtml(row.website)}" target="_blank">${escHtml(row.website)}</a></span>`);
+  if (row.scan_note) parts.push(`<span style="color:var(--dim);font-style:italic;font-size:11px">ðŸ” ${escHtml(row.scan_note)}</span>`);
+  document.getElementById('panel-meta').innerHTML = parts.join('');
+
+  document.getElementById('panel-email').value = row.to_email || '';
+  document.getElementById('panel-email').disabled = !!row.sent_at;
+  document.getElementById('panel-subject').value = row.subject || '';
+  document.getElementById('panel-subject').disabled = !!row.sent_at;
+  document.getElementById('panel-body').value = row.body || '';
+  document.getElementById('panel-body').disabled = !!row.sent_at;
+
+  const sc = parseInt(row.final_priority_score) || 3;
+  const chip = document.getElementById('panel-score-chip');
+  chip.textContent = sc;
+  chip.className = `score-chip ${scoreClass(row.final_priority_score)}`;
+  chip.dataset.tip = scoreTip(row.final_priority_score);
+  document.getElementById('panel-reason').textContent = row.scoring_reason || '';
+  // approval_reason â€” show "âœ“ Auto-approved" badge when set
+  const arEl = document.getElementById('panel-approval-reason');
+  if (arEl) {
+    const ar = (row.approval_reason || '').trim();
+    if (ar === 'safe_autopilot') { arEl.textContent = 'âœ“ Auto-approved (safe autopilot)'; arEl.style.display = ''; }
+    else if (ar) { arEl.textContent = 'âœ“ Approved: ' + ar; arEl.style.display = ''; }
+    else { arEl.style.display = 'none'; }
+  }
+
+  // â”€â”€ Opportunity score badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const oppEl = document.getElementById('panel-opp-badge');
+  if (oppEl) {
+    const os  = parseInt(row.opp_score ?? row.opportunity_score) || 0;
+    const opl = row.opp_priority || (os >= 60 ? 'High' : os >= 30 ? 'Medium' : 'Low');
+    const opc = opl === 'High' ? 'opp-high' : opl === 'Medium' ? 'opp-mid' : 'opp-low';
+    oppEl.innerHTML = os
+      ? `<span class="opp-badge ${opc}">${opl}</span> <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${os}</span>`
+      : '';
+  }
+
+  // â”€â”€ Lead insight â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const insightSec  = document.getElementById('panel-insight-section');
+  const insightTxt  = document.getElementById('panel-insight-text');
+  const insightSigs = document.getElementById('panel-insight-signals');
+  if (insightSec && insightTxt) {
+    const sentence = row.lead_insight_sentence || '';
+    if (sentence) {
+      insightTxt.textContent = sentence;
+      if (insightSigs) {
+        const sigs = (row.lead_insight_signals || '').split('|').filter(Boolean);
+        insightSigs.textContent = sigs.length ? 'Signals: ' + sigs.join(', ') : '';
+      }
+      insightSec.style.display = '';
+    } else {
+      insightSec.style.display = 'none';
+    }
+  }
+
+  // â”€â”€ Schedule info block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const schedEl = document.getElementById('panel-schedule-info');
+  if (schedEl) {
+    const queueMeta = _queueStateMeta(row);
+    if (row.send_after && !row.sent_at) {
+      const waitCopy = row.is_ready
+        ? 'The scheduled time has already arrived. This row is eligible in Send Approved now, but it keeps its schedule until you send or clear it.'
+        : 'This row stays out of Send Approved until the scheduled time arrives. "Tomorrow morning" uses the backend industry send window.';
+      schedEl.className = 'panel-sched-info' + (row.is_ready ? ' ready-now' : '');
+      schedEl.innerHTML =
+        `<span class="sched-time">${row.is_ready ? 'Ready now from schedule' : 'Scheduled for ' + _formatSendAfter(row.send_after)}</span>` +
+        `<div class="sched-sub">${escHtml(_formatSendAfterExact(row.send_after))} - ${escHtml(waitCopy)}</div>` +
+        `<button class="btn-sched-act" onclick="panelUnschedule()">Unschedule</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(1)">+1 day</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(2)">+2</button>` +
+        `<button class="btn-sched-act" onclick="panelReschedule(3)">+3</button>`;
+      schedEl.style.display = '';
+    } else if (row.approved === 'true' && !row.sent_at) {
+      schedEl.className = 'panel-sched-info ready-now';
+      schedEl.innerHTML =
+        `<span class="sched-time">Ready to send now</span>` +
+        `<div class="sched-sub">${escHtml(queueMeta.detail || 'Included in Send Approved immediately.')}</div>`;
+      schedEl.style.display = '';
+    } else if (!row.sent_at) {
+      schedEl.className = 'panel-sched-info pending-review';
+      schedEl.innerHTML =
+        `<span class="sched-time">Not sending yet</span>` +
+        `<div class="sched-sub">This draft still needs approval before it can send now or be confidently scheduled for later.</div>`;
+      schedEl.style.display = '';
+    } else {
+      schedEl.innerHTML = '';
+      schedEl.className = 'panel-sched-info';
+      schedEl.style.display = 'none';
+    }
+  }
+
+  // â”€â”€ Reply display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  let replyBox = document.getElementById('panel-reply-box');
+  if (row.replied === 'true') {
+    if (!replyBox) {
+      replyBox = document.createElement('div');
+      replyBox.id = 'panel-reply-box';
+      replyBox.className = 'panel-reply-box';
+      document.getElementById('panel-score-chip').closest('.panel-section').after(replyBox);
+    }
+    const ts = row.replied_at ? new Date(row.replied_at).toLocaleString() : '';
+    replyBox.innerHTML =
+      `<div class="reply-label">â˜… Reply received${ts ? ' â€” ' + ts : ''}</div>` +
+      `<div class="reply-body">${escHtml(row.reply_snippet || '(no preview available)')}</div>`;
+    replyBox.style.display = 'block';
+  } else {
+    if (replyBox) replyBox.style.display = 'none';
+  }
+
+  const ab = document.getElementById('panel-approve-btn');
+  const ub = document.getElementById('panel-unapprove-btn');
+  const sb = document.getElementById('panel-schedule-btn');
+  if (row.sent_at) { ab.style.display='none'; ub.style.display='none'; if(sb) sb.style.display='none'; }
+  else if (row.approved === 'true') { ab.style.display='none'; ub.style.display=''; if(sb) sb.style.display=''; }
+  else { ab.style.display=''; ub.style.display='none'; if(sb) sb.style.display=''; }
+  // â”€â”€ Best-next-action + quick-log + campaign â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  _panelRenderFlowActions(row);
+  const _gi = allRows.indexOf(row);
+  await _loadPresets();
+  let _panelExtra = document.getElementById('panel-extra-sections');
+  if (!_panelExtra) {
+    _panelExtra = document.createElement('div');
+    _panelExtra.id = 'panel-extra-sections';
+    document.getElementById('panel-body').appendChild(_panelExtra);
+  }
+  _panelExtra.innerHTML =
+    '<div class="panel-section"><div class="panel-label">Quick Log</div>'
+    + _panelStatusGridHtml(row, _gi) + '</div>'
+    + '<div class="panel-section"><div class="panel-label" style="margin-bottom:2px">Best Next Action</div>'
+    + _panelBestActionHtml(row, _gi) + '</div>'
+    + '<div class="panel-section">' + _panelCampaignHtml(row) + '</div>';
+
+  // â”€â”€ Social channels + DM drafts section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const socialSec   = document.getElementById('panel-social-section');
+  const chWrap      = document.getElementById('panel-channels-wrap');
+  const draftsWrap  = document.getElementById('panel-social-drafts');
+  const badges      = channelBadgesHtml(row);
+
+  if (badges) {
+    socialSec.style.display = '';
+    chWrap.innerHTML = badges;
+
+    // Build draft boxes for each available channel
+    const draftBlocks = [];
+    const _pdm = (label, text, ch, logResult) => {
+      if (!text) return '';
+      const safeText = escHtml(text);
+      const safeJs   = JSON.stringify(text);
+      return `<div class="panel-dm-box" style="margin-top:6px">
+        <div class="panel-dm-label">
+          <span>${label}</span>
+          <button class="btn-copy" onclick="panelCopyText(this,${safeJs})">Copy</button>
+        </div>
+        <div class="panel-dm-text">${safeText}</div>
+      </div>`;
+    };
+
+    if (row.facebook_dm_draft || row.social_dm_text)
+      draftBlocks.push(_pdm('f Facebook DM', row.facebook_dm_draft || row.social_dm_text));
+    if (row.instagram_dm_draft)
+      draftBlocks.push(_pdm('â—Ž Instagram DM', row.instagram_dm_draft));
+    if (row.contact_form_message)
+      draftBlocks.push(_pdm('âŠŸ Contact Form Message', row.contact_form_message));
+
+    if (draftsWrap) draftsWrap.innerHTML = draftBlocks.join('');
+  } else {
+    socialSec.style.display = 'none';
+  }
+}
+
+function panelCopyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => toast('Copy failed â€” select text manually', 'err'));
+}
+
+function closePanel(force) {
+  if (!force && _panelHasPendingSave()) {
+    toast('Finishing your edit save. Use Close again in a moment.', 'info');
+    return;
+  }
+  document.getElementById('panel-overlay').classList.remove('open');
+  panelIdx = -1;
+  panelRowsKeys = [];
+  panelRowKey = '';
+  panelSessionLabel = '';
+}
+
+function closePanelOnOverlay(e) {
+  if (e.target === document.getElementById('panel-overlay')) {
+    toast('Review stays open until you use Close.', 'info');
+  }
+}
+
+function navigatePanel(dir) {
+  const rows = _panelCurrentRows();
+  const n = panelIdx + dir;
+  if (n >= 0 && n < rows.length) openPanel(n, rows);
+}
+
+// â”€â”€ Social channel badge helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function channelBadgesHtml(row) {
+  const parts = [];
+  if (row.to_email && row.to_email.includes('@'))
+    parts.push(`<span class="ch-badge ch-email" title="Email found â€” use outreach queue">âœ‰ Email</span>`);
+  if (row.facebook_url)
+    parts.push(`<a class="ch-badge ch-fb" href="${escHtml(row.facebook_url)}" target="_blank" title="Open Facebook page">f Facebook</a>`);
+  if (row.instagram_url)
+    parts.push(`<a class="ch-badge ch-ig" href="${escHtml(row.instagram_url)}" target="_blank" title="Open Instagram profile">â—Ž Instagram</a>`);
+  if (row.contact_form_url)
+    parts.push(`<a class="ch-badge ch-form" href="${escHtml(row.contact_form_url)}" target="_blank" title="Open contact form">âŠŸ Form</a>`);
+  if (!parts.length)
+    parts.push(`<span class="ch-badge ch-none">No channel found</span>`);
+  return parts.join('');
+}
+
+// Render channel badges inline in the email column of the queue table
+function channelBadgesInline(row) {
+  const parts = [];
+  if (row.to_email && row.to_email.includes('@'))
+    parts.push(`<span class="ch-badge ch-email" style="font-size:9px;padding:1px 5px">âœ‰</span>`);
+  if (row.facebook_url)
+    parts.push(`<a class="ch-badge ch-fb" href="${escHtml(row.facebook_url)}" target="_blank"
+      onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px" title="Facebook">f</a>`);
+  if (row.instagram_url)
+    parts.push(`<a class="ch-badge ch-ig" href="${escHtml(row.instagram_url)}" target="_blank"
+      onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px" title="Instagram">â—Ž</a>`);
+  if (row.contact_form_url)
+    parts.push(`<a class="ch-badge ch-form" href="${escHtml(row.contact_form_url)}" target="_blank"
+      onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px" title="Contact form">âŠŸ</a>`);
+  return parts.length ? `<div class="ch-wrap" style="margin-top:2px">${parts.join('')}</div>` : '';
+}
+
+function panelCopyDm(btn) {
+  const text = document.getElementById('panel-dm-text')?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => toast('Copy failed â€” select text manually', 'err'));
+}
+
+function panelFieldChanged(field, value) {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  const gi = allRows.indexOf(row);
+  row[field] = value;
+  panelRowKey = _panelMakeKey(row);
+  // Show saving indicator on body edits
+  if (field === 'body') {
+    const ind = document.getElementById('panel-save-state');
+    if (ind) { ind.textContent = 'Savingâ€¦'; ind.className = 'panel-save-state saving'; }
+  }
+  clearTimeout(panelSaveTimer);
+  panelSaveInFlight = false;
+  panelSaveTimer = setTimeout(() => {
+    panelSaveTimer = null;
+    panelSaveInFlight = true;
+    api('/api/update_row', {index: gi, updates: {[field]: value}})
+      .then(() => {
+        if (field === 'body') {
+          const ind = document.getElementById('panel-save-state');
+          if (ind) { ind.textContent = 'Saved âœ“'; ind.className = 'panel-save-state saved'; }
+        }
+        renderTable();
+      })
+      .catch(() => {
+        if (field === 'body') {
+          const ind = document.getElementById('panel-save-state');
+          if (ind) { ind.textContent = 'Error saving'; ind.className = 'panel-save-state save-err'; }
+        }
+      })
+      .finally(() => { panelSaveInFlight = false; });
+  }, 500);
+}
+
+// Pass 9b â€” industry send windows (local time, HH:MM)
+const SEND_WINDOWS = {
+  plumbing:    '07:30',
+  hvac:        '07:30',
+  electrical:  '08:00',
+  roofing:     '08:00',
+  landscaping: '08:30',
+  locksmith:   '08:00',
+  default:     '08:00',
+};
+
+async function panelScheduleTomorrow() {
+  const row = _panelCurrentRow();
+  if (!row) return false;
+  if (row.sent_at) { toast('Already sent â€” cannot schedule', 'err'); return; }
+  const gi = allRows.indexOf(row);
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      days_ahead: 1,
+    });
+    if (!res.ok) { toast('Schedule error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = res.send_after;
+    renderTable();
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
+    toast(`Scheduled for ${_formatSendAfter(row.send_after)} - waits until that time`, 'ok');
+    return true;
+  } catch(e) {
+    toast('Connection error', 'err');
+  }
+}
+
+// Pass 10 â€” clear existing schedule
+async function panelUnschedule() {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  const gi = allRows.indexOf(row);
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      send_after: '',
+    });
+    if (!res.ok) { toast('Clear error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = '';
+    renderTable();
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
+    await loadStats();
+    toast('Unscheduled - back in the ready-now queue', 'ok');
+    return true;
+  } catch(e) {
+    toast('Connection error', 'err');
+  }
+}
+
+// Pass 10 / Pass 20a â€” reschedule to today + N days via backend industry window
+async function panelReschedule(days) {
+  const row = _panelCurrentRow();
+  if (!row) return;
+  if (row.sent_at) { toast('Already sent â€” cannot reschedule', 'err'); return; }
+  const gi = allRows.indexOf(row);
+  try {
+    const res = await api('/api/schedule_email', {
+      index: gi,
+      business_name: row.business_name,
+      days_ahead: days,
+    });
+    if (!res.ok) { toast('Reschedule error: ' + (res.error || 'unknown'), 'err'); return; }
+    row.send_after = res.send_after;
+    renderTable();
+    fillPanel(row, panelIdx, _panelCurrentRows().length);
+    toast('Rescheduled for ' + _formatSendAfter(row.send_after) + ' - waits until then', 'ok');
+    return true;
+  } catch(e) {
+    toast('Connection error', 'err');
+  }
+}
+
+async function panelApprove() {
+  const row = _panelCurrentRow(); if (!row) return;
+  if (!row.to_email) { toast('Add a To Email first','err'); return; }
+  const gi = allRows.indexOf(row);
+  await api('/api/approve_row',{index:gi});
+  row.approved='true'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); loadStats();
+  toast('Approved âœ“','ok');
+}
+
+async function panelUnapprove() {
+  const row = _panelCurrentRow(); if (!row) return;
+  const gi = allRows.indexOf(row);
+  await api('/api/unapprove_row',{index:gi});
+  row.approved='false'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); loadStats();
+  toast('Approval removed - back to pending review','info');
+}
+
+async function panelDelete() {
+  const row = _panelCurrentRow();
+  if (!row||!confirm('Remove this lead?')) return;
+  const gi = allRows.indexOf(row);
+  const res = await api('/api/delete_row',{index:gi});
+  if (res.ok) { closePanel(); await loadAll(); toast('Deleted','info'); }
+}
+
+async function panelOptOut() {
+  const row = _panelCurrentRow();
+  if (!row||!confirm('Mark as do not contact? This blocks all future sends to this lead.')) return;
+  const gi = allRows.indexOf(row);
+  const res = await api('/api/opt_out_row',{index:gi});
+  if (res.ok) { row.do_not_contact='true'; row.approved='false'; fillPanel(row,panelIdx,_panelCurrentRows().length); renderTable(); toast('Marked as do not contact','info'); }
+}
+
+async function resetProspectStatus(businessName) {
+  const res = await api('/api/reset_prospect_status',{business_name:businessName});
+  if (res.ok) toast(`Reset ${businessName} â€” will re-draft on next run`,'ok');
+  else toast('Reset failed: '+res.error,'err');
+}
+
+// â”€â”€ Row actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function approveRow(gi) {
+  const row = allRows[gi]; if (!row) return;
+  if (!row.to_email) { toast('Add a To Email first','err'); return; }
+  await api('/api/approve_row',{index:gi});
+  row.approved='true'; renderTable(); loadStats(); toast('Approved âœ“','ok');
+}
+
+async function unapproveRow(gi) {
+  await api('/api/unapprove_row',{index:gi});
+  if (allRows[gi]) allRows[gi].approved='false';
+  renderTable(); loadStats();
+}
+
+async function deleteRow(gi) {
+  if (!confirm('Remove this lead?')) return;
+  const res = await api('/api/delete_row',{index:gi});
+  if (res.ok) { await loadAll(); toast('Deleted','info'); }
+}
+
+async function approveAll() {
+  const count = allRows.filter(r => r.approved !== 'true' && !r.sent_at).length;
+  if (!count) { toast('No pending unsent rows to approve', 'info'); return; }
+  if (!confirm(`Approve ${count} pending unsent row(s)? This writes approval state to the queue.`)) return;
+  const res = await api('/api/approve_all',{});
+  await loadAll(); toast(`Approved ${res.approved} rows - ready to send now`,'ok');
+}
+
+// â”€â”€ Bulk â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function getSelectedGIs() { return [...document.querySelectorAll('.row-chk:checked')].map(c=>parseInt(c.dataset.gi)); }
+function _bulkAllowedInCurrentFilter() {
+  return ['active', 'pending', 'approved', 'scheduled'].includes(currentFilter);
+}
+
+function _selectedRows() {
+  return getSelectedGIs().map(i => allRows[i]).filter(Boolean);
+}
+
+function _selectedHasScheduled() {
+  return _selectedRows().some(row => isRowScheduled(row));
+}
+
+function updateBulkSafety() {
+  const bulk = document.getElementById('bulk-bar');
+  const master = document.getElementById('chk-all');
+  const allowed = _bulkAllowedInCurrentFilter();
+  if (master) {
+    master.disabled = !allowed;
+    if (!allowed) master.checked = false;
+  }
+  if (!allowed) {
+    document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+    if (bulk) bulk.classList.remove('visible');
+  }
+}
+
+function updateBulkBar() {
+  if (!_bulkAllowedInCurrentFilter()) return;
+  const n = document.querySelectorAll('.row-chk:checked').length;
+  const unscheduleBtn = document.getElementById('bulk-unschedule-btn');
+  document.getElementById('bulk-count').textContent = n;
+  if (unscheduleBtn) unscheduleBtn.style.display = n > 0 && _selectedHasScheduled() ? 'inline-flex' : 'none';
+  document.getElementById('bulk-bar').classList.toggle('visible', n > 0);
+}
+function clearSelection() {
+  document.querySelectorAll('.row-chk').forEach(c=>c.checked=false);
+  document.getElementById('chk-all').checked=false;
+  updateBulkBar();
+}
+function toggleCheckAll(master) { if (!_bulkAllowedInCurrentFilter()) return; document.querySelectorAll('.row-chk').forEach(c=>c.checked=master.checked); updateBulkBar(); }
+
+async function bulkApprove() {
+  const idxs = getSelectedGIs();
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/approve_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='true';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Approved ${okCount} - ready to send now`,'ok');
+}
+
+async function bulkUnapprove() {
+  const idxs = getSelectedGIs();
+  if (!idxs.length) return;
+  let okCount = 0;
+  for (const i of idxs) {
+    try {
+      const res = await api('/api/unapprove_row',{index:i});
+      if (res.ok) {
+        if (allRows[i]) allRows[i].approved='false';
+        okCount += 1;
+      }
+    } catch(e) {}
+  }
+  clearSelection();
+  renderTable();
+  await loadStats();
+  toast(`Unapproved ${okCount} - back to pending review`,'info');
+}
+
+async function bulkDelete() {
+  const idxs = getSelectedGIs();
+  if (!confirm(`Delete ${idxs.length} lead(s)?`)) return;
+  for (const i of [...idxs].sort((a,b)=>b-a)) await api('/api/delete_row',{index:i});
+  clearSelection(); await loadAll(); toast(`Deleted ${idxs.length}`,'info');
+}
+
+async function bulkUnschedule() {
+  const rows = _selectedRows().filter(row => isRowScheduled(row));
+  if (!rows.length) { toast('No scheduled rows selected', 'err'); return; }
+  if (!confirm(`Unschedule ${rows.length} row(s)?`)) return;
+  let ok = 0, fail = 0;
+  for (const row of rows) {
+    try {
+      const res = await api('/api/schedule_email', {
+        index: row.index,
+        business_name: row.business_name,
+        send_after: '',
+      });
+      if (res.ok) {
+        row.send_after = '';
+        ok++;
+      } else fail++;
+    } catch(e) { fail++; }
+  }
+  renderTable();
+  clearSelection();
+  await loadStats();
+  toast(`Unscheduled ${ok} row(s)${fail ? ' â€” ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
+}
+
+// Pass 23a â€” bulk + per-row scheduling
+async function bulkSchedule(mode) {
+  const idxs = getSelectedGIs();
+  if (!idxs.length) { toast('No rows selected', 'err'); return; }
+  const isClear = mode === 'clear';
+  const label   = isClear ? 'Clear schedule' : (mode === 'best' ? 'Best Time schedule' : 'Tomorrow schedule');
+  if (!confirm(`${label} for ${idxs.length} row(s)?`)) return;
+  let ok = 0, fail = 0;
+  for (const i of idxs) {
+    const row = allRows[i];
+    if (!row) continue;
+    try {
+      const payload = { index: i, business_name: row.business_name };
+      if (isClear)        payload.send_after = '';
+      else                payload.days_ahead  = 1;   // both Tomorrow and Best Time use days_ahead=1;
+                                                      // backend picks industry-window time automatically
+      const res = await api('/api/schedule_email', payload);
+      if (res.ok) { row.send_after = res.send_after ?? ''; ok++; }
+      else fail++;
+    } catch(e) { fail++; }
+  }
+  renderTable();
+  clearSelection();
+  await loadStats();
+  toast(isClear ? `Cleared ${ok} schedule(s) - back in ready-now queues` : `Scheduled ${ok} row(s) for future morning windows`, ok > 0 ? 'ok' : 'err');
+}
+
+async function rowSchedule(gi, businessName) {
+  const row = allRows[gi];
+  if (!row) return;
+  try {
+    const res = await api('/api/schedule_email', { index: gi, business_name: businessName, days_ahead: 1 });
+    if (res.ok) { row.send_after = res.send_after; renderTable(); await loadStats(); toast(`Scheduled: ${businessName} for ${_formatSendAfter(row.send_after)} - waits until then`, 'ok'); }
+    else toast('Schedule failed: ' + (res.error || ''), 'err');
+  } catch(e) { toast('Connection error', 'err'); }
+}
+
+async function rowUnschedule(gi, businessName) {
+  const row = allRows[gi];
+  if (!row) return;
+  try {
+    const res = await api('/api/schedule_email', { index: gi, business_name: businessName, send_after: '' });
+    if (res.ok) { row.send_after = ''; renderTable(); await loadStats(); toast('Schedule cleared - back in ready-now queue', 'ok'); }
+    else toast('Clear failed: ' + (res.error || ''), 'err');
+  } catch(e) { toast('Connection error', 'err'); }
+}
+
+// â”€â”€ Send â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function sendDryRun() {
+  const btn=document.getElementById('btnSendDry');
+  btn.classList.add('loading'); btn.disabled=true;
+  try {
+    const res = await api('/api/send_approved',{send_live:false});
+    if (res.ok) { const s=res.stats; toast(`Dry run: ${s.approved_ready} ready, ${s.skipped} no email`,'info'); }
+    else toast('Error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+function confirmSend() {
+  const ready = allRows.filter(r=>r.approved==='true'&&!r.sent_at&&r.to_email).length;
+  document.getElementById('send-modal-msg').innerHTML =
+    `<strong>${ready} email${ready!==1?'s':''}</strong> will be sent from your Gmail account as Drew @ Copperline. Only approved rows with a <code>to_email</code> are included. This cannot be undone.`;
+  document.getElementById('send-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('send-modal').classList.remove('open'); }
+
+async function sendLive() {
+  const btn=document.getElementById('btn-confirm-send');
+  btn.classList.add('loading'); btn.disabled=true; closeModal();
+  const sb=document.getElementById('btnSendLive');
+  sb.classList.add('loading'); sb.disabled=true;
+  try {
+    const res = await api('/api/send_approved',{send_live:true});
+    if (res.ok) { const s=res.stats; await loadAll(); toast(`Sent ${s.sent}`+(s.failed?` (${s.failed} failed)`:''),(s.failed?'err':'ok')); }
+    else toast('Send error: '+res.error,'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+  sb.classList.remove('loading'); sb.disabled=false;
+}
+
+// â”€â”€ Discover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function discoverLeads() {
+  const industry=document.getElementById('d-industry').value;
+  const city=document.getElementById('d-city').value.trim();
+  const state=document.getElementById('d-state').value.trim();
+  const limit=parseInt(document.getElementById('d-limit').value)||20;
+  if (!industry||!city||!state) { toast('Fill in industry, city, and state','err'); return; }
+  const btn=document.getElementById('btnDiscover');
+  btn.classList.add('loading'); btn.disabled=true;
+  toast(`Searching ${industry} in ${city}, ${state}â€¦`,'info');
+  try {
+    const res = await api('/api/discover',{industry,city,state,limit});
+    if (res.ok) {
+      await loadAll();
+      toast(`Found ${res.found} new â€” ${res.total_queue} total in queue`,'ok');
+      document.getElementById('api-key-notice').style.display='none';
+      // Refresh search history if that tab is open
+      if (document.getElementById('page-searches')?.classList.contains('active')) loadSearchHistory();
+      // Always refresh Cities data (record_discovery is called server-side on every run)
+      if (document.getElementById('page-cities')?.classList.contains('active')) tpLoad();
+      else { /* pre-fetch silently so Cities tab shows fresh data on next visit */
+        fetch('/api/territory').then(r=>r.json()).then(d=>{ _tpData = d.cities||[]; _tpIndustries = d.industries||[]; _tpUpdateStats(); }).catch(()=>{}); }
+    }
+    else {
+      if (res.error?.includes('GOOGLE_PLACES_API_KEY')) document.getElementById('api-key-notice').style.display='block';
+      toast('Discover error: '+res.error,'err');
+    }
+  } catch(e) { toast('Connection error','err'); }
+  btn.classList.remove('loading'); btn.disabled=false;
+}
+
+// â”€â”€ City Autocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Shared state for two instances: 'd' (discover bar) and 'cp' (city planner add form)
+const _acState = {
+  d:  { filter: 'all', items: [], focusIdx: -1 },
+  cp: { filter: 'all', items: [], focusIdx: -1 },
+};
+
+function _acListEl(ns)  { return document.getElementById(`${ns}-city-ac`); }
+function _acItemsEl(ns) { return document.getElementById(`${ns}-city-ac-items`); }
+function _acInputEl(ns) { return document.getElementById(`${ns}-city`); }
+function _acStateEl(ns) { return document.getElementById(`${ns}-state`); }
+
+function _acStatusBadge(s, tracked) {
+  if (!tracked) return `<span class="city-ac-status cac-seed">seed</span>`;
+  const map = {
+    due: ['cac-due','âš  Due'],
+    never_checked: ['cac-never','â— Never'],
+    checked: ['cac-checked','âœ“ Done'],
+    skipped: ['cac-skipped','â€” Skip'],
+  };
+  const [cls, label] = map[s] || ['cac-seed', s];
+  return `<span class="city-ac-status ${cls}">${label}</span>`;
+}
+
+function _acRenderItems(ns) {
+  const st    = _acState[ns];
+  const items = st.items;
+  const el    = _acItemsEl(ns);
+  if (!el) return;
+
+  let filtered = items;
+  if (st.filter === 'due')    filtered = items.filter(i => i.status === 'due' || i.status === 'never_checked');
+  if (st.filter === 'never')  filtered = items.filter(i => i.status === 'never_checked');
+  if (st.filter === 'nearby') filtered = items.filter(i => i.tracked);
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="city-ac-item"><span class="city-ac-name" style="color:var(--muted)">No cities found</span></div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map((item, idx) => `
+    <div class="city-ac-item${st.focusIdx===idx?' focused':''}" data-idx="${idx}"
+         onmousedown="cityAcSelect('${ns}','${escHtml(item.city)}')">
+      <div>
+        <span class="city-ac-name">${escHtml(item.city)}</span>
+        <span class="city-ac-state"> ${escHtml(item.state)}</span>
+      </div>
+      ${_acStatusBadge(item.status, item.tracked)}
+    </div>`).join('');
+}
+
+async function cityAcInput(ns) {
+  const inp   = _acInputEl(ns);
+  const stEl  = _acStateEl(ns);
+  const query = (inp?.value || '').trim();
+  const state = (stEl?.value || 'IL').trim().toUpperCase();
+  if (!state || state.length < 2) return;
+
+  const url = `/api/cities/suggest?state=${encodeURIComponent(state)}&q=${encodeURIComponent(query)}&limit=40`;
+  try {
+    const res = await fetch(url);
+    _acState[ns].items    = await res.json();
+    _acState[ns].focusIdx = -1;
+    _acRenderItems(ns);
+    _acListEl(ns)?.classList.add('open');
+  } catch(e) { /* silent */ }
+}
+
+function cityAcSelect(ns, cityName) {
+  const inp = _acInputEl(ns);
+  if (inp) inp.value = cityName;
+  _acListEl(ns)?.classList.remove('open');
+  // If in the discover bar, also trigger a state refresh
+  if (ns === 'd') cityAcInput('d');
+}
+
+function cityAcCloseDelay(ns) {
+  setTimeout(() => _acListEl(ns)?.classList.remove('open'), 180);
+}
+
+function cityAcSetFilter(ns, filter, el) {
+  _acState[ns].filter = filter;
+  // update active tab styling within this dropdown only
+  const list = _acListEl(ns);
+  if (list) list.querySelectorAll('.caf').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _acRenderItems(ns);
+}
+
+function cityAcKey(e, ns) {
+  const st = _acState[ns];
+  const itemEls = _acItemsEl(ns)?.querySelectorAll('.city-ac-item') || [];
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    st.focusIdx = Math.min(st.focusIdx + 1, itemEls.length - 1);
+    _acRenderItems(ns);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    st.focusIdx = Math.max(st.focusIdx - 1, -1);
+    _acRenderItems(ns);
+  } else if (e.key === 'Enter' && st.focusIdx >= 0) {
+    e.preventDefault();
+    const focused = _acItemsEl(ns)?.querySelector('.city-ac-item.focused');
+    const cityName = focused?.querySelector('.city-ac-name')?.textContent;
+    if (cityName) cityAcSelect(ns, cityName);
+  } else if (e.key === 'Escape') {
+    _acListEl(ns)?.classList.remove('open');
+  }
+}
+
+// Close autocomplete when clicking outside
+document.addEventListener('click', e => {
+  ['d','cp'].forEach(ns => {
+    const wrap = _acInputEl(ns)?.closest('.city-ac-wrap');
+    if (wrap && !wrap.contains(e.target)) _acListEl(ns)?.classList.remove('open');
+  });
+});
+
+async function loadIndustries() {
+  try {
+    const list = await api('/api/industries');
+    const sel = document.getElementById('d-industry');
+    sel.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+    sel.value='plumbing';
+  } catch(e) {}
+}
+
+function _mapIndustryLabel(industry) {
+  return (industry || '').replace(/_/g, ' ');
+}
+
+function _mapGridSelectedIndustriesList() {
+  return [..._mapGridSelectedIndustries];
+}
+
+function _mapRenderGridIndustryChips(list) {
+  const wrap = document.getElementById('map-grid-industries');
+  if (!wrap) return;
+  wrap.innerHTML = list.map(industry => {
+    const active = _mapGridSelectedIndustries.has(industry) ? ' active' : '';
+    return `<button type="button" class="map-grid-chip${active}" data-industry="${industry}" onclick="_mapToggleGridIndustry('${industry}')">${_mapIndustryLabel(industry)}</button>`;
+  }).join('');
+}
+
+function _mapToggleGridIndustry(industry) {
+  if (!industry) return;
+  if (_mapGridSweepActive) return;
+  if (_mapGridSelectedIndustries.has(industry)) _mapGridSelectedIndustries.delete(industry);
+  else _mapGridSelectedIndustries.add(industry);
+  _mapRenderGridIndustryChips(_mapIndustryOptions);
+  _mapUpdateGridControls();
+}
+
+function _mapUpdateIndustryControls() {
+  const industry = document.getElementById('map-industry')?.value || '';
+  const btnVisible = document.getElementById('btnSearchVisible');
+  const btnExhaust = document.getElementById('btnExhaust');
+  if (btnVisible && !_mapVisibleSearchActive && !_mapGridSweepActive) btnVisible.disabled = !industry;
+  if (btnExhaust && !_exhaustSearchActive && !_mapGridSweepActive) btnExhaust.disabled = !industry || !_mapCenter;
+  _mapUpdateGridControls();
+}
+
+function _mapUpdateGridControls() {
+  const summaryEl = document.getElementById('map-grid-summary');
+  const btnRun = document.getElementById('btnGridSearch');
+  if (!summaryEl || !btnRun) return;
+  const selected = _mapGridSelectedIndustriesList();
+  const industryCountLabel = `${selected.length} ${selected.length === 1 ? 'industry' : 'industries'}`;
+  if (_mapGridSweepActive) {
+    btnRun.disabled = true;
+    return;
+  }
+  if (_mapVisibleSearchActive || _exhaustSearchActive) {
+    summaryEl.textContent = 'Finish the current discovery run before starting a grid sweep.';
+    btnRun.disabled = true;
+    return;
+  }
+  if (!_mapCenter) {
+    summaryEl.textContent = selected.length ? `${industryCountLabel} selected â€” place a circle to estimate the grid.` : 'Draw a circle and pick industries to estimate the run.';
+    btnRun.disabled = true;
+    return;
+  }
+  if (!selected.length) {
+    summaryEl.textContent = 'Select at least one industry for the grid sweep.';
+    btnRun.disabled = true;
+    return;
+  }
+  const plan = _mapCircleGridPlan();
+  if (plan.tooManyCells) {
+    summaryEl.textContent = `${plan.cells.length} cells would exceed the ${MAP_GRID_MAX_CELLS}-cell cap. Shrink the circle first.`;
+    btnRun.disabled = true;
+    return;
+  }
+  if (!plan.cells.length) {
+    summaryEl.textContent = 'Circle is too small to build a grid. Increase the radius a bit.';
+    btnRun.disabled = true;
+    return;
+  }
+  if (plan.totalCalls > MAP_GRID_MAX_CALLS) {
+    summaryEl.textContent = `${plan.totalCalls} calls would exceed the ${MAP_GRID_MAX_CALLS}-call cap. Reduce cells or industries.`;
+    btnRun.disabled = true;
+    return;
+  }
+  summaryEl.textContent = `${industryCountLabel} â€¢ ${plan.cells.length} cells â€¢ ${plan.totalCalls} calls`;
+  btnRun.disabled = false;
+}
+
+function _mapPopulateIndustries() {
+  const dest = document.getElementById('map-industry');
+  console.log('[_mapPopulateIndustries] dest:', !!dest);
+  if (!dest) return;
+  api('/api/industries').then(list => {
+    console.log('[_mapPopulateIndustries] got', list?.length, 'industries:', list);
+    dest.innerHTML = list.map(i => `<option value="${i}">${i.replace('_',' ')}</option>`).join('');
+    dest.value = 'plumbing';
+    _mapIndustryOptions = Array.isArray(list) ? list.slice() : [];
+    _mapGridSelectedIndustries = new Set(dest.value ? [dest.value] : []);
+    _mapRenderGridIndustryChips(_mapIndustryOptions);
+    _mapUpdateIndustryControls();
+  }).catch(err => { console.error('[_mapPopulateIndustries] fetch error:', err); });
+}
+
+async function testApiKey() {
+  const btn=document.getElementById('btnTestKey');
+  btn.disabled=true; btn.textContent='ðŸ”‘ Testingâ€¦';
+  try {
+    const res = await api('/api/check_api_key');
+    toast(res.ok?'âœ“ '+res.message:'âœ— '+res.error,res.ok?'ok':'err');
+  } catch(e) { toast('Connection error','err'); }
+  btn.disabled=false; btn.textContent='ðŸ”‘ Test Key';
+}
+
+async function runFollowups() {
+  const btn = document.querySelector('#page-followup .btn-primary');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  toast('Generating follow-up draftsâ€¦','info');
+  try {
+    const res = await api('/api/run_followups',{});
+    if (res.ok) {
+      await loadAll();
+      const n = res.stats.queued || 0;
+      toast(n > 0 ? `Queued ${n} follow-up draft(s) â€” review below` : 'No follow-ups due yet', n > 0 ? 'ok' : 'info');
+      fqLoad();
+    } else { toast('Error: '+res.error,'err'); }
+  } catch(e) { toast('Connection error','err'); }
+  if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+async function runFollowupsDryRun() {
+  toast('Dry-run preview â€” nothing writtenâ€¦','info');
+  try {
+    const res = await api('/api/run_followups_dry_run',{});
+    if (res.ok) {
+      const n = (res.preview || []).length;
+      if (n === 0) { toast('Dry run: no rows eligible for follow-up right now','info'); return; }
+      toast(`Dry run: ${n} row(s) would receive follow-up drafts â€” details in browser console`,'ok');
+      console.table((res.preview||[]).map(r=>({ business: r.business_name, email: r.to_email, step: r.followup_step, sent_at: r.sent_at })));
+    } else { toast('Error: '+res.error,'err'); }
+  } catch(e) { toast('Connection error','err'); }
+}
+
+// â”€â”€ Nav badge refresh â€” runs in background on every loadAll() â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function _refreshNavBadges() {
+  try {
+    const [hRes, eRes] = await Promise.allSettled([
+      api('/api/queue_health'),
+      api('/api/exceptions'),
+    ]);
+
+    // Health badge: show count of issues (non-zero problem fields)
+    const hBadge = document.getElementById('nav-health-badge');
+    if (hBadge && hRes.status === 'fulfilled' && hRes.value.ok) {
+      const h = hRes.value.health || {};
+      const issues = (h.duplicate_rows||0) + (h.invalid_emails||0) + (h.approved_no_email||0) + (h.missing_required||0);
+      if (issues > 0) { hBadge.textContent = issues; hBadge.style.display = 'inline'; }
+      else { hBadge.style.display = 'none'; }
+    }
+
+    // Exceptions badge: count flagged rows
+    const eBadge = document.getElementById('nav-exceptions-badge');
+    if (eBadge && eRes.status === 'fulfilled' && eRes.value.ok) {
+      const n = eRes.value.exception_rows || 0;
+      if (n > 0) { eBadge.textContent = n; eBadge.style.display = 'inline'; }
+      else { eBadge.style.display = 'none'; }
+    }
+  } catch(_) { /* badge refresh is best-effort â€” never block main UI */ }
+}
+
+function toast(msg, type='info') {
+  const el=document.createElement('div');
+  el.className=`toast-msg ${type}`; el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },4500);
+}
+
+// ==================================================================
+// PAGE NAVIGATION â€” 5-tab top nav + sub-tab system
+// ==================================================================
+let _currentPage   = 'outreach';
+let _currentParent = 'pipeline';
+
+// Which page each parent defaults to on first click
+const _parentDefaults = {
+  pipeline:  'outreach',
+  discovery: 'map',
+  clients:   'mc-clients',
+  health:    'health',
+  tools:     'tools',
+};
+
+// Which pages show together (health shows both page-health AND page-exceptions)
+const _multiPage = {
+  health: ['health', 'exceptions'],
+};
+
+// Remember the last sub-page visited per parent so clicking a top tab
+// returns to where the operator left off.
+const _parentLastPage = {
+  pipeline:  'outreach',
+  discovery: 'map',
+  clients:   'mc-clients',
+  health:    'health',
+  tools:     'tools',
+};
+
+function _activatePage(name) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // Show the target page(s)
+  const extras = _multiPage[name];
+  if (extras) {
+    extras.forEach(n => document.getElementById('page-' + n)?.classList.add('active'));
+  } else {
+    document.getElementById('page-' + name)?.classList.add('active');
+  }
+  _currentPage = name;
+}
+
+function _runPageHooks(name) {
+  if (name === 'cities')        tpLoad();
+  if (name === 'followup')      fqLoad();
+  if (name === 'searches')      loadSearchHistory();
+  if (name === 'mc-clients')    mcLoadClients();
+  if (name === 'social')        socialLoad();
+  if (name === 'sprint')        sprintLoad();
+  if (name === 'conversations') convLoad();
+  if (name === 'health')        { healthLoad(); exceptionsLoad(); }
+  if (name === 'map') {
+    requestAnimationFrame(() => {
+      _mapInit();
+      _mapPopulateIndustries();
+    });
+  }
+}
+
+function switchParent(parent, el) {
+  // Update top-nav active state
+  document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _currentParent = parent;
+
+  // Show only sub-tabs belonging to this parent
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.style.display = (t.dataset.parent === parent) ? '' : 'none';
+  });
+
+  // Navigate to the last visited sub-page for this parent (or the default)
+  const target = _parentLastPage[parent] || _parentDefaults[parent] || parent;
+  _activatePage(target);
+
+  // Mark the correct sub-tab active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === target);
+  });
+
+  _runPageHooks(target);
+}
+
+function switchSubPage(parent, name, el) {
+  _parentLastPage[parent] = name;
+  _activatePage(name);
+
+  // Update sub-tab active state
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  _runPageHooks(name);
+}
+
+// Legacy shim â€” existing code calls switchPage(name, el) in many places
+// (e.g. mcViewLeads, cvOpenInOutreach, _shRerun, etc.).  This translates
+// those calls into the new system without touching any caller.
+function switchPage(name, el) {
+  // Find which parent owns this page
+  const subTabEl = document.querySelector(`#sub-nav .sub-tab[data-page="${name}"]`);
+  const parent   = subTabEl?.dataset.parent || _currentParent;
+
+  // Activate the correct top-tab if parent changed
+  if (parent !== _currentParent) {
+    const topTabEl = document.querySelector(`#top-nav .nav-tab[data-parent="${parent}"]`);
+    document.querySelectorAll('#top-nav .nav-tab').forEach(t => t.classList.remove('active'));
+    if (topTabEl) topTabEl.classList.add('active');
+    _currentParent = parent;
+
+    // Show the right sub-tabs
+    document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+      t.style.display = (t.dataset.parent === parent) ? '' : 'none';
+    });
+  }
+
+  _parentLastPage[parent] = name;
+  _activatePage(name);
+
+  // Mark sub-tab active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === name);
+  });
+
+  _runPageHooks(name);
+}
+
+// ==================================================================
+// TERRITORY PLANNER  (tp*)
+// ==================================================================
+let _tpData       = [];
+let _tpIndustries = [];
+let _tpFilter     = 'all';
+let _tpOpen       = new Set();
+
+async function tpLoad() {
+  try {
+    const d = await fetch('/api/territory').then(r => r.json());
+    _tpData       = d.cities || [];
+    _tpIndustries = d.industries || [];
+    const el = document.getElementById('tp-ind-count');
+    if (el) el.textContent = _tpIndustries.length;
+    _tpUpdateStats();
+    tpRender();
+  } catch(e) {
+    const c = document.getElementById('tp-cards');
+    if (c) c.innerHTML = '<div class="tp-empty"><div class="tp-empty-icon">\u26A0\uFE0F</div><div>Failed to load territory data</div></div>';
+  }
+}
+
+function _tpUpdateStats() {
+  const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  s('tp-stat-cities',    _tpData.length);
+  s('tp-stat-uncovered', _tpData.reduce((a,c) => a+(c.never_count||0), 0));
+  s('tp-stat-due',       _tpData.reduce((a,c) => a+(c.due_count||0), 0));
+  s('tp-stat-leads',     _tpData.reduce((a,c) => a+(c.leads_found||0), 0));
+}
+
+function tpSetFilter(f, el) {
+  _tpFilter = f;
+  document.querySelectorAll('[data-tpf]').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  tpRender();
+}
+
+function tpRender() {
+  const q = (document.getElementById('tp-search')?.value || '').trim().toLowerCase();
+  let cities = [..._tpData];
+  if (q) cities = cities.filter(c => c.city.toLowerCase().includes(q) || c.state.toLowerCase().includes(q));
+  if (_tpFilter === 'due')    cities = cities.filter(c => c.city_is_due || c.due_count > 0);
+  if (_tpFilter === 'active') cities = cities.filter(c => c.covered_count > 0);
+  if (_tpFilter === 'open')   cities = cities.filter(c => c.never_count > 0);
+  const container = document.getElementById('tp-cards');
+  if (!container) return;
+  if (!cities.length) {
+    container.innerHTML = '<div class="tp-empty"><div class="tp-empty-icon">\uD83D\uDDFA\uFE0F</div><div>No cities match this filter. Add a city above.</div></div>';
+    return;
+  }
+  container.innerHTML = cities.map(c => _tpCityCard(c)).join('');
+}
+
+function _tpKey(c) { return (c.city + '|' + c.state).toLowerCase(); }
+
+function _tpFmt(iso) {
+  if (!iso) return '\u2014';
+  try { return new Date(iso).toLocaleDateString(); } catch(e) { return iso; }
+}
+
+function _tpCityCard(c) {
+  const key     = _tpKey(c);
+  const isOpen  = _tpOpen.has(key);
+  const covered = c.covered_count || 0;
+  const total   = c.total_industries || _tpIndustries.length;
+  const pct     = total > 0 ? Math.round(covered / total * 100) : 0;
+  const progDone = pct >= 100 ? ' tp-prog-done' : '';
+  const cardCls  = c.city_is_due ? 'tp-card tp-card-due' : covered > 0 ? 'tp-card tp-card-active' : 'tp-card';
+  const openCls  = isOpen ? ' open' : '';
+
+  let statusHtml = c.city_is_due
+    ? '<span class="tp-ind-status tp-s-due">\u26A0 Due</span>'
+    : !c.last_checked_at
+      ? '<span class="tp-ind-status tp-s-never">\u25CF Never</span>'
+      : '<span class="tp-ind-status tp-s-checked">\u2713 Active</span>';
+
+  const nextInd = (c.industry_rows || []).find(r => r.status === 'due' || r.status === 'never_checked');
+  const nextHint = nextInd
+    ? '<span style="font-size:10px;color:var(--muted)">Next: <strong style="color:var(--text)">' + escHtml(nextInd.industry) + '</strong></span>'
+    : '';
+
+  const cj = JSON.stringify(c.city);
+  const sj = JSON.stringify(c.state);
+
+  const indContent = isOpen ? (
+    '<table class="tp-ind-table"><thead><tr><th>Industry</th><th>Status</th><th>Leads</th><th>Last Run</th><th style=\"text-align:right\">Actions</th></tr></thead><tbody>'
+    + (c.industry_rows || []).map(r => _tpIndRow(c, r)).join('')
+    + '</tbody></table>'
+    + '<div class="tp-card-footer">'
+    + '<button class="tp-btn tp-btn-run" onclick="tpRunNext(' + cj + ',' + sj + ',this)"><span class="tp-spin" style="display:none"></span>\u26A1 Run Next</button>'
+    + '<button class="tp-btn tp-btn-run" style="background:var(--green);color:#0e1a12" onclick="tpRunRemaining(' + cj + ',' + sj + ',this)" title="Run all uncovered industries">\u25B6\u25B6 Run Remaining</button>'
+    + '<button class="tp-btn" style="background:var(--copper-bg);color:var(--copper);border:1px solid rgba(184,115,51,.3)" onclick="tpOpenLeads(' + cj + ',' + sj + ')">\uD83D\uDCCB Open Leads</button>'
+    + '<button class="tp-btn tp-btn-skip" onclick="tpSkipCity(' + cj + ',' + sj + ')">Skip City</button>'
+    + '</div>'
+  ) : '';
+
+  return '<div class="' + cardCls + openCls + '" id="tp-card-' + key.replace(/[^a-z0-9]/g, '-') + '">'
+    + '<div class="tp-card-hdr" onclick="tpToggle(' + JSON.stringify(key) + ')">'
+    + '<div style="display:flex;flex-direction:column;gap:3px">'
+    + '<div class="tp-city-name">' + escHtml(c.city) + ', ' + escHtml(c.state) + ' ' + statusHtml + '</div>'
+    + '<div class="tp-city-meta">' + (c.leads_found||0) + ' leads \u00B7 Last: ' + _tpFmt(c.last_checked_at) + ' \u00B7 Next: ' + _tpFmt(c.next_check_at) + ' \u00B7 ' + (c.tier||'mid') + '</div>'
+    + nextHint
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:12px">'
+    + '<div class="tp-progress-wrap"><div class="tp-progress-bar"><div class="tp-progress-fill' + progDone + '" style="width:' + pct + '%"></div></div>'
+    + '<span class="tp-progress-text">' + covered + ' / ' + total + '</span></div>'
+    + '<span class="tp-chevron">\u25BC</span>'
+    + '</div></div>'
+    + indContent
+    + '</div>';
+}
+
+function _tpIndRow(city, r) {
+  const sm = { never_checked:['tp-s-never','\u25CF Not run'], checked:['tp-s-checked','\u2713 Done'], due:['tp-s-due','\u26A0 Due'], skipped:['tp-s-skipped','\u2014 Skipped'], exhausted:['tp-s-exhausted','\u2717 Exhausted'] };
+  const [cls, label] = sm[r.status] || ['tp-s-never', r.status];
+  const cj = JSON.stringify(city.city), sj = JSON.stringify(city.state), ij = JSON.stringify(r.industry);
+  const runBtn = r.status !== 'exhausted'
+    ? '<button class="tp-btn tp-btn-run" onclick="tpRunIndustry(' + cj + ',' + sj + ',' + ij + ',this)"><span class="tp-spin" style="display:none"></span>\u26A1 Run</button>'
+    : '';
+  const exhBtn = r.status !== 'exhausted'
+    ? '<button class="tp-btn tp-btn-exh" onclick="tpExhaustIndustry(' + cj + ',' + sj + ',' + ij + ')">\u2717</button>'
+    : '';
+  return '<tr><td class="tp-ind-name">' + escHtml(r.industry) + '</td>'
+    + '<td><span class="tp-ind-status ' + cls + '">' + label + '</span></td>'
+    + '<td>' + (r.leads_found||0) + (r.new_leads_last_run ? ' <span style="color:var(--green);font-size:10px">+' + r.new_leads_last_run + '</span>' : '') + '</td>'
+    + '<td style="color:var(--muted)">' + _tpFmt(r.last_checked_at) + '</td>'
+    + '<td><div class="tp-ind-acts" style="justify-content:flex-end">' + runBtn
+    + '<button class="tp-btn tp-btn-skip" onclick="tpSkipIndustry(' + cj + ',' + sj + ',' + ij + ')">Skip</button>'
+    + exhBtn + '</div></td></tr>';
+}
+
+function tpToggle(key) {
+  // Toggle open/closed state in _tpOpen
+  if (_tpOpen.has(key)) {
+    _tpOpen.delete(key);
+  } else {
+    _tpOpen.add(key);
+  }
+
+  // Mutate the existing card DOM in-place â€” no full re-render
+  const safeKey = key.replace(/[^a-z0-9]/g, '-');
+  const card = document.getElementById('tp-card-' + safeKey);
+  if (!card) { tpRender(); return; } // fallback if card not found
+
+  const isNowOpen = _tpOpen.has(key);
+  card.classList.toggle('open', isNowOpen);
+
+  // Find the city data object
+  const [cityName, stateName] = key.split('|');
+  const c = _tpData.find(d =>
+    d.city.toLowerCase() === cityName.toLowerCase() &&
+    d.state.toLowerCase() === stateName.toLowerCase()
+  );
+  if (!c) return;
+
+  // Remove any existing footer/table that was injected
+  const existing = card.querySelector('.tp-ind-table');
+  const existingFooter = card.querySelector('.tp-card-footer');
+  if (existing) existing.remove();
+  if (existingFooter) existingFooter.remove();
+
+  // If now open, inject the industry table + footer
+  if (isNowOpen) {
+    const cj = JSON.stringify(c.city);
+    const sj = JSON.stringify(c.state);
+    const indHtml = '<table class="tp-ind-table"><thead><tr>'
+      + '<th>Industry</th><th>Status</th><th>Leads</th><th>Last Run</th>'
+      + '<th style="text-align:right">Actions</th>'
+      + '</tr></thead><tbody>'
+      + (c.industry_rows || []).map(r => _tpIndRow(c, r)).join('')
+      + '</tbody></table>'
+      + '<div class="tp-card-footer">'
+      + '<button class="tp-btn tp-btn-run" onclick="tpRunNext(' + cj + ',' + sj + ',this)"><span class="tp-spin" style="display:none"></span>\u26A1 Run Next</button>'
+      + '<button class="tp-btn tp-btn-run" style="background:var(--green);color:#0e1a12" onclick="tpRunRemaining(' + cj + ',' + sj + ',this)" title="Run all uncovered industries">\u25B6\u25B6 Run Remaining</button>'
+      + '<button class="tp-btn" style="background:var(--copper-bg);color:var(--copper);border:1px solid rgba(184,115,51,.3)" onclick="tpOpenLeads(' + cj + ',' + sj + ')">\uD83D\uDCCB Open Leads</button>'
+      + '<button class="tp-btn tp-btn-skip" onclick="tpSkipCity(' + cj + ',' + sj + ')">Skip City</button>'
+      + '</div>';
+    card.insertAdjacentHTML('beforeend', indHtml);
+  }
+}
+
+function _tpSetBtnLoading(btn, on) {
+  if (!btn) return;
+  const sp = btn.querySelector('.tp-spin');
+  if (sp) sp.style.display = on ? 'inline-block' : 'none';
+  btn.disabled = on;
+}
+
+async function tpRunIndustry(city, state, industry, btn) {
+  _tpSetBtnLoading(btn, true);
+  const limit = parseInt(document.getElementById('d-limit')?.value || '20');
+  try {
+    const res = await api('/api/discover', { industry, city, state, limit });
+    if (res.ok) { toast('\u2713 ' + res.found + ' new leads \u2014 ' + city + ' ' + industry, 'ok'); await tpLoad(); await loadAll(); _tpOpen.add(_tpKey({city,state})); tpRender(); }
+    else toast(res.error || 'Discover failed', 'err');
+  } catch(e) { toast('Connection error', 'err'); }
+  _tpSetBtnLoading(btn, false);
+}
+
+async function tpRunNext(city, state, btn) {
+  _tpSetBtnLoading(btn, true);
+  try {
+    const res = await api('/api/territory/next_industry', { city, state });
+    if (res.ok && res.industry) {
+      toast('Running ' + res.industry + ' in ' + city + '\u2026', 'info');
+      const limit = parseInt(document.getElementById('d-limit')?.value || '20');
+      const dr = await api('/api/discover', { industry: res.industry, city, state, limit });
+      if (dr.ok) { toast('\u2713 ' + dr.found + ' new leads \u2014 ' + city + ' ' + res.industry, 'ok'); await tpLoad(); await loadAll(); _tpOpen.add(_tpKey({city,state})); tpRender(); }
+      else toast(dr.error || 'Discover failed', 'err');
+    } else toast('No next industry found', 'info');
+  } catch(e) { toast('Connection error', 'err'); }
+  _tpSetBtnLoading(btn, false);
+}
+
+async function tpRunRemaining(city, state, btn) {
+  const entry = _tpData.find(c => c.city.toLowerCase()===city.toLowerCase() && c.state.toLowerCase()===state.toLowerCase());
+  if (!entry) return;
+  const toRun = (entry.industry_rows||[]).filter(r => r.status==='never_checked').map(r=>r.industry);
+  if (!toRun.length) { toast('All industries already covered for ' + city, 'info'); return; }
+  if (!confirm('Run ' + toRun.length + ' industries for ' + city + '? This will make ' + toRun.length + ' API calls.')) return;
+  _tpSetBtnLoading(btn, true);
+  const limit = parseInt(document.getElementById('d-limit')?.value || '20');
+  let total = 0;
+  for (const ind of toRun) {
+    try { const r = await api('/api/discover', {industry:ind,city,state,limit}); if (r.ok) total += r.found||0; } catch(e) {}
+  }
+  toast('\u2713 Finished ' + toRun.length + ' industries in ' + city + ' \u2014 ' + total + ' new leads', 'ok');
+  await tpLoad(); await loadAll(); _tpOpen.add(_tpKey({city,state})); tpRender();
+  _tpSetBtnLoading(btn, false);
+}
+
+async function tpSkipIndustry(city, state, industry) {
+  await api('/api/territory/skip_industry', {city,state,industry});
+  toast('Skipped ' + industry + ' in ' + city, 'info');
+  await tpLoad(); _tpOpen.add(_tpKey({city,state})); tpRender();
+}
+
+async function tpExhaustIndustry(city, state, industry) {
+  await api('/api/territory/mark_exhausted', {city,state,industry});
+  toast('Marked ' + industry + ' exhausted in ' + city, 'info');
+  await tpLoad(); _tpOpen.add(_tpKey({city,state})); tpRender();
+}
+
+async function tpSkipCity(city, state) {
+  await fetch('/api/cities/skip', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city,state})});
+  toast('Skipped ' + city, 'info');
+  await tpLoad();
+}
+
+function tpOpenLeads(city, state) {
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  const box = document.getElementById('searchBox');
+  if (box) { box.value = city; renderTable(); }
+}
+
+async function tpAddCity() {
+  const city  = (document.getElementById('cp-city')?.value || '').trim();
+  const state = (document.getElementById('cp-state')?.value || '').trim().toUpperCase();
+  if (!city || !state) { toast('Enter city and state', 'err'); return; }
+  await api('/api/cities/add', {city, state});
+  const inp = document.getElementById('cp-city'); if (inp) inp.value = '';
+  toast('Added ' + city + ', ' + state, 'ok');
+  await tpLoad(); _tpOpen.add(_tpKey({city,state})); tpRender();
+}
+
+// ==================================================================
+// FOLLOW-UP QUEUE  (fq*)
+// ==================================================================
+let _fqData = null;
+
+async function fqLoad() {
+  const container = document.getElementById('fq-container');
+  if (container) container.innerHTML = '<div class="fq-empty">Loading\u2026</div>';
+  try { _fqData = await api('/api/followup_queue'); fqRender(); }
+  catch(e) { if (container) container.innerHTML = '<div class="fq-empty">Failed to load follow-ups</div>'; }
+}
+
+function fqRender() {
+  if (!_fqData) return;
+  const {overdue, today, this_week, upcoming, counts} = _fqData;
+  const badge = document.getElementById('fq-total-badge');
+  if (badge) badge.textContent = counts.total + ' due';
+  const nav = document.getElementById('nav-followup');
+  if (nav) nav.textContent = counts.overdue + counts.today > 0
+    ? '\uD83D\uDD01 Follow-Up (' + (counts.overdue + counts.today) + ')' : '\uD83D\uDD01 Follow-Up';
+  const container = document.getElementById('fq-container');
+  if (!container) return;
+  if (counts.total === 0) { container.innerHTML = '<div class="fq-empty">\uD83C\uDF89 No follow-ups due. Queue is clear.</div>'; return; }
+  const groups = [
+    {title:'\uD83D\uDD34 Overdue',   rows:overdue,   cls:'fq-group fq-group-overdue'},
+    {title:'\uD83D\uDFE1 Due Today', rows:today,     cls:'fq-group fq-group-today'},
+    {title:'\uD83D\uDD35 This Week', rows:this_week, cls:'fq-group fq-group-week'},
+    {title:'\u25A1 Upcoming',         rows:upcoming,  cls:'fq-group'},
+  ];
+  container.innerHTML = groups.filter(g=>g.rows.length).map(g =>
+    '<div class="' + g.cls + '">'
+    + '<div class="fq-group-hdr"><span class="fq-group-title">' + g.title + '</span><span class="fq-group-count">' + g.rows.length + '</span></div>'
+    + g.rows.map(r => _fqCard(r)).join('')
+    + '</div>'
+  ).join('');
+}
+
+function _fqFmtDue(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso), now = new Date();
+    const diff = Math.floor((d - now) / 86400000);
+    if (diff < -1) return Math.abs(diff) + ' days ago';
+    if (diff === -1) return 'yesterday';
+    if (diff === 0) return 'today';
+    if (diff === 1) return 'tomorrow';
+    return d.toLocaleDateString();
+  } catch(e) { return iso; }
+}
+
+function _fqCard(r) {
+  const idx     = r.index;
+  const result  = r.contact_result || 'draft_ready';
+  const channel = r.last_contact_channel || '\u2014';
+  const attempts = r.contact_attempt_count || '0';
+  const due = r.next_followup_at || r.sent_at || '';
+  const isOverdue = due && new Date(due) < new Date();
+  const cardCls = isOverdue ? 'fq-card fq-overdue' : 'fq-card';
+  const dueLbl  = isOverdue ? 'overdue' : 'ok';
+  const resBadge = '<span class="fq-result-badge fqr-' + escHtml(result) + '">' + result.replace('_',' ') + '</span>';
+  const bestBtn = _fqBestBtn(r, idx);
+  return '<div class="' + cardCls + '">'
+    + '<div class="fq-info">'
+    + '<div class="fq-name">' + escHtml(r.business_name) + '</div>'
+    + '<div class="fq-meta"><span>' + escHtml(r.city) + ', ' + escHtml(r.state) + '</span>'
+    + (r.industry ? '<span>' + escHtml(r.industry) + '</span>' : '')
+    + '<span>via ' + escHtml(channel) + '</span>'
+    + '<span>' + attempts + ' attempt' + (attempts !== '1' ? 's' : '') + '</span>'
+    + resBadge + '</div>'
+    + (due ? '<div class="fq-due ' + dueLbl + '">Due ' + _fqFmtDue(due) + '</div>' : '')
+    + '</div>'
+    + '<div class="fq-actions">' + bestBtn
+    + '<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="fqSnooze(' + idx + ')">\uD83D\uDCA4 Snooze 7d</button>'
+    + '<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="fqClose(' + idx + ')">\u2717 Close</button>'
+    + '<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="fqOpenLead(' + idx + ')">Open \u2192</button>'
+    + '</div></div>';
+}
+
+function _fqBestBtn(r, idx) {
+  if (r.to_email && r.to_email.includes('@')) {
+    const touchLabels = ['1st', '2nd', '3rd'];
+    const touchNum  = (r.followup_touch_num || 1) - 1;
+    const touchLabel = touchLabels[Math.min(touchNum, 2)] || '1st';
+    return `<button class="btn btn-success" style="font-size:11px;padding:4px 10px" onclick="sendFollowup(${idx},${JSON.stringify(r.business_name)})" title="Auto-send ${touchLabel} follow-up via Gmail">&#9993; Send ${touchLabel} Follow-Up</button>`
+      + `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="fqLogAndOpen(${idx},'email','sent')" title="Log + open Gmail manually">&#9654; Manual</button>`;
+  }
+  if (r.facebook_url)
+    return `<button class="btn" style="font-size:11px;padding:4px 10px;background:rgba(66,103,178,.2);color:#7b9fd4;border:1px solid rgba(66,103,178,.3)" onclick="fqLogAndOpenUrl(${idx},'facebook','dm_sent',${JSON.stringify(r.facebook_url)})">f Follow-Up DM</button>`;
+  if (r.instagram_url)
+    return `<button class="btn" style="font-size:11px;padding:4px 10px;background:rgba(225,48,108,.12);color:#e1306c;border:1px solid rgba(225,48,108,.2)" onclick="fqLogAndOpenUrl(${idx},'instagram','dm_sent',${JSON.stringify(r.instagram_url)})">\u25CE DM</button>`;
+  if (r.contact_form_url)
+    return `<button class="btn" style="font-size:11px;padding:4px 10px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.3)" onclick="fqLogAndOpenUrl(${idx},'contact_form','submitted',${JSON.stringify(r.contact_form_url)})">\u229F Form</button>`;
+  return '<span style="font-size:11px;color:var(--dim)">No channel</span>';
+}
+
+async function fqLogAndOpen(idx, channel, result) {
+  await api('/api/log_contact', {index:idx, channel, result});
+  await loadAll();
+  const row = allRows[idx];
+  if (row) { const fi = filteredRows.indexOf(row); if (fi >= 0) openPanel(fi); }
+  await fqLoad();
+}
+
+async function fqLogAndOpenUrl(idx, channel, result, url) {
+  await api('/api/log_contact', {index:idx, channel, result});
+  if (url) window.open(url, '_blank');
+  await fqLoad();
+}
+
+// Pass 22 â€” auto-send follow-up via SMTP
+async function sendFollowup(idx, businessName) {
+  if (!confirm(`Send follow-up email to ${businessName}?\n\nThis will send immediately via Gmail.`)) return;
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+  try {
+    const res = await api('/api/send_followup', { index: idx, business_name: businessName });
+    if (res.ok) {
+      const ordinals = ['1st', '2nd', '3rd'];
+      const label = ordinals[Math.min((res.touch_num || 1) - 1, 2)];
+      toast(`${label} follow-up sent to ${businessName}`, 'ok');
+      await fqLoad();
+    } else {
+      toast('Send failed: ' + (res.error || 'unknown'), 'err');
+      if (btn) { btn.disabled = false; btn.textContent = '\u2709 Send Follow-Up'; }
+    }
+  } catch(e) {
+    toast('Connection error', 'err');
+    if (btn) { btn.disabled = false; btn.textContent = '\u2709 Send Follow-Up'; }
+  }
+}
+
+async function fqSnooze(idx) {
+  await api('/api/snooze_row', {index:idx, days:7});
+  toast('Snoozed 7 days', 'info');
+  await fqLoad();
+}
+
+async function fqClose(idx) {
+  await api('/api/log_contact', {index:idx, channel:'', result:'closed'});
+  toast('Closed', 'info');
+  await fqLoad();
+}
+
+function fqOpenLead(idx) {
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  setTimeout(() => { const row = allRows[idx]; if (!row) return; const fi = filteredRows.indexOf(row); if (fi >= 0) openPanel(fi); }, 200);
+}
+
+// ==================================================================
+// PANEL  â€” Best-Next-Action + Quick-Log + Campaign  (Part 1-3)
+// ==================================================================
+let _presets = [];
+async function _loadPresets() {
+  if (_presets.length) return;
+  try { _presets = await api('/api/presets'); } catch(e) {}
+}
+
+function bestChannel(row) {
+  if (row.to_email && row.to_email.includes('@')) return 'email';
+  if (row.contact_form_url) return 'contact_form';
+  if (row.facebook_url)     return 'facebook';
+  if (row.instagram_url)    return 'instagram';
+  return 'none';
+}
+
+function _panelBestActionHtml(row, gi) {
+  const ch = bestChannel(row);
+  const labels  = {email:'\u2709 Send Email', contact_form:'\u229F Submit Form', facebook:'f Open Facebook DM', instagram:'\u25CE Open Instagram DM', none:'No outreach channel'};
+  const classes = {email:'pba-email', contact_form:'pba-form', facebook:'pba-fb', instagram:'pba-ig', none:'pba-none'};
+  const cfUrl = JSON.stringify(row.contact_form_url||'');
+  const fbUrl = JSON.stringify(row.facebook_url||'');
+  const igUrl = JSON.stringify(row.instagram_url||'');
+  const actions = {
+    email:        `panelLogContact(${gi},'email','sent')`,
+    contact_form: `panelLogAndOpenUrl(${gi},'contact_form','submitted',${cfUrl})`,
+    facebook:     `panelLogAndOpenUrl(${gi},'facebook','dm_sent',${fbUrl})`,
+    instagram:    `panelLogAndOpenUrl(${gi},'instagram','dm_sent',${igUrl})`,
+    none:         '',
+  };
+  const onclick = actions[ch] ? ` onclick="${actions[ch]}"` : '';
+  const attempts = row.contact_attempt_count || '0';
+  return '<div class="panel-best-action">'
+    + '<span class="pba-label">Best Action</span>'
+    + `<button class="pba-btn ${classes[ch]}"${onclick}>${labels[ch]}</button>`
+    + '<span class="attempt-counter">' + attempts + ' sent</span>'
+    + '</div>';
+}
+
+function _panelStatusGridHtml(row, gi) {
+  const cur = row.contact_result || '';
+  const btns = [
+    {r:'sent',           ch:'email',        l:'\u2709 Email Sent'},
+    {r:'dm_sent',        ch:'facebook',     l:'\uD83D\uDCAC DM Sent'},
+    {r:'submitted',      ch:'contact_form', l:'\u229F Form Submitted'},
+    {r:'replied',        ch:'',             l:'\u2605 Reply Received'},
+    {r:'not_interested', ch:'',             l:'\uD83D\uDC4E Not Interested'},
+    {r:'bad_lead',       ch:'',             l:'\u2717 Bad Lead'},
+    {r:'no_reply',       ch:'',             l:'\uD83D\uDD07 No Reply'},
+    {r:'closed',         ch:'',             l:'\uD83D\uDD12 Closed'},
+  ];
+  return '<div class="panel-status-grid">'
+    + btns.map(b => '<button class="pstat-btn' + (cur===b.r?' pstat-active':'') + '" onclick="panelLogContact(' + gi + ',' + JSON.stringify(b.ch) + ',' + JSON.stringify(b.r) + ')">' + b.l + '</button>').join('')
+    + '</div>';
+}
+
+function _panelCampaignHtml(row) {
+  const cur = row.campaign_key || '';
+  const opts = _presets.map(p => '<option value="' + escHtml(p.key) + '"' + (p.key===cur?' selected':'') + '>' + escHtml(p.name) + '</option>').join('');
+  return '<div class="panel-campaign-row"><label>Campaign</label><select class="panel-campaign-sel" onchange="panelCampaignChanged(this.value)">' + opts + '</select></div>';
+}
+
+function panelCampaignChanged(key) {
+  const row = _panelCurrentRow(); if (!row) return;
+  row.campaign_key = key;
+  api('/api/update_row', {index: allRows.indexOf(row), updates:{campaign_key:key}});
+}
+
+async function panelLogContact(gi, channel, result) {
+  const res = await api('/api/log_contact', {index:gi, channel, result});
+  if (res.ok && res.row) {
+    const row = allRows[gi];
+    if (row) {
+      Object.assign(row, {
+        contact_result: result,
+        last_contact_channel: channel || row.last_contact_channel,
+        last_contacted_at: res.row.last_contacted_at,
+        contact_attempt_count: res.row.contact_attempt_count,
+        next_followup_at: res.row.next_followup_at || '',
+      });
+      if (result === 'sent' && res.row.sent_at) row.sent_at = res.row.sent_at;
+      fillPanel(row, panelIdx, _panelCurrentRows().length);
+    }
+    toast('Logged: ' + result, 'ok');
+    renderTable();
+  }
+}
+
+async function panelLogAndOpenUrl(gi, channel, result, url) {
+  await panelLogContact(gi, channel, result);
+  if (url) window.open(url, '_blank');
+}
+
+
+// ==================================================================
+// SOCIAL OUTREACH  (sq*)  â€” Part 1
+// ==================================================================
+let _sqData = [];
+let _sqFilter = 'all';
+
+async function socialLoad() {
+  const container = document.getElementById('sq-container');
+  if (container) container.innerHTML = '<div class="sq-empty"><div class="sq-empty-icon">ðŸ“²</div><p>Loadingâ€¦</p></div>';
+  try {
+    _sqData = await api('/api/social_queue');
+    _sqRender();
+  } catch(e) {
+    if (container) container.innerHTML = '<div class="sq-empty"><p>Failed to load social queue</p></div>';
+  }
+}
+
+function sqSetFilter(f, el) {
+  _sqFilter = f;
+  document.querySelectorAll('[data-sqf]').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _sqRender();
+}
+
+function _sqRender() {
+  const container = document.getElementById('sq-container');
+  if (!container) return;
+  let rows = [..._sqData];
+  if (_sqFilter === 'facebook')  rows = rows.filter(r => r.facebook_url);
+  if (_sqFilter === 'instagram') rows = rows.filter(r => r.instagram_url);
+  if (_sqFilter === 'form')      rows = rows.filter(r => r.contact_form_url);
+  if (_sqFilter === 'unsent')    rows = rows.filter(r => !r.last_contacted_at);
+
+  const badge = document.getElementById('sq-count-badge');
+  if (badge) badge.textContent = rows.length + ' leads';
+
+  if (!rows.length) {
+    container.innerHTML = '<div class="sq-empty"><div class="sq-empty-icon">ðŸ“­</div>'
+      + '<h3>No social leads in this filter</h3>'
+      + '<p>Social queue shows leads without an email but with Facebook, Instagram, or a contact form.</p></div>';
+    return;
+  }
+  container.innerHTML = rows.map(r => _sqCard(r)).join('');
+}
+
+function _sqCard(r) {
+  const idx   = r.index;
+  const score = r.opportunity_score || 0;
+  const lbl   = score >= 60 ? 'High' : score >= 30 ? 'Medium' : 'Low';
+  const scCls = score >= 60 ? 'opp-high' : score >= 30 ? 'opp-mid' : 'opp-low';
+  const sent  = r.last_contacted_at ? `<span style="color:var(--green);font-size:11px">âœ“ Contacted ${_sqFmtDate(r.last_contacted_at)}</span>` : '';
+  const insight = r.lead_insight_sentence
+    ? `<div class="sq-insight">ðŸ’¡ ${escHtml(r.lead_insight_sentence)}</div>` : '';
+
+  const drafts = [];
+  if (r.facebook_dm_draft || r.social_dm_text) {
+    const txt = r.facebook_dm_draft || r.social_dm_text;
+    drafts.push(`<div class="sq-draft-box">
+      <div class="sq-draft-label">
+        <span>f Facebook DM</span>
+        <button class="btn-copy" onclick="sqCopy(this,'${escHtml(txt.replace(/'/g,"\\'"))}')">Copy</button>
+      </div>
+      <div class="sq-draft-text">${escHtml(txt)}</div>
+    </div>`);
+  }
+  if (r.instagram_dm_draft) {
+    const txt = r.instagram_dm_draft;
+    drafts.push(`<div class="sq-draft-box">
+      <div class="sq-draft-label">
+        <span>â—Ž Instagram DM</span>
+        <button class="btn-copy" onclick="sqCopy(this,'${escHtml(txt.replace(/'/g,"\\'"))}')">Copy</button>
+      </div>
+      <div class="sq-draft-text">${escHtml(txt)}</div>
+    </div>`);
+  }
+  if (r.contact_form_message) {
+    const txt = r.contact_form_message;
+    drafts.push(`<div class="sq-draft-box">
+      <div class="sq-draft-label">
+        <span>âŠŸ Contact Form Message</span>
+        <button class="btn-copy" onclick="sqCopy(this,'${escHtml(txt.replace(/'/g,"\\'"))}')">Copy</button>
+      </div>
+      <div class="sq-draft-text">${escHtml(txt)}</div>
+    </div>`);
+  }
+
+  const fbBtn  = r.facebook_url
+    ? `<button class="btn btn-ghost" style="font-size:11px" onclick="sqOpenAndCopy(${idx},'facebook',${JSON.stringify(r.facebook_url)},${JSON.stringify(r.facebook_dm_draft||r.social_dm_text||'')})">f Open + Copy DM</button>` : '';
+  const igBtn  = r.instagram_url
+    ? `<button class="btn btn-ghost" style="font-size:11px" onclick="sqOpenAndCopy(${idx},'instagram',${JSON.stringify(r.instagram_url)},${JSON.stringify(r.instagram_dm_draft||r.social_dm_text||'')})">â—Ž Open + Copy DM</button>` : '';
+  const fmBtn  = r.contact_form_url
+    ? `<button class="btn btn-ghost" style="font-size:11px" onclick="sqOpenAndCopy(${idx},'contact_form',${JSON.stringify(r.contact_form_url)},${JSON.stringify(r.contact_form_message||'')})">âŠŸ Open Form + Copy</button>` : '';
+  const allBtn = (r.facebook_url || r.instagram_url || r.contact_form_url)
+    ? `<button class="btn btn-ghost" style="font-size:11px" onclick="sqOpenAll(${idx},${JSON.stringify({fb:r.facebook_url||'',ig:r.instagram_url||'',form:r.contact_form_url||''})})">â†— All Channels</button>` : '';
+
+  const logBtns = []
+    .concat(r.facebook_url  ? [`<button class="btn btn-ghost" style="font-size:11px;color:var(--blue)" onclick="sqLog(${idx},'facebook','dm_sent',this)">âœ“ FB DM Sent</button>`] : [])
+    .concat(r.instagram_url ? [`<button class="btn btn-ghost" style="font-size:11px;color:var(--blue)" onclick="sqLog(${idx},'instagram','dm_sent',this)">âœ“ IG DM Sent</button>`] : [])
+    .concat(r.contact_form_url ? [`<button class="btn btn-ghost" style="font-size:11px;color:var(--blue)" onclick="sqLog(${idx},'contact_form','submitted',this)">âœ“ Form Submitted</button>`] : []);
+
+  return `<div class="sq-card">
+    <div class="sq-card-top">
+      <div style="flex:1;min-width:0">
+        <div class="sq-biz">${escHtml(r.business_name)}</div>
+        <div class="sq-meta">
+          <span>${escHtml(r.city)}, ${escHtml(r.state)}</span>
+          ${r.industry ? `<span>${escHtml(r.industry)}</span>` : ''}
+          ${sent}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <span class="opp-badge ${scCls}">${lbl}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${score}</span>
+      </div>
+    </div>
+    ${insight}
+    ${drafts.length ? `<div class="sq-draft-wrap">${drafts.join('')}</div>` : ''}
+    <div class="sq-actions">
+      ${fbBtn}${igBtn}${fmBtn}${allBtn}
+      <span style="flex:1"></span>
+      ${logBtns.join('')}
+    </div>
+  </div>`;
+}
+
+function _sqFmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString(); } catch(e) { return iso; }
+}
+
+function sqCopy(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => toast('Copy failed', 'err'));
+}
+
+async function sqOpenAndCopy(idx, channel, url, text) {
+  if (text) {
+    try { await navigator.clipboard.writeText(text); toast('Message copied âœ“', 'ok'); }
+    catch(e) { toast('Copy failed â€” use the Copy button', 'err'); }
+  }
+  if (url) window.open(url, '_blank');
+}
+
+function sqOpenAll(idx, urls) {
+  if (urls.fb)   window.open(urls.fb, '_blank');
+  if (urls.ig)   window.open(urls.ig, '_blank');
+  if (urls.form) window.open(urls.form, '_blank');
+}
+
+async function sqLog(idx, channel, result, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Loggingâ€¦'; }
+  const res = await api('/api/log_contact', {index: idx, channel, result});
+  if (res.ok) {
+    toast('Logged: ' + result.replace('_',' '), 'ok');
+    if (allRows[idx]) Object.assign(allRows[idx], {
+      contact_result: result,
+      last_contact_channel: channel,
+      last_contacted_at: res.row?.last_contacted_at || new Date().toISOString(),
+    });
+    await socialLoad();
+  } else {
+    toast('Log failed: ' + res.error, 'err');
+    if (btn) { btn.disabled = false; btn.textContent = 'âœ“ Log'; }
+  }
+}
+
+
+// ==================================================================
+// SEND SPRINT  (sp*)  â€” Part 4
+// ==================================================================
+let _spChannel = 'any';
+let _spLead    = null;
+let _spSkipped = new Set();
+let _spTotal   = 0;
+
+async function sprintLoad() {
+  _spSkipped.clear();
+  await _spFetchNext();
+}
+
+function spSetFilter(f, el) {
+  _spChannel = f;
+  document.querySelectorAll('[data-spf]').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _spSkipped.clear();
+  _spFetchNext();
+}
+
+async function _spFetchNext() {
+  const container = document.getElementById('sprint-container');
+  if (container) container.innerHTML = '<div class="sprint-empty"><div class="sprint-empty-icon" style="font-size:28px;opacity:.5">â³</div><p>Loadingâ€¦</p></div>';
+  try {
+    const res = await api(`/api/sprint_next?channel=${_spChannel}`);
+    if (!res.ok || !res.lead) {
+      _spLead = null;
+      _spTotal = 0;
+      _spRenderEmpty();
+      return;
+    }
+    _spLead  = res.lead;
+    _spTotal = res.remaining + 1;
+    _spRender();
+  } catch(e) {
+    if (container) container.innerHTML = '<div class="sprint-empty"><p>Connection error</p></div>';
+  }
+}
+
+function _spRender() {
+  const container = document.getElementById('sprint-container');
+  if (!container || !_spLead) return;
+  const r   = _spLead;
+  const idx = r.index;
+  const ch  = r.best_channel || 'email';
+  const chLabels = {email:'âœ‰ Email', facebook:'f Facebook DM', instagram:'â—Ž Instagram DM', contact_form:'âŠŸ Contact Form'};
+  const chClass  = `sprint-ch-${ch}`;
+  const score    = parseInt(r.opportunity_score) || 0;
+  const scLbl    = score >= 60 ? 'High' : score >= 30 ? 'Medium' : 'Low';
+  const scCls    = score >= 60 ? 'opp-high' : score >= 30 ? 'opp-mid' : 'opp-low';
+  const draft    = r.sprint_draft || r.body || '';
+  const insight  = r.lead_insight_sentence
+    ? `<div class="sprint-insight">ðŸ’¡ ${escHtml(r.lead_insight_sentence)}</div>` : '';
+  const openHref = ch === 'email'
+    ? (r.to_email ? `mailto:${r.to_email}?subject=${encodeURIComponent(r.subject||'')}&body=${encodeURIComponent(draft)}` : '')
+    : (ch === 'facebook' ? r.facebook_url : ch === 'instagram' ? r.instagram_url : r.contact_form_url) || '';
+
+  const filled = _spTotal > 0 ? Math.round((_spSkipped.size / _spTotal) * 100) : 0;
+  const progEl = document.getElementById('sprint-progress-fill');
+  if (progEl) progEl.style.width = filled + '%';
+
+  container.innerHTML = `
+    <div class="sprint-card">
+      <div class="sprint-card-top">
+        <div class="sprint-biz">${escHtml(r.business_name)}</div>
+        <div class="sprint-meta">
+          <span>ðŸ“ ${escHtml(r.city)}, ${escHtml(r.state)}</span>
+          ${r.industry ? `<span>${escHtml(r.industry)}</span>` : ''}
+          ${r.phone ? `<span>ðŸ“ž ${escHtml(r.phone)}</span>` : ''}
+        </div>
+        <div class="sprint-score-row">
+          <span class="sprint-channel-pill ${chClass}">${chLabels[ch] || ch}</span>
+          <span class="opp-badge ${scCls}">${scLbl}</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${score}</span>
+          <span class="sprint-counter" style="margin-left:auto">${_spTotal} left in queue</span>
+        </div>
+        ${insight}
+      </div>
+      <div class="sprint-draft-wrap">
+        <div class="sprint-draft-label">${escHtml(chLabels[ch] || 'Draft')} â€” ready to send</div>
+        <div class="sprint-draft-text">${escHtml(draft)}</div>
+      </div>
+      <div class="sprint-actions">
+        <button class="sprint-btn-sent" onclick="spSent(${idx})">âœ“ Sent</button>
+        ${openHref ? `<button class="sprint-btn-open" onclick="spOpenChannel(${idx},${JSON.stringify(openHref)},${JSON.stringify(draft)})">â†— Open + Copy</button>` : ''}
+        <button class="sprint-btn-skip" onclick="spSkip(${idx})">Skip â†’</button>
+        <button class="sprint-btn-copy" onclick="spCopyDraft(this,${JSON.stringify(draft)})">âŽ˜ Copy</button>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;margin-left:4px" onclick="spOpenReview(${idx})">Full Review</button>
+      </div>
+    </div>`;
+}
+
+function _spRenderEmpty() {
+  const container = document.getElementById('sprint-container');
+  if (!container) return;
+  const progEl = document.getElementById('sprint-progress-fill');
+  if (progEl) progEl.style.width = '100%';
+  container.innerHTML = `<div class="sprint-empty">
+    <div class="sprint-empty-icon">ðŸŽ‰</div>
+    <h3 style="font-size:15px;color:var(--text);margin-bottom:6px">Sprint complete!</h3>
+    <p>No more leads in this queue. Switch channel filter or discover new leads.</p>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="sprintLoad()">â†» Reload Queue</button>
+      <button class="btn btn-ghost" onclick="switchPage('outreach',document.querySelector('[data-page=outreach]'))">Go to Outreach</button>
+    </div>
+  </div>`;
+}
+
+async function spSent(idx) {
+  const ch = _spLead?.best_channel || 'email';
+  const result = ch === 'contact_form' ? 'submitted' : ch === 'email' ? 'sent' : 'dm_sent';
+  const res = await api('/api/log_contact', {index: idx, channel: ch, result});
+  if (res.ok) {
+    toast('âœ“ Logged + moving to next', 'ok');
+    if (allRows[idx]) Object.assign(allRows[idx], {
+      contact_result: result,
+      last_contact_channel: ch,
+      last_contacted_at: res.row?.last_contacted_at || new Date().toISOString(),
+      sent_at: ch === 'email' ? (res.row?.sent_at || new Date().toISOString()) : allRows[idx].sent_at,
+    });
+    await _spFetchNext();
+  } else {
+    toast('Log failed: ' + res.error, 'err');
+  }
+}
+
+async function spOpenChannel(idx, url, draft) {
+  if (draft) {
+    try { await navigator.clipboard.writeText(draft); toast('Copied to clipboard âœ“', 'ok'); }
+    catch(e) {}
+  }
+  if (url) window.open(url, '_blank');
+}
+
+function spSkip(idx) {
+  _spSkipped.add(idx);
+  toast('Skipped â€” loading next', 'info');
+  _spFetchNext();
+}
+
+async function spCopyDraft(btn, text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'âœ“ Copied'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'âŽ˜ Copy'; btn.classList.remove('copied'); }, 2000);
+  } catch(e) { toast('Copy failed', 'err'); }
+}
+
+function spOpenReview(idx) {
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  setTimeout(() => {
+    const row = allRows[idx];
+    if (!row) return;
+    const fi = filteredRows.indexOf(row);
+    if (fi >= 0) openPanel(fi);
+    else {
+      currentFilter = 'all';
+      document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+      const allTab = document.querySelector('[data-filter=all]');
+      if (allTab) allTab.classList.add('active');
+      renderTable();
+      setTimeout(() => {
+        const fi2 = filteredRows.indexOf(allRows[idx]);
+        if (fi2 >= 0) openPanel(fi2);
+      }, 100);
+    }
+  }, 200);
+}
+
+
+// ==================================================================
+// CONVERSATIONS  (cv*)  â€” Part 6
+// ==================================================================
+let _cvData    = [];
+let _cvActive  = null;
+
+async function convLoad() {
+  const list = document.getElementById('cv-list');
+  if (list) list.innerHTML = '<div class="cv-empty"><div class="cv-empty-icon">ðŸ’¬</div><p>Loadingâ€¦</p></div>';
+  try {
+    _cvData = await api('/api/conversation_queue');
+    _cvRenderList();
+    // Update nav badge
+    const nav = document.getElementById('nav-conversations');
+    if (nav) nav.textContent = _cvData.length > 0
+      ? `ðŸ’¬ Conversations (${_cvData.length})` : 'ðŸ’¬ Conversations';
+  } catch(e) {
+    if (list) list.innerHTML = '<div class="cv-empty"><p>Failed to load</p></div>';
+  }
+}
+
+function _cvRenderList() {
+  const list = document.getElementById('cv-list');
+  if (!list) return;
+  if (!_cvData.length) {
+    list.innerHTML = `<div class="cv-empty">
+      <div class="cv-empty-icon">ðŸ’¬</div>
+      <h3 style="font-size:14px;color:var(--text);margin-bottom:5px">No conversations yet</h3>
+      <p style="font-size:12px">Leads will appear here when a reply is detected from Gmail.</p>
+    </div>`;
+    return;
+  }
+  list.innerHTML = _cvData.map((r, i) => {
+    const ts    = r.replied_at ? new Date(r.replied_at).toLocaleString() : '';
+    const isCur = _cvActive === i;
+    return `<div class="cv-item${isCur?' active':''}" onclick="cvSelect(${i})">
+      <div class="cv-item-name">${escHtml(r.business_name)}</div>
+      <div class="cv-item-meta">${escHtml(r.city)}, ${escHtml(r.state)}${r.industry ? ' Â· '+escHtml(r.industry) : ''}</div>
+      ${r.reply_snippet ? `<div class="cv-item-snippet">â†© ${escHtml(r.reply_snippet.substring(0,70))}</div>` : ''}
+      <div class="cv-item-ts">${ts}</div>
+    </div>`;
+  }).join('');
+}
+
+function cvSelect(i) {
+  _cvActive = i;
+  _cvRenderList();
+  _cvRenderPanel(_cvData[i], i);
+}
+
+function _cvRenderPanel(r, i) {
+  const panel = document.getElementById('cv-panel');
+  if (!panel) return;
+  const idx   = r.index;
+  const ts    = r.replied_at ? new Date(r.replied_at).toLocaleString() : '';
+  const notes = r.conversation_notes || '';
+  const next  = r.conversation_next_step || '';
+
+  panel.innerHTML = `
+    <div class="cv-panel-hdr">
+      <div>
+        <div class="cv-panel-biz">${escHtml(r.business_name)} <span class="cv-fire">ðŸ”¥ Replied</span></div>
+        <div class="cv-panel-meta">
+          <span>ðŸ“ ${escHtml(r.city)}, ${escHtml(r.state)}</span>
+          ${r.phone ? `<span>ðŸ“ž ${escHtml(r.phone)}</span>` : ''}
+          ${r.to_email ? `<span>âœ‰ ${escHtml(r.to_email)}</span>` : ''}
+          ${r.website ? `<span><a href="${escHtml(r.website)}" target="_blank" style="color:var(--blue)">ðŸŒ site</a></span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-ghost" style="font-size:11px" onclick="cvOpenInOutreach(${idx})">Open in Outreach â†’</button>
+      </div>
+    </div>
+    <div class="cv-panel-body">
+      <div>
+        <div class="cv-section-label">Reply received ${ts ? 'â€” ' + ts : ''}</div>
+        <div class="cv-reply-box">
+          <div class="cv-reply-label">â˜… Inbound Reply</div>
+          <div class="cv-reply-body">${escHtml(r.reply_snippet || '(no preview â€” check Gmail)')}</div>
+        </div>
+      </div>
+      ${r.lead_insight_sentence ? `<div class="sq-insight">ðŸ’¡ ${escHtml(r.lead_insight_sentence)}</div>` : ''}
+      <div>
+        <div class="cv-section-label">Conversation Notes</div>
+        <textarea id="cv-notes-${i}" class="cv-textarea" placeholder="Add notes about this conversationâ€¦"
+          oninput="cvSaveNotes(${idx},${i})">${escHtml(notes)}</textarea>
+      </div>
+      <div>
+        <div class="cv-section-label">Next Step</div>
+        <textarea id="cv-nextstep-${i}" class="cv-textarea" style="min-height:60px" placeholder="e.g. Send demo link, Schedule callâ€¦"
+          oninput="cvSaveNextStep(${idx},${i})">${escHtml(next)}</textarea>
+      </div>
+      <div>
+        <div class="cv-section-label">Quick Actions</div>
+        <div class="cv-quick-actions">
+          <button class="btn btn-primary" style="font-size:12px"
+            onclick="cvSendQuick(${idx},'demo')">ðŸ“Ž Copy Demo Reply</button>
+          <button class="btn btn-ghost" style="font-size:12px"
+            onclick="cvSendQuick(${idx},'call')">ðŸ“ž Copy Call Invite</button>
+          <button class="btn btn-ghost" style="font-size:12px"
+            onclick="cvSendQuick(${idx},'case_study')">ðŸ“„ Copy Case Study Reply</button>
+          <button class="btn btn-danger" style="font-size:12px"
+            onclick="cvClose(${idx},${i})">âœ— Close Lead</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+let _cvSaveTimer = null;
+function cvSaveNotes(idx, i) {
+  const val = document.getElementById(`cv-notes-${i}`)?.value || '';
+  if (_cvData[i]) _cvData[i].conversation_notes = val;
+  clearTimeout(_cvSaveTimer);
+  _cvSaveTimer = setTimeout(() => api('/api/update_conversation', {index: idx, notes: val}), 600);
+}
+
+function cvSaveNextStep(idx, i) {
+  const val = document.getElementById(`cv-nextstep-${i}`)?.value || '';
+  if (_cvData[i]) _cvData[i].conversation_next_step = val;
+  clearTimeout(_cvSaveTimer);
+  _cvSaveTimer = setTimeout(() => api('/api/update_conversation', {index: idx, next_step: val}), 600);
+}
+
+function cvSendQuick(idx, type) {
+  const row = allRows[idx];
+  if (!row) return;
+  const demoUrl      = _clinkOr(COPPERLINE_LINKS.demo,      'âš  Demo link not configured â€” update COPPERLINE_LINKS.demo in the dashboard before sending');
+  const bookingUrl   = _clinkOr(COPPERLINE_LINKS.booking,   'âš  Booking link not configured â€” update COPPERLINE_LINKS.booking in the dashboard before sending');
+  const caseStudyUrl = _clinkOr(COPPERLINE_LINKS.caseStudy, 'âš  Case study link not configured â€” update COPPERLINE_LINKS.caseStudy in the dashboard before sending');
+  const templates = {
+    demo:       `hey â€” here's a quick look at how this works in practice for a service business: ${demoUrl}. lmk if any of it looks familiar`,
+    call:       `hey â€” happy to jump on a quick call and take a look at where work might be slipping through for ${row.business_name || 'your business'}. grab a time here: ${bookingUrl}`,
+    case_study: `hey â€” here's a quick example of what we fixed for a similar business: ${caseStudyUrl}. lmk if it raises any questions`,
+  };
+  const text = templates[type] || '';
+  // Warn operator if any unconfigured placeholder made it into the text
+  if (text.includes('âš ')) {
+    toast('âš  Template contains unconfigured link â€” update COPPERLINE_LINKS before sending', 'err');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('Template copied â€” review before sending', 'ok'))
+    .catch(() => toast('Copy failed', 'err'));
+}
+
+async function cvClose(idx, i) {
+  const res = await api('/api/log_contact', {index: idx, channel: '', result: 'closed'});
+  if (res.ok) {
+    toast('Closed', 'info');
+    _cvData.splice(i, 1);
+    _cvActive = null;
+    _cvRenderList();
+    const panel = document.getElementById('cv-panel');
+    if (panel) panel.innerHTML = '<div class="cv-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center"><p>Select a conversation</p></div>';
+    const nav = document.getElementById('nav-conversations');
+    if (nav) nav.textContent = _cvData.length > 0 ? `ðŸ’¬ Conversations (${_cvData.length})` : 'ðŸ’¬ Conversations';
+  }
+}
+
+function cvOpenInOutreach(idx) {
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  setTimeout(() => {
+    const row = allRows[idx];
+    if (!row) return;
+    const fi = filteredRows.indexOf(row);
+    if (fi >= 0) openPanel(fi);
+  }, 200);
+}
+
+
+// â”€â”€ Search History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function _shRerun(city, state, industry) {
+  // Pre-fill the discover bar on the Outreach page and fire the search
+  const cityEl     = document.getElementById('d-city');
+  const stateEl    = document.getElementById('d-state');
+  const industryEl = document.getElementById('d-industry');
+  if (cityEl)     cityEl.value     = city;
+  if (stateEl)    stateEl.value    = state;
+  if (industryEl) {
+    // Try to select the matching option; fall through if not found
+    const opt = Array.from(industryEl.options).find(o => o.value === industry);
+    if (opt) industryEl.value = industry;
+  }
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  // Brief delay so the page switch renders before the API call fires
+  setTimeout(() => discoverLeads(), 120);
+}
+
+async function loadSearchHistory() {
+  const wrap  = document.getElementById('search-history-wrap');
+  const tbody = document.getElementById('search-history-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="mc-muted" style="text-align:center;padding:24px">Loadingâ€¦</td></tr>';
+  try {
+    const rows = await api('/api/search_history');
+    if (!rows.length) {
+      if (wrap) wrap.querySelector('#sh-summary')?.remove();
+      tbody.innerHTML = '<tr><td colspan="7" class="mc-muted" style="text-align:center;padding:24px">No searches yet â€” run Discover + Draft to get started.</td></tr>';
+      return;
+    }
+
+    // Compute summary stats
+    const totalSearches = rows.length;
+    const totalFound    = rows.reduce((a, r) => a + (r.found || 0), 0);
+    const zeroRows      = rows.filter(r => !r.found).length;
+    const citiesSet     = new Set(rows.map(r => (r.city + '|' + r.state).toLowerCase()));
+
+    const summaryEl = document.getElementById('sh-summary');
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <div class="ops-stat-row" style="margin-bottom:14px">
+          <div class="ops-stat"><div class="ops-stat-n" style="color:var(--blue)">${totalSearches}</div><div class="ops-stat-l">Searches Run</div></div>
+          <div class="ops-stat"><div class="ops-stat-n" style="color:var(--green)">${totalFound}</div><div class="ops-stat-l">Total Found</div></div>
+          <div class="ops-stat"><div class="ops-stat-n" style="color:var(--blue)">${citiesSet.size}</div><div class="ops-stat-l">Unique Cities</div></div>
+          <div class="ops-stat"><div class="ops-stat-n" style="color:${zeroRows ? 'var(--amber)' : 'var(--green)'}">${zeroRows}</div><div class="ops-stat-l">Zero-Result Runs</div></div>
+        </div>`;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const isZero   = !r.found;
+      const isDupe   = r.status === 'all_duplicates';
+      const isErr    = r.status === 'error';
+      const rowBg    = isZero && !isDupe ? 'background:rgba(245,166,35,.04)' : '';
+      const statusCls = isErr    ? 'color:var(--red)'   :
+                        isDupe   ? 'color:var(--amber)'  :
+                        isZero   ? 'color:var(--amber)'  : 'color:var(--green)';
+      const statusLabel = isErr   ? 'âœ— error'  :
+                          isDupe  ? 'â€” dupes'  :
+                          isZero  ? 'â€” 0 new'  : `âœ“ ${r.found}`;
+      const foundCls    = r.found > 0 ? 'font-weight:600' : 'color:var(--muted)';
+      const rerunTitle  = `Re-run: ${r.industry} in ${r.city}, ${r.state}`;
+      return `<tr style="${rowBg}">
+        <td class="mc-muted" style="font-size:11px;white-space:nowrap">${escHtml(r.ts)}</td>
+        <td style="font-weight:500">${escHtml(r.city)}</td>
+        <td class="mc-mono">${escHtml(r.state)}</td>
+        <td><span class="tag-industry">${escHtml(r.industry)}</span></td>
+        <td style="text-align:center;${foundCls}">${r.found ?? 0}</td>
+        <td style="text-align:center;${statusCls};font-size:12px;font-weight:600">${statusLabel}${r.error ? `<div style="font-size:10px;color:var(--muted);font-weight:400">${escHtml(r.error)}</div>` : ''}</td>
+        <td><button class="tp-btn tp-btn-run" title="${escHtml(rerunTitle)}"
+          onclick="_shRerun(${JSON.stringify(r.city)},${JSON.stringify(r.state)},${JSON.stringify(r.industry)})">âš¡ Re-run</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="mc-muted" style="text-align:center;padding:24px">Error loading history: ${e}</td></tr>`;
+  }
+}
+
+// â”€â”€ MC helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function mcApi(path, body) {
+  const opts = body !== undefined
+    ? { method: body === null ? 'DELETE' : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: body === null ? undefined : JSON.stringify(body) }
+    : {};
+  if (body === null) opts.method = 'DELETE';
+  const r = await fetch(path, opts);
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    throw new Error(`mcApi ${path} returned ${r.status}: ${text.slice(0, 120)}`);
+  }
+  return r.json();
+}
+
+async function mcCheckHealth() {
+  try {
+    const res = await mcApi('/api/mc/health');
+    const pill = document.getElementById('mc-svc-status');
+    const detail = document.getElementById('mc-health-detail');
+    if (res.ok) {
+      const clients = res.service?.clients_loaded ?? '?';
+      pill.className = 'svc-pill svc-online';
+      pill.textContent = 'â— Service Online';
+      if (detail) detail.textContent = `${clients} client(s) loaded`;
+    } else {
+      pill.className = 'svc-pill svc-offline';
+      pill.textContent = 'â— Service Offline';
+      if (detail) detail.textContent = 'Missed call server not running';
+    }
+  } catch(e) {
+    const pill = document.getElementById('mc-svc-status');
+    pill.className = 'svc-pill svc-unknown';
+    pill.textContent = 'â— Unknown';
+  }
+}
+
+// â”€â”€ Clients page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let _mcClients = [];
+async function mcLoadClients() {
+  const container = document.getElementById('mc-clients-container');
+  container.innerHTML = '<div class="mc-muted">Loadingâ€¦</div>';
+  try {
+    _mcClients = await mcApi('/api/clients');
+    mcRenderClients();
+  } catch(e) {
+    container.innerHTML = `<div class="mc-muted">Error loading clients: ${e}</div>`;
+  }
+}
+
+function mcRenderClients() {
+  const container = document.getElementById('mc-clients-container');
+  if (!_mcClients.length) {
+    container.innerHTML = `<div class="stub-card"><h3>No clients yet</h3><p>Click <strong>+ New Client</strong> to onboard your first Missed Call service client.</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="mc-card">
+      <table class="mc-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Phone</th>
+            <th>SMS Reply</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="mc-clients-tbody"></tbody>
+      </table>
+    </div>`;
+  const tbody = document.getElementById('mc-clients-tbody');
+  tbody.innerHTML = _mcClients.map(c => `
+    <tr>
+      <td>
+        <div style="font-weight:500">${escHtml(c.business_name)}</div>
+        <div class="mc-mono mc-muted">${escHtml(c.client_id)}</div>
+        ${c.owner_email ? `<div class="mc-muted" style="font-size:11px">${escHtml(c.owner_email)}</div>` : ''}
+      </td>
+      <td class="mc-mono">${escHtml(c.phone || 'â€”')}</td>
+      <td style="font-size:12px;max-width:200px">${escHtml((c.sms_reply||'').substring(0,60))}${(c.sms_reply||'').length>60?'â€¦':''}</td>
+      <td><span class="tag-industry" style="${c.active===false?'opacity:.5':''}">${c.active===false?'Inactive':'Active'}</span></td>
+      <td>
+        <div class="mc-actions">
+          <button class="act act-edit" disabled title="Leads view not enabled yet" style="opacity:.4;cursor:not-allowed">Leads</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="mcRunDemo('${escHtml(c.id||c.client_id||'')}','${escHtml(c.business_name)}')">ðŸŽ¬ Run Demo</button>
+          <button class="act act-del" disabled title="Delete client not enabled yet" style="opacity:.4;cursor:not-allowed">âœ•</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function mcDeleteClient(cid, name) {
+  if (!confirm(`Remove client "${name}"? This does NOT delete their Google Sheet or Twilio number.`)) return;
+  const res = await fetch('/api/mc/clients/' + encodeURIComponent(cid), {method:'DELETE'});
+  const data = await res.json();
+  if (data.ok) { toast('Client removed','info'); mcLoadClients(); }
+  else toast('Error: ' + data.error, 'err');
+}
+
+async function mcTestSms(cid) {
+  // Kept for backward compatibility â€” calls run_demo internally now
+  await mcRunDemo(cid, cid);
+}
+
+async function mcRunDemo(cid, name) {
+  toast(`Running demo for ${name}â€¦`, 'info');
+  const res = await mcApi('/api/demo_run', {client_id: cid});
+
+  // Always show the result modal regardless of partial success
+  const bizEl   = document.getElementById('demo-modal-biz');
+  const stepsEl = document.getElementById('demo-modal-steps');
+
+  bizEl.textContent = `${res.business_name || name}  Â·  ${cid}`;
+
+  if (!res.ok && !res.steps) {
+    stepsEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:12px 0">${escHtml(res.error || 'Unknown error')}</div>`;
+  } else {
+    const stepMeta = [
+      { key: 'sms',    icon: 'ðŸ’¬', label: 'Auto-SMS to owner phone' },
+      { key: 'sheet',  icon: 'ðŸ“‹', label: 'Lead logged to Google Sheets' },
+      { key: 'notify', icon: 'ðŸ””', label: 'Owner notification sent' },
+    ];
+    stepsEl.innerHTML = stepMeta.map(({key, icon, label}) => {
+      const s = res.steps?.[key] || {};
+      const cls = s.ok ? 'demo-step-ok' : s.error ? 'demo-step-fail' : 'demo-step-skip';
+      const statusIcon = s.ok ? 'âœ“' : s.error ? 'âœ—' : 'â€“';
+      return `<div class="demo-step ${cls}">
+        <div class="demo-step-icon">${icon}</div>
+        <div class="demo-step-body">
+          <div class="demo-step-label">${statusIcon} ${label}</div>
+          <div class="demo-step-detail">${escHtml(s.detail || '')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('demo-modal-overlay').classList.add('open');
+}
+
+function closeDemoModal() {
+  document.getElementById('demo-modal-overlay').classList.remove('open');
+}
+
+// â”€â”€ Leads page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let _mcLeadsClientId = '';
+function mcViewLeads(cid, name) {
+  toast('Leads view not enabled yet', 'info');
+}
+
+function mcClearFilters() {
+  document.getElementById('mc-leads-date').value = '';
+  document.getElementById('mc-leads-caller').value = '';
+  mcLoadLeads();
+}
+
+async function mcLoadLeads() {
+  if (!_mcLeadsClientId) return;
+  const container = document.getElementById('mc-leads-container');
+  container.innerHTML = '<div class="mc-muted">Loadingâ€¦</div>';
+  const date = document.getElementById('mc-leads-date').value.trim();
+  const caller = document.getElementById('mc-leads-caller').value.trim();
+  let url = `/api/mc/clients/${encodeURIComponent(_mcLeadsClientId)}/leads`;
+  const params = [];
+  if (date) params.push('date=' + encodeURIComponent(date));
+  if (caller) params.push('caller=' + encodeURIComponent(caller));
+  if (params.length) url += '?' + params.join('&');
+  try {
+    const res = await mcApi(url);
+    if (!res.ok) { container.innerHTML = `<div class="mc-muted">Error: ${escHtml(res.error)}</div>`; return; }
+    const leads = res.leads;
+    document.getElementById('mc-leads-count').textContent = leads.length + ' leads';
+    if (!leads.length) {
+      container.innerHTML = '<div class="stub-card"><h3>No leads yet</h3><p>Leads will appear here once callers start reaching the Twilio number and replying to the auto-SMS.</p></div>';
+      return;
+    }
+    container.innerHTML = `<div class="mc-card">
+      <table class="mc-table">
+        <thead><tr><th>Timestamp</th><th>Caller</th><th>Message</th><th>Status</th></tr></thead>
+        <tbody>${leads.map(l => {
+          const sc = l.status || '';
+          const scClass = sc === 'replied' ? 'status-replied' : sc === 'new' ? 'status-new' : 'status-closed';
+          return `<tr>
+            <td class="mc-mono" style="white-space:nowrap;font-size:11px">${escHtml(l.timestamp||'')}</td>
+            <td class="mc-mono">${escHtml(l.caller_number||'')}</td>
+            <td><div class="lead-msg">${escHtml(l.message||'')}</div></td>
+            <td><span class="${scClass}" style="font-size:11px;font-weight:600">${escHtml(sc)}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch(e) {
+    container.innerHTML = `<div class="mc-muted">Error: ${e}</div>`;
+  }
+}
+
+// â”€â”€ New client form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function mcResetForm() {
+  ['client_id','business_name','owner_phone','owner_email','twilio_number',
+   'spreadsheet_id','sheet_name','auto_sms_message','ack_sms_message'].forEach(id => {
+    const el = document.getElementById('f-' + id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-notification_channel').value = 'sms';
+  document.getElementById('mc-form-errors').style.display = 'none';
+  document.getElementById('mc-form-success').style.display = 'none';
+}
+
+async function mcSubmitNewClient() {
+  const errBox = document.getElementById('mc-form-errors');
+  const okBox = document.getElementById('mc-form-success');
+  errBox.style.display = 'none';
+  okBox.style.display = 'none';
+  const data = {
+    client_id: document.getElementById('f-client_id').value.trim(),
+    business_name: document.getElementById('f-business_name').value.trim(),
+    owner_phone: document.getElementById('f-owner_phone').value.trim(),
+    owner_email: document.getElementById('f-owner_email').value.trim(),
+    twilio_number: document.getElementById('f-twilio_number').value.trim(),
+    spreadsheet_id: document.getElementById('f-spreadsheet_id').value.trim(),
+    sheet_name: document.getElementById('f-sheet_name').value.trim(),
+    notification_channel: document.getElementById('f-notification_channel').value,
+    auto_sms_message: document.getElementById('f-auto_sms_message').value.trim(),
+    ack_sms_message: document.getElementById('f-ack_sms_message').value.trim(),
+  };
+  try {
+    const res = await mcApi('/api/clients/add', data);
+    if (res.ok) {
+      okBox.className = 'form-success';
+      okBox.textContent = `âœ“ Client "${data.client_id}" saved. Click Clients to verify, then set Twilio webhooks and reload the service.`;
+      okBox.style.display = 'block';
+      mcResetForm();
+    } else {
+      errBox.innerHTML = '<ul>' + (res.errors||[res.error||'Unknown error']).map(e=>`<li>${escHtml(e)}</li>`).join('') + '</ul>';
+      errBox.className = 'form-errors';
+      errBox.style.display = 'block';
+    }
+  } catch(e) {
+    errBox.innerHTML = `<ul><li>Connection error: ${e}</li></ul>`;
+    errBox.className = 'form-errors';
+    errBox.style.display = 'block';
+  }
+}
+
+// â”€â”€ Reports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function mcLoadReports() {
+  const grid = document.getElementById('mc-reports-grid');
+  if (!grid) return;
+  // Show per-client lead counts from the clients list
+  try {
+    const clients = await mcApi('/api/clients');
+    if (!clients.length) return;
+    grid.innerHTML = clients.map(c => `
+      <div class="mc-card" style="cursor:pointer" onclick="mcViewLeads('${escHtml(c.client_id)}','${escHtml(c.business_name)}')">
+        <div class="mc-card-hdr"><span>${escHtml(c.business_name)}</span></div>
+        <div class="mc-card-body">
+          <div class="mc-mono" style="font-size:11px;color:var(--muted)">${escHtml(c.twilio_number)}</div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted)">${c.spreadsheet_id ? 'âœ“ Sheet configured' : 'âš  No sheet ID'}</div>
+          <div style="margin-top:4px;font-size:12px;color:var(--blue)">â†’ View leads</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// â”€â”€ Reply checker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function checkReplies(silent = false) {
+  const btn = document.getElementById('btnCheckReplies');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const res = await api('/api/check_replies', {});
+    if (!res.ok) {
+      if (!silent) toast('Reply check failed: ' + (res.error || 'unknown error'), 'err');
+      return;
+    }
+    const r = res.result;
+    if (r.new_replies > 0) {
+      await loadAll(); // refresh table + stat counter
+      toast(`â˜… ${r.new_replies} new repl${r.new_replies === 1 ? 'y' : 'ies'} â€” click Replied tab`, 'ok');
+    } else if (!silent) {
+      toast('No new replies found', 'info');
+    }
+    if (r.errors && r.errors.length && !silent) {
+      toast('Reply check warning: ' + r.errors[0], 'err');
+    }
+  } catch (e) {
+    if (!silent) toast('Reply check error: ' + e, 'err');
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
+async function checkSent() {
+  const btn = document.getElementById('btnCheckSent');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const res = await api('/api/reconcile_sent', { max_messages: 150, lookback_hours: 72 });
+    if (!res.ok) {
+      toast('Sent reconciliation failed: ' + (res.error || 'unknown error'), 'err');
+      return;
+    }
+    const r = res.result || {};
+    if ((r.updated_rows || 0) > 0) {
+      await loadAll();
+      toast(`â†º Reconciled ${r.updated_rows} sent row${r.updated_rows === 1 ? '' : 's'} from Gmail Sent`, 'ok');
+    } else {
+      toast('No sent rows needed reconciliation', 'info');
+    }
+    if ((r.skipped_ambiguous || 0) > 0) {
+      toast(`Sent check skipped ${r.skipped_ambiguous} ambiguous row${r.skipped_ambiguous === 1 ? '' : 's'} (safe skip)`, 'err');
+    }
+    if (r.errors && r.errors.length) {
+      toast('Sent check warning: ' + r.errors[0], 'err');
+    }
+  } catch (e) {
+    toast('Sent reconciliation error: ' + e, 'err');
+  } finally {
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+}
+
+// â”€â”€ Keyboard shortcuts when panel open â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('panel-overlay').classList.contains('open')) return;
+  if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp')   { e.preventDefault(); navigatePanel(-1); }
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') { e.preventDefault(); navigatePanel(1); }
+  if (e.key==='Escape') { e.preventDefault(); closePanel(); return; }
+  if ((e.key==='a'||e.key==='A') && e.shiftKey) { e.preventDefault(); panelApproveAndNext(); return; }
+  if (e.key==='a'||e.key==='A') { e.preventDefault(); panelApprove(); return; }
+  if ((e.key==='s'||e.key==='S') && e.shiftKey) { e.preventDefault(); panelScheduleTomorrowAndNext(); return; }
+  if (e.key==='s'||e.key==='S') { e.preventDefault(); panelScheduleTomorrow(); return; }
+  if (e.key==='u'||e.key==='U') { e.preventDefault(); panelUnschedule(); return; }
+  if (e.key==='n'||e.key==='N') { e.preventDefault(); panelSkipNext(); return; }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  _loadPresets();
+  loadAll();
+  loadIndustries();
+  mcCheckHealth();
+  setInterval(mcCheckHealth, 30000);
+  setInterval(() => checkReplies(true), 300000);
+  const sendModal = document.getElementById('send-modal');
+  if (sendModal) sendModal.addEventListener('click', e => {
+    if (e.target === sendModal) closeModal();
+  });
+  // Boot nav: show Pipeline sub-tabs, hide all others, Outreach active
+  document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
+    t.style.display = (t.dataset.parent === 'pipeline') ? '' : 'none';
+    t.classList.remove('active');
+    if (t.dataset.page === 'outreach') t.classList.add('active');
+  });
+});
+
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PAGE: HEALTH  (Queue Health + Approved Unsent + Followups Due)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function healthLoad() {
+  const wrap = document.getElementById('health-body');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="ops-loading">Loadingâ€¦</div>';
+  try {
+    const [h, s, fq] = await Promise.all([
+      api('/api/queue_health'),
+      api('/api/status'),
+      api('/api/followup_queue')
+    ]);
+    const health   = h.health || {};
+    const counts   = fq.counts || {};
+    const ok       = health.queue_ok;
+    const statusDot = ok
+      ? '<span style="color:var(--green)">âœ“ Clean</span>'
+      : '<span style="color:var(--red)">âš  Issues Found</span>';
+
+    wrap.innerHTML = `
+      <div class="ops-section-hdr">Queue Health ${statusDot}</div>
+
+      <div class="ops-stat-row">
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--blue)">${health.total_rows ?? 'â€”'}</div><div class="ops-stat-l">Total Rows</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--green)">${health.real_sends ?? 'â€”'}</div><div class="ops-stat-l">Real Sends</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${health.contact_logged_only ?? 'â€”'}</div><div class="ops-stat-l">Logged Only</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--red)">${health.duplicate_rows ?? 'â€”'}</div><div class="ops-stat-l">Duplicates</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--red)">${health.invalid_emails ?? 'â€”'}</div><div class="ops-stat-l">Invalid Emails</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${health.approved_no_email ?? 'â€”'}</div><div class="ops-stat-l">Approved/No Email</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${health.missing_required ?? 'â€”'}</div><div class="ops-stat-l">Missing Fields</div></div>
+      </div>
+
+      ${health.invalid_email_details && health.invalid_email_details.length ? `
+      <div class="ops-section-hdr" style="margin-top:20px">Invalid Emails</div>
+      <table class="ops-table"><thead><tr><th>Business</th><th>Bad Email</th></tr></thead><tbody>
+      ${health.invalid_email_details.map(e=>`<tr><td>${e.business_name||'â€”'}</td><td style="color:var(--red);font-family:var(--mono);font-size:12px">${e.email}</td></tr>`).join('')}
+      </tbody></table>` : ''}
+
+      <div class="ops-section-hdr" style="margin-top:20px">Approved but Unsent</div>
+      <div class="ops-stat-row">
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${s.approved_unsent ?? 'â€”'}</div><div class="ops-stat-l">Approved Unsent</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--green)">${s.sent ?? 'â€”'}</div><div class="ops-stat-l">Real Sends</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--muted)">${s.sent_logged_only ?? 'â€”'}</div><div class="ops-stat-l">Logged Only</div></div>
+      </div>
+      ${(s.approved_unsent > 0)
+        ? `<div class="ops-notice ops-notice-amber">âš  ${s.approved_unsent} row(s) are approved but haven't been sent yet. Switch to the Outreach tab to send them.</div>`
+        : `<div class="ops-notice ops-notice-green">âœ“ No approved rows waiting to be sent.</div>`}
+
+      <div class="ops-section-hdr" style="margin-top:20px">Follow-Ups Due</div>
+      <div class="ops-stat-row">
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--red)">${counts.overdue ?? 0}</div><div class="ops-stat-l">Overdue</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--amber)">${counts.today ?? 0}</div><div class="ops-stat-l">Due Today</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--blue)">${counts.this_week ?? 0}</div><div class="ops-stat-l">This Week</div></div>
+        <div class="ops-stat"><div class="ops-stat-n" style="color:var(--muted)">${counts.upcoming ?? 0}</div><div class="ops-stat-l">Upcoming</div></div>
+      </div>
+      ${(counts.overdue > 0)
+        ? `<div class="ops-notice ops-notice-red">ðŸ”´ ${counts.overdue} follow-up(s) overdue. Switch to Follow-Up tab to action them.</div>`
+        : (counts.today > 0)
+          ? `<div class="ops-notice ops-notice-amber">ðŸŸ¡ ${counts.today} follow-up(s) due today.</div>`
+          : `<div class="ops-notice ops-notice-green">âœ“ No overdue follow-ups.</div>`}
+
+      <div style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="healthLoad()"><span class="spin"></span>â†» Refresh Health</button>
+      </div>
+    `;
+  } catch(e) {
+    wrap.innerHTML = `<div class="ops-error">Failed to load health data: ${e.message}</div>`;
+  }
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PAGE: EXCEPTIONS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+const _EX_LABELS = {
+  INVALID_EMAIL:      { label: 'Invalid Email',        color: 'var(--red)' },
+  MISSING_EMAIL:      { label: 'Missing Email',         color: 'var(--amber)' },
+  ASSET_EMAIL:        { label: 'Asset Filename Email',  color: 'var(--red)' },
+  POSSIBLE_DUPLICATE: { label: 'Possible Duplicate',    color: 'var(--amber)' },
+  PRIOR_CONTACT:      { label: 'Prior Contact (No MID)',color: 'var(--amber)' },
+  DRAFT_ERROR:        { label: 'Draft Error',           color: 'var(--red)' },
+  APPROVED_NO_EMAIL:  { label: 'Approved / No Email',   color: 'var(--red)' },
+  FOLLOWUP_CONFLICT:  { label: 'Followup Conflict',     color: 'var(--amber)' },
+};
+
+async function exceptionsLoad() {
+  const wrap = document.getElementById('exceptions-body');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="ops-loading">Scanning queue for exceptionsâ€¦</div>';
+  try {
+    const d = await api('/api/exceptions');
+    if (!d.ok) { wrap.innerHTML = `<div class="ops-error">Error: ${d.error}</div>`; return; }
+
+    const flagBadge = (f) => {
+      const info = _EX_LABELS[f] || { label: f, color: 'var(--muted)' };
+      return `<span class="ex-flag" style="border-color:${info.color};color:${info.color}">${info.label}</span>`;
+    };
+
+    const countRows = Object.entries(d.counts || {}).filter(([,v])=>v>0);
+
+    wrap.innerHTML = `
+      <div class="ops-section-hdr">
+        Exception Summary
+        <span style="font-size:12px;font-weight:400;color:${d.exception_rows>0?'var(--red)':'var(--green)'}">
+          ${d.exception_rows} of ${d.total_rows} rows flagged
+        </span>
+      </div>
+
+      ${countRows.length ? `
+      <div class="ex-counts">
+        ${countRows.map(([f,n])=>`
+          <div class="ex-count-card">
+            <div class="ex-count-n" style="color:${(_EX_LABELS[f]||{}).color||'var(--muted)'}">${n}</div>
+            <div class="ex-count-l">${(_EX_LABELS[f]||{}).label||f}</div>
+          </div>`).join('')}
+      </div>` : `<div class="ops-notice ops-notice-green">âœ“ No exceptions found. Queue is clean.</div>`}
+
+      ${d.exception_rows > 0 ? `
+      <div class="ops-section-hdr" style="margin-top:20px">Exception Rows</div>
+      <table class="ops-table">
+        <thead><tr><th>Business</th><th>City</th><th>Email</th><th>Flags</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${(d.rows||[]).map((r,ri)=>`
+            <tr id="ex-row-${ri}">
+              <td style="font-weight:500">${r.business_name||'â€”'}</td>
+              <td style="color:var(--muted);font-size:12px">${r.city||''}</td>
+              <td style="font-family:var(--mono);font-size:11px;color:${r.to_email?'var(--text)':'var(--amber)'}">${r.to_email||'<em>none</em>'}</td>
+              <td>${(r.exception_flags||[]).map(flagBadge).join(' ')}</td>
+              <td style="white-space:nowrap">
+                ${r.to_email && (r.exception_flags||[]).some(f=>['INVALID_EMAIL','ASSET_EMAIL'].includes(f))
+                  ? `<button class="btn btn-ghost" style="font-size:10px;padding:2px 7px" onclick="exClearEmail(${r.index ?? -1},${ri})">âœ• Clear Email</button> ` : ''}
+                ${r.index !== undefined && r.index >= 0
+                  ? `<button class="btn btn-ghost" style="font-size:10px;padding:2px 7px;color:var(--red)" onclick="exDeleteRow(${r.index ?? -1},${ri})">ðŸ—‘ Delete</button>` : ''}
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : ''}
+
+      <div style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="exceptionsLoad()">â†» Refresh Exceptions</button>
+      </div>
+    `;
+  } catch(e) {
+    wrap.innerHTML = `<div class="ops-error">Failed to load exceptions: ${e.message}</div>`;
+  }
+}
+// â”€â”€ Exception row actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function exClearEmail(queueIndex, tableRowIndex) {
+  if (queueIndex < 0) { toast('Cannot action â€” row index unknown','err'); return; }
+  if (!confirm('Clear the invalid email address on this row? The row will stay in queue as a non-email lead.')) return;
+  try {
+    const res = await api('/api/update_row', { index: queueIndex, updates: { to_email: '', approved: 'false' } });
+    if (res.ok) {
+      toast('Email cleared â€” row unapproved and kept in queue','ok');
+      document.getElementById('ex-row-'+tableRowIndex)?.remove();
+      await loadAll();
+    } else { toast('Error: '+res.error,'err'); }
+  } catch(e) { toast('Connection error','err'); }
+}
+
+async function exDeleteRow(queueIndex, tableRowIndex) {
+  if (queueIndex < 0) { toast('Cannot action â€” row index unknown','err'); return; }
+  if (!confirm('Permanently delete this row from the queue?')) return;
+  try {
+    const res = await api('/api/delete_row', { index: queueIndex });
+    if (res.ok) {
+      toast('Row deleted','ok');
+      document.getElementById('ex-row-'+tableRowIndex)?.remove();
+      await loadAll();
+    } else { toast('Error: '+res.error,'err'); }
+  } catch(e) { toast('Connection error','err'); }
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PAGE: MAP SEARCH  (Leaflet + /api/discover_area)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let _mapResultMarkers = [];
+let _mapResultItems  = [];    // [{biz, marker}] â€” ties list panel to map markers
+let _mapInstance    = null;   // Leaflet map object
+let _mapClusterGroup = null;  // MarkerClusterGroup for result markers
+let _mapPanelActiveKey = '';
+let _mapPanelTriageFilter = 'all';
+
+function _mapClearResultMarkers() {
+  if (_mapClusterGroup) _mapClusterGroup.clearLayers();
+  _mapResultMarkers = [];
+  _mapResultItems   = [];
+  const panel     = document.getElementById('map-results-panel');
+  const list      = document.getElementById('mrp-list');
+  const count     = document.getElementById('mrp-count');
+  const sortEl    = document.getElementById('mrp-sort');
+  const filterEl  = document.getElementById('mrp-email-only');
+  if (panel)    panel.classList.remove('visible');
+  if (list)     list.innerHTML = '';
+  if (count)    count.textContent = '';
+  if (sortEl)   sortEl.value   = '';
+  if (filterEl) filterEl.checked = false;
+}
+
+function _mrpFindQueueRow(bizName) {
+  if (!bizName || !allRows || !allRows.length) return null;
+  const key = bizName.trim().toLowerCase();
+  return allRows.find(r => (r.business_name || '').trim().toLowerCase() === key) || null;
+}
+
+function _mapRenderPanel() {
+  const panel     = document.getElementById('map-results-panel');
+  const list      = document.getElementById('mrp-list');
+  const count     = document.getElementById('mrp-count');
+  const bulkBar   = document.getElementById('mrp-bulk-bar');
+  const sortEl    = document.getElementById('mrp-sort');
+  const filterEl  = document.getElementById('mrp-email-only');
+  if (!panel || !list || !count) return;
+  if (_mapResultItems.length === 0) return;
+
+  const emailOnly = filterEl ? filterEl.checked : false;
+  const sortKey   = sortEl  ? sortEl.value      : '';
+
+  let items = emailOnly
+    ? _mapResultItems.filter(({ biz }) => biz.email && biz.email.length > 0)
+    : _mapResultItems.slice();
+
+  if (sortKey === 'name') {
+    items.sort((a, b) => (a.biz.name || '').localeCompare(b.biz.name || ''));
+  } else if (sortKey === 'city') {
+    items.sort((a, b) => (a.biz.city || '').localeCompare(b.biz.city || ''));
+  }
+
+  // Track visible item names for bulk actions
+  window._mrpVisibleNames = items.map(({ biz }) => biz.name);
+  if (bulkBar) bulkBar.style.display = items.length ? '' : 'none';
+
+  list.innerHTML = '';
+  items.forEach(({ biz, marker }) => {
+    const hasEmail = biz.email && biz.email.length > 0;
+    const qrow     = _mrpResolveRow(biz);
+
+    const item = document.createElement('div');
+    item.className = 'mrp-item';
+
+    // Name
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'mrp-name';
+    nameDiv.title = biz.name || '';
+    nameDiv.textContent = biz.name || '';
+
+    // Meta row: city + email dot
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'mrp-meta';
+    metaDiv.innerHTML =
+      `<span class="mrp-dot ${hasEmail ? 'has-email' : 'no-email'}"></span>` +
+      `<span>${biz.city || ''}${hasEmail ? ' â€” email' : ' â€” no email'}</span>`;
+
+    item.appendChild(nameDiv);
+    item.appendChild(metaDiv);
+
+    // Queue state pills
+    if (qrow) {
+      const pillsDiv = document.createElement('div');
+      pillsDiv.className = 'mrp-status-pills';
+      const isSent     = !!(qrow.sent_at || '').trim();
+      const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+      const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+      const score      = parseInt(qrow.final_priority_score) || 0;
+      if (isSent)      pillsDiv.innerHTML += `<span class="mrp-pill sent">Sent</span>`;
+      else if (isScheduled) pillsDiv.innerHTML += `<span class="mrp-pill scheduled">Scheduled</span>`;
+      else if (isApproved) pillsDiv.innerHTML += `<span class="mrp-pill approved">Approved</span>`;
+      else             pillsDiv.innerHTML += `<span class="mrp-pill drafted">Drafted</span>`;
+      if (score)       pillsDiv.innerHTML += `<span class="mrp-pill score">Score ${score}</span>`;
+      item.appendChild(pillsDiv);
+
+      // Per-item actions (only if not sent)
+      if (!isSent) {
+        const actsDiv = document.createElement('div');
+        actsDiv.className = 'mrp-item-acts';
+        actsDiv.addEventListener('click', e => e.stopPropagation()); // don't trigger map zoom
+
+        if (!isApproved) {
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'mrp-act';
+          btnApprove.textContent = 'âœ“ Approve';
+          btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
+          actsDiv.appendChild(btnApprove);
+        }
+        if (!isScheduled) {
+          const btnSched = document.createElement('button');
+          btnSched.className = 'mrp-act';
+          btnSched.textContent = 'ðŸ• Schedule';
+          btnSched.onclick = () => _mrpSchedule(biz, qrow.index);
+          actsDiv.appendChild(btnSched);
+        }
+        const btnPreview = document.createElement('button');
+        btnPreview.className = 'mrp-act';
+        btnPreview.textContent = 'ðŸ‘ Preview';
+        btnPreview.onclick = () => _mrpPreview(biz, qrow);
+        actsDiv.appendChild(btnPreview);
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'mrp-act danger';
+        btnDel.textContent = 'âœ• Delete';
+        btnDel.onclick = () => _mrpDelete(biz, qrow.index);
+        actsDiv.appendChild(btnDel);
+
+        item.appendChild(actsDiv);
+      }
+    }
+
+    // Click on item body zooms map to marker
+    item.addEventListener('click', () => {
+      if (_mapClusterGroup) _mapClusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
+      else marker.openPopup();
+    });
+
+    list.appendChild(item);
+  });
+
+  count.textContent = emailOnly
+    ? `(${items.length} of ${_mapResultItems.length})`
+    : `(${_mapResultItems.length})`;
+  panel.classList.add('visible');
+  setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+}
+
+// Pass 24 â€” stable row lookup: place_id primary, name|city fallback
+// Returns the allRows entry for a biz object from the map results panel.
+function _mapClearResultMarkers() {
+  if (_mapClusterGroup) _mapClusterGroup.clearLayers();
+  _mapResultMarkers = [];
+  _mapResultItems = [];
+  _mapPanelActiveKey = '';
+  _mapPanelTriageFilter = 'all';
+  window._mrpVisibleNames = [];
+  window._mrpVisibleQueueRows = [];
+  const panel = document.getElementById('map-results-panel');
+  const list = document.getElementById('mrp-list');
+  const count = document.getElementById('mrp-count');
+  const sortEl = document.getElementById('mrp-sort');
+  const groupEl = document.getElementById('mrp-group');
+  const filterEl = document.getElementById('mrp-email-only');
+  const triageBar = document.getElementById('mrp-triage-bar');
+  if (panel) panel.classList.remove('visible');
+  if (list) list.innerHTML = '';
+  if (count) count.textContent = '';
+  if (sortEl) sortEl.value = 'score';
+  if (groupEl) groupEl.value = 'workflow';
+  if (filterEl) filterEl.checked = false;
+  if (triageBar) triageBar.innerHTML = '';
+}
+
+function _mapPanelItemKey(biz) {
+  return biz ? _mapBizRunKey(biz) : '';
+}
+
+function _mapPanelActiveKeyForRow(row) {
+  if (!row) return '';
+  const rowKey = _panelMakeKey(row);
+  const hit = _mapResultItems.find(item => {
+    const qrow = _mrpResolveRow(item.biz);
+    return qrow && _panelMakeKey(qrow) === rowKey;
+  });
+  return hit ? _mapPanelItemKey(hit.biz) : '';
+}
+
+function _mapPanelSetActive(biz, skipRender) {
+  _mapPanelActiveKey = _mapPanelItemKey(biz);
+  if (!skipRender) _mapRenderPanel();
+}
+
+function _mapPanelItemScore(item, qrow) {
+  const score = parseInt((qrow && qrow.final_priority_score) || item.biz.final_priority_score || item.biz.score || 0, 10);
+  return Number.isFinite(score) ? score : 0;
+}
+
+function _mapPanelNumber(...values) {
+  for (const value of values) {
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return 0;
+}
+
+function _mapPanelQualification(item, qrow) {
+  const hasEmail = !!((item.biz.email || (qrow && qrow.to_email) || '').trim());
+  const hasWebsite = !!((item.biz.website || (qrow && qrow.website) || '').trim());
+  const hasPhone = !!((item.biz.phone || (qrow && qrow.phone) || '').trim());
+  const score = _mapPanelItemScore(item, qrow);
+  const oppScore = _mapPanelNumber(
+    qrow && (qrow.opp_score ?? qrow.opportunity_score),
+    item.biz.opp_score ?? item.biz.opportunity_score
+  );
+  const rating = _mapPanelNumber(qrow && qrow.rating, item.biz.rating);
+  const reviewCount = _mapPanelNumber(
+    qrow && (qrow.review_count ?? qrow.reviews),
+    item.biz.review_count ?? item.biz.reviews
+  );
+  const contactability = String((qrow && qrow.contactability) || item.biz.contactability || '').trim().toLowerCase();
+  const isSent = !!(qrow && (qrow.sent_at || '').trim());
+  const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
+  const isApproved = !!(qrow && String(qrow.approved || '').toLowerCase() === 'true');
+  const strongSignals = score >= 4 || oppScore >= 60 || (rating >= 4.5 && reviewCount >= 20);
+  const usableSignals = score >= 3 || oppScore >= 35 || (rating >= 4.1 && reviewCount >= 8);
+  const highContactability = contactability.includes('high');
+  const mediumContactability = highContactability || contactability.includes('medium');
+  const lowScore = score > 0 && score <= 2;
+
+  let key = 'weak';
+  let label = 'Weak / skip';
+  let order = 3;
+  let tone = 'weak';
+
+  if (isSent) {
+    key = 'closed';
+    label = 'Sent / closed';
+    order = 4;
+    tone = 'closed';
+  } else if (hasEmail && (isApproved || isScheduled || strongSignals || highContactability || (hasWebsite && hasPhone))) {
+    key = 'ready';
+    label = 'Ready now';
+    order = 0;
+    tone = 'ready';
+  } else if (!hasEmail && (hasWebsite || hasPhone) && (strongSignals || usableSignals || mediumContactability)) {
+    key = 'needs-contact';
+    label = 'Needs contact info';
+    order = 2;
+    tone = 'needs-contact';
+  } else if (hasEmail || ((hasWebsite || hasPhone) && (usableSignals || mediumContactability))) {
+    key = 'maybe';
+    label = 'Maybe later';
+    order = 1;
+    tone = 'maybe';
+  }
+
+  const reasons = [];
+  if (hasEmail) reasons.push('Email ready');
+  else if (hasWebsite && hasPhone) reasons.push('Web + phone only');
+  else if (hasPhone) reasons.push('Phone only');
+  else if (hasWebsite) reasons.push('Website only');
+  else reasons.push('No contact path');
+
+  if (score >= 4) reasons.push(`Score ${score}`);
+  else if (lowScore) reasons.push(score ? `Low score ${score}` : 'Low score');
+  else if (score === 3) reasons.push('Mid score');
+
+  if (!hasEmail) reasons.push('Needs email');
+  if (!hasWebsite) reasons.push('No website');
+  if (!hasPhone && !hasEmail) reasons.push('No direct contact');
+  if ((rating >= 4.5 && reviewCount >= 20) || (rating >= 4.1 && reviewCount >= 8)) {
+    reasons.push(`${rating.toFixed(1)}â˜…/${Math.round(reviewCount)}`);
+  }
+  if (highContactability) reasons.push('High contactability');
+
+  return {
+    key,
+    label,
+    order,
+    tone,
+    hasEmail,
+    hasWebsite,
+    hasPhone,
+    score,
+    lowScore,
+    isSent,
+    isApproved,
+    isScheduled,
+    reasons: Array.from(new Set(reasons)).slice(0, 3),
+  };
+}
+
+function _mapPanelSortItems(items, sortKey) {
+  const sorted = items.slice();
+  sorted.sort((a, b) => {
+    const aRow = _mrpResolveRow(a.biz);
+    const bRow = _mrpResolveRow(b.biz);
+    if (sortKey === 'name') {
+      return (a.biz.name || '').localeCompare(b.biz.name || '');
+    }
+    if (sortKey === 'city') {
+      const cityCompare = (a.biz.city || '').localeCompare(b.biz.city || '');
+      return cityCompare || (a.biz.name || '').localeCompare(b.biz.name || '');
+    }
+    const scoreCompare = _mapPanelItemScore(b, bRow) - _mapPanelItemScore(a, aRow);
+    if (scoreCompare !== 0) return scoreCompare;
+    const aHasEmail = !!((a.biz.email || (aRow && aRow.to_email) || '').trim());
+    const bHasEmail = !!((b.biz.email || (bRow && bRow.to_email) || '').trim());
+    if (aHasEmail !== bHasEmail) return aHasEmail ? -1 : 1;
+    return (a.biz.name || '').localeCompare(b.biz.name || '');
+  });
+  return sorted;
+}
+
+function _mapPanelGroupInfo(item, qrow, groupKey) {
+  const qualification = _mapPanelQualification(item, qrow);
+  const hasEmail = qualification.hasEmail;
+  if (groupKey === 'flat') return { id: 'all', label: 'All results', order: 0 };
+  if (groupKey === 'qualification') {
+    return { id: qualification.key, label: qualification.label, order: qualification.order };
+  }
+  if (groupKey === 'city') {
+    const cityLabel = item.biz.city || (qrow && qrow.city) || 'No city';
+    return { id: 'city:' + cityLabel.toLowerCase(), label: cityLabel, order: 0 };
+  }
+  if (groupKey === 'email') {
+    return hasEmail
+      ? { id: 'has-email', label: 'Has email', order: 0 }
+      : { id: 'no-email', label: 'Needs email', order: 1 };
+  }
+  const isSent = !!(qrow && (qrow.sent_at || '').trim());
+  const isScheduled = !!(qrow && (qrow.send_after || '').trim()) && !isSent;
+  const isApproved = !!(qrow && String(qrow.approved || '').toLowerCase() === 'true');
+  if (qrow && isSent) return { id: 'sent', label: 'Sent / closed', order: 4 };
+  if (qrow && isScheduled) return { id: 'scheduled', label: 'Scheduled', order: 2 };
+  if (!hasEmail) return { id: 'needs-email', label: 'Needs email', order: 3 };
+  if (qrow && isApproved) return { id: 'approved', label: 'Approved and ready', order: 0 };
+  if (qrow) return { id: 'review', label: 'Review next', order: 1 };
+  return { id: 'other', label: 'Other', order: 5 };
+}
+
+function _mapPanelSectionSort(a, b, groupKey) {
+  if (groupKey === 'city') return a.label.localeCompare(b.label);
+  return (a.order || 0) - (b.order || 0) || a.label.localeCompare(b.label);
+}
+
+function _mapPanelMatchesTriage(item, qrow, triageKey) {
+  const qualification = _mapPanelQualification(item, qrow);
+  if (triageKey === 'ready') return qualification.key === 'ready';
+  if (triageKey === 'maybe') return qualification.key === 'maybe';
+  if (triageKey === 'needs-contact') return qualification.key === 'needs-contact';
+  if (triageKey === 'weak') return qualification.key === 'weak';
+  if (triageKey === 'no-email') return !qualification.hasEmail;
+  return true;
+}
+
+function _mapRenderTriageBar(sourceItems) {
+  const bar = document.getElementById('mrp-triage-bar');
+  if (!bar) return;
+  const defs = [
+    { key: 'all', label: 'All' },
+    { key: 'ready', label: 'Ready' },
+    { key: 'maybe', label: 'Maybe' },
+    { key: 'needs-contact', label: 'Needs Contact' },
+    { key: 'weak', label: 'Weak' },
+    { key: 'no-email', label: 'No Email' },
+  ];
+
+  const counts = new Map();
+  defs.forEach(def => {
+    if (def.key === 'all') counts.set(def.key, sourceItems.length);
+    else counts.set(def.key, sourceItems.filter(({ item, qrow }) => _mapPanelMatchesTriage(item, qrow, def.key)).length);
+  });
+
+  bar.innerHTML = '';
+  defs.forEach(def => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mrp-triage-chip' + (_mapPanelTriageFilter === def.key ? ' active' : '');
+    btn.disabled = def.key !== 'all' && counts.get(def.key) === 0;
+    btn.innerHTML =
+      `<span>${escHtml(def.label)}</span>` +
+      `<span class="mrp-triage-count">${counts.get(def.key)}</span>`;
+    btn.onclick = () => {
+      _mapPanelTriageFilter = def.key;
+      _mapRenderPanel();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function _mrpOpenEdit(qrow) {
+  if (!qrow) return;
+  const rows = Array.isArray(window._mrpVisibleQueueRows) && window._mrpVisibleQueueRows.length
+    ? window._mrpVisibleQueueRows
+    : [qrow];
+  let fi = rows.findIndex(row => _panelMakeKey(row) === _panelMakeKey(qrow));
+  if (fi < 0) fi = 0;
+  const activeKey = _mapPanelActiveKeyForRow(qrow);
+  if (activeKey) _mapPanelActiveKey = activeKey;
+  openPanel(fi, rows, 'Discovery review subset');
+  _mapRenderPanel();
+}
+
+function _mapRenderPanel() {
+  const panel = document.getElementById('map-results-panel');
+  const list = document.getElementById('mrp-list');
+  const count = document.getElementById('mrp-count');
+  const bulkBar = document.getElementById('mrp-bulk-bar');
+  const sortEl = document.getElementById('mrp-sort');
+  const groupEl = document.getElementById('mrp-group');
+  const filterEl = document.getElementById('mrp-email-only');
+  if (!panel || !list || !count) return;
+  if (_mapResultItems.length === 0) return;
+
+  const emailOnly = filterEl ? filterEl.checked : false;
+  const sortKey = sortEl ? (sortEl.value || 'score') : 'score';
+  const groupKey = groupEl ? (groupEl.value || 'workflow') : 'workflow';
+
+  let sourceItems = _mapResultItems.map(item => ({ item, qrow: _mrpResolveRow(item.biz) }));
+  if (emailOnly) {
+    sourceItems = sourceItems.filter(({ item, qrow }) => !!((item.biz.email || (qrow && qrow.to_email) || '').trim()));
+  }
+  _mapRenderTriageBar(sourceItems);
+
+  const triageKey = _mapPanelTriageFilter || 'all';
+  let items = sourceItems.filter(({ item, qrow }) => _mapPanelMatchesTriage(item, qrow, triageKey)).map(({ item }) => item);
+
+  window._mrpVisibleNames = items.map(({ biz }) => biz.name);
+  window._mrpVisibleQueueRows = items.map(({ biz }) => _mrpResolveRow(biz)).filter(Boolean);
+  if (bulkBar) bulkBar.style.display = _mrpVisibleQueueRowsDeduped().length ? '' : 'none';
+  _mrpRefreshBulkBarMeta();
+
+  if (!items.length) {
+    count.textContent = `(0 of ${_mapResultItems.length})`;
+    list.innerHTML = `<div class="mrp-empty">No results match the current discovery filters${triageKey !== 'all' ? ' and triage bucket' : ''}.</div>`;
+    panel.classList.add('visible');
+    return;
+  }
+
+  items = _mapPanelSortItems(items, sortKey);
+
+  const sectionsById = new Map();
+  items.forEach(item => {
+    const qrow = _mrpResolveRow(item.biz);
+    const group = _mapPanelGroupInfo(item, qrow, groupKey);
+    if (!sectionsById.has(group.id)) {
+      sectionsById.set(group.id, { id: group.id, label: group.label, order: group.order, items: [] });
+    }
+    sectionsById.get(group.id).items.push({ item, qrow });
+  });
+
+  const activeRow = panelRowKey ? _panelFindRowByKey(panelRowKey) : null;
+  const panelActiveKey = activeRow ? _mapPanelActiveKeyForRow(activeRow) : '';
+  if (panelActiveKey) _mapPanelActiveKey = panelActiveKey;
+
+  const sections = Array.from(sectionsById.values()).sort((a, b) => _mapPanelSectionSort(a, b, groupKey));
+  list.innerHTML = '';
+
+  sections.forEach(section => {
+    const sectionEl = document.createElement('div');
+    sectionEl.className = 'mrp-section';
+
+    if (groupKey !== 'flat') {
+      const hdr = document.createElement('div');
+      hdr.className = 'mrp-section-hdr';
+      hdr.innerHTML =
+        `<span class="mrp-section-title">${escHtml(section.label)}</span>` +
+        `<span class="mrp-section-meta">${section.items.length} lead${section.items.length === 1 ? '' : 's'}</span>`;
+      sectionEl.appendChild(hdr);
+    }
+
+    section.items.forEach(({ item, qrow }) => {
+      const { biz, marker } = item;
+      const qualification = _mapPanelQualification(item, qrow);
+      const hasEmail = qualification.hasEmail;
+      const hasWebsite = qualification.hasWebsite;
+      const hasPhone = qualification.hasPhone;
+      const itemEl = document.createElement('div');
+      itemEl.className = 'mrp-item' + (_mapPanelActiveKey === _mapPanelItemKey(biz) ? ' active' : '');
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'mrp-name';
+      nameDiv.title = biz.name || '';
+      nameDiv.textContent = biz.name || '';
+
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'mrp-meta';
+      metaDiv.innerHTML =
+        `<span class="mrp-dot ${hasEmail ? 'has-email' : 'no-email'}"></span>` +
+        `<span>${escHtml(biz.city || '')}${hasEmail ? ' - email' : ' - no email'}</span>`;
+
+      const triageDiv = document.createElement('div');
+      triageDiv.className = 'mrp-detail';
+      triageDiv.innerHTML =
+        `<span class="mrp-qpill ${qualification.tone}">${escHtml(qualification.label)}</span>` +
+        qualification.reasons.map(reason => `<span class="mrp-why">${escHtml(reason)}</span>`).join('');
+
+      const detailDiv = document.createElement('div');
+      detailDiv.className = 'mrp-detail';
+      detailDiv.innerHTML =
+        `<span>${hasWebsite ? 'Website' : 'No website'}</span>` +
+        `<span>${hasPhone ? 'Phone' : 'No phone'}</span>` +
+        `<span>${qrow ? 'In queue' : 'Discovery only'}</span>`;
+
+      itemEl.appendChild(nameDiv);
+      itemEl.appendChild(metaDiv);
+      itemEl.appendChild(triageDiv);
+      itemEl.appendChild(detailDiv);
+
+      if (qrow) {
+        const pillsDiv = document.createElement('div');
+        pillsDiv.className = 'mrp-status-pills';
+        const isSent = !!(qrow.sent_at || '').trim();
+        const isApproved = String(qrow.approved || '').toLowerCase() === 'true';
+        const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+        const score = _mapPanelItemScore(item, qrow);
+        if (isSent) pillsDiv.innerHTML += `<span class="mrp-pill sent">Sent</span>`;
+        else if (isScheduled) pillsDiv.innerHTML += `<span class="mrp-pill scheduled">Scheduled</span>`;
+        else if (isApproved) pillsDiv.innerHTML += `<span class="mrp-pill approved">Approved</span>`;
+        else pillsDiv.innerHTML += `<span class="mrp-pill drafted">Drafted</span>`;
+        if (score) pillsDiv.innerHTML += `<span class="mrp-pill score">Score ${score}</span>`;
+        itemEl.appendChild(pillsDiv);
+
+        const actsDiv = document.createElement('div');
+        actsDiv.className = 'mrp-item-acts';
+        actsDiv.addEventListener('click', e => e.stopPropagation());
+
+        if (!isSent && !isApproved) {
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'mrp-act';
+          btnApprove.textContent = 'Approve';
+          btnApprove.onclick = () => _mrpApprove(biz, qrow.index);
+          actsDiv.appendChild(btnApprove);
+        }
+        if (!isSent && !isScheduled) {
+          const btnSched = document.createElement('button');
+          btnSched.className = 'mrp-act';
+          btnSched.textContent = 'Schedule';
+          btnSched.onclick = () => _mrpSchedule(biz, qrow.index);
+          actsDiv.appendChild(btnSched);
+        }
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'mrp-act approved';
+        btnEdit.textContent = 'Edit';
+        btnEdit.onclick = () => _mrpOpenEdit(qrow);
+        actsDiv.appendChild(btnEdit);
+
+        const btnPreview = document.createElement('button');
+        btnPreview.className = 'mrp-act';
+        btnPreview.textContent = 'Preview';
+        btnPreview.onclick = () => _mrpPreview(biz, qrow);
+        actsDiv.appendChild(btnPreview);
+
+        if (!isSent) {
+          const btnDel = document.createElement('button');
+          btnDel.className = 'mrp-act danger';
+          btnDel.textContent = 'Delete';
+          btnDel.onclick = () => _mrpDelete(biz, qrow.index);
+          actsDiv.appendChild(btnDel);
+        }
+
+        itemEl.appendChild(actsDiv);
+      }
+
+      itemEl.addEventListener('click', () => {
+        _mapPanelSetActive(biz, true);
+        if (_mapClusterGroup) _mapClusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
+        else marker.openPopup();
+        _mapRenderPanel();
+      });
+
+      sectionEl.appendChild(itemEl);
+    });
+
+    list.appendChild(sectionEl);
+  });
+
+  count.textContent = (emailOnly || triageKey !== 'all')
+    ? `(${items.length} of ${_mapResultItems.length})`
+    : `(${items.length})`;
+  panel.classList.add('visible');
+  setTimeout(() => { if (_mapInstance) _mapInstance.invalidateSize(); }, 50);
+}
+
+function _mrpResolveRow(biz) {
+  if (!biz || !allRows || !allRows.length) return null;
+  // 1. place_id match (stable, from backend Pass 24)
+  if (biz.place_id) {
+    // place_id is not stored in queue rows â€” use as disambiguator on name+city tie only
+    // Primary: exact name+city match preferred when place_id is present
+  }
+  // 2. name + city composite match (more reliable than name alone)
+  const nameKey = (biz.name || '').trim().toLowerCase();
+  const cityKey = (biz.city || '').trim().toLowerCase();
+  if (nameKey && cityKey) {
+    const hit = allRows.find(r =>
+      (r.business_name || '').trim().toLowerCase() === nameKey &&
+      (r.city || '').trim().toLowerCase() === cityKey
+    );
+    if (hit) return hit;
+  }
+  // 3. name-only fallback (original behaviour, least reliable)
+  if (nameKey) {
+    return allRows.find(r => (r.business_name || '').trim().toLowerCase() === nameKey) || null;
+  }
+  return null;
+}
+
+// Keep original name for bulk helpers that still pass bizName strings
+function _mrpFindQueueRow(bizName) {
+  return _mrpResolveRow({ name: bizName, city: '' });
+}
+
+// Pass 23 â€” map panel per-item and bulk actions (Pass 24: use _mrpResolveRow)
+
+function _mrpVisibleQueueRowsDeduped() {
+  const rows = Array.isArray(window._mrpVisibleQueueRows) ? window._mrpVisibleQueueRows : [];
+  const seen = new Set();
+  return rows.filter(row => {
+    const key = _panelMakeKey(row);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function _mrpVisibleReviewRows() {
+  return _mrpVisibleQueueRowsDeduped().filter(row => !(row.sent_at || '').trim());
+}
+
+function _mrpVisibleReadyRows() {
+  return _mrpVisibleReviewRows().filter(row => !!((row.to_email || '').trim().includes('@')));
+}
+
+function _mrpRefreshBulkBarMeta() {
+  const metaEl = document.getElementById('mrp-bulk-meta');
+  const prepBtn = document.getElementById('mrp-bulk-prep');
+  const reviewBtn = document.getElementById('mrp-bulk-review');
+  const reviewRows = _mrpVisibleReviewRows();
+  const readyRows = _mrpVisibleReadyRows();
+  const needsApproval = readyRows.filter(row => String(row.approved || '').toLowerCase() !== 'true').length;
+  if (metaEl) {
+    metaEl.textContent = reviewRows.length
+      ? `${reviewRows.length} reviewable â€¢ ${readyRows.length} ready â€¢ ${needsApproval} need approval`
+      : 'No reviewable queue rows in view';
+  }
+  if (prepBtn) prepBtn.style.display = readyRows.length ? 'inline-flex' : 'none';
+  if (reviewBtn) reviewBtn.style.display = reviewRows.length ? 'inline-flex' : 'none';
+}
+
+function _mrpOpenRowsInOutreach(rows) {
+  const keys = (rows || []).map(_panelMakeKey).filter(Boolean);
+  if (!keys.length) { toast('No visible review rows available', 'err'); return; }
+  switchPage('outreach', document.querySelector('[data-page=outreach]'));
+  setTimeout(() => {
+    const freshRows = keys.map(_panelFindRowByKey).filter(Boolean);
+    if (!freshRows.length) { toast('Visible review set is no longer available', 'err'); return; }
+    renderTable();
+    openPanel(0, freshRows, 'Discovery review subset');
+  }, 180);
+}
+
+function _mrpOpenVisibleReview() {
+  const reviewRows = _mrpVisibleReviewRows();
+  if (!reviewRows.length) { toast('No visible review rows available', 'err'); return; }
+  _mrpOpenRowsInOutreach(reviewRows);
+}
+
+async function _mrpApprove(biz, idx) {
+  try {
+    await api('/api/approve_row', { index: idx });
+    await loadAll();
+    _mapRenderPanel();
+    toast('Approved: ' + biz.name + ' - ready to send now', 'ok');
+  } catch(e) { toast('Approve failed', 'err'); }
+}
+
+async function _mrpSchedule(biz, idx) {
+  try {
+    const res = await api('/api/schedule_email', {
+      index: idx,
+      business_name: biz.name,
+      days_ahead: 1,
+    });
+    if (!res.ok) { toast('Schedule failed: ' + (res.error || ''), 'err'); return; }
+    await loadAll();
+    _mapRenderPanel();
+    toast('Scheduled: ' + biz.name + ' for a future morning window', 'ok');
+  } catch(e) { toast('Schedule failed', 'err'); }
+}
+
+// Pass 24 â€” inline preview: no page switch
+function _mrpPreview(biz, qrow) {
+  const modal = document.getElementById('mrp-modal');
+  if (!modal) return;
+  const subject = qrow.subject || '(no subject)';
+  const body    = qrow.body    || '(no body)';
+  const email   = qrow.to_email || biz.email || '(no email)';
+  const idx     = qrow.index;
+  const bizName = biz.name;
+  const isSent  = !!(qrow.sent_at || '').trim();
+  const isApproved = (qrow.approved || '').toLowerCase() === 'true';
+  const isScheduled = !!(qrow.send_after || '').trim() && !isSent;
+
+  document.getElementById('mrp-modal-title').textContent = bizName;
+  document.getElementById('mrp-modal-sub').textContent = email;
+  document.getElementById('mrp-modal-subject').textContent = 'Subject: ' + subject;
+  document.getElementById('mrp-modal-email-body').textContent = body;
+
+  const ftr = document.getElementById('mrp-modal-ftr');
+  ftr.innerHTML = '';
+
+  if (!isSent) {
+    if (!isApproved) {
+      const btnA = document.createElement('button');
+      btnA.className = 'btn btn-success';
+      btnA.style.fontSize = '12px';
+      btnA.textContent = 'âœ“ Approve';
+      btnA.onclick = async () => {
+        await _mrpApprove(biz, idx);
+        _mrpModalClose();
+      };
+      ftr.appendChild(btnA);
+    }
+    if (!isScheduled) {
+      const btnS = document.createElement('button');
+      btnS.className = 'btn btn-ghost';
+      btnS.style.fontSize = '12px';
+      btnS.textContent = 'ðŸ• Schedule Tomorrow';
+      btnS.onclick = async () => {
+        await _mrpSchedule(biz, idx);
+        _mrpModalClose();
+      };
+      ftr.appendChild(btnS);
+    }
+    const btnD = document.createElement('button');
+    btnD.className = 'btn btn-danger';
+    btnD.style.fontSize = '12px';
+    btnD.textContent = 'âœ• Delete';
+    btnD.onclick = async () => {
+      if (!confirm('Delete "' + bizName + '"?')) return;
+      await api('/api/delete_row', { index: idx });
+      await loadAll();
+      _mapRenderPanel();
+      _mrpModalClose();
+    };
+    ftr.appendChild(btnD);
+  }
+
+  const btnClose = document.createElement('button');
+  btnClose.className = 'btn btn-ghost';
+  btnClose.style.fontSize = '12px';
+  btnClose.textContent = 'Close';
+  btnClose.onclick = _mrpModalClose;
+  ftr.appendChild(btnClose);
+
+  modal.classList.add('open');
+}
+
+function _mrpModalClose() {
+  const modal = document.getElementById('mrp-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function _mrpDelete(biz, idx) {
+  if (!confirm('Delete "' + biz.name + '" from queue?')) return;
+  try {
+    await api('/api/delete_row', { index: idx });
+    await loadAll();
+    _mapRenderPanel();
+    toast('Deleted: ' + biz.name, 'ok');
+  } catch(e) { toast('Delete failed', 'err'); }
+}
+
+async function _mrpBulkApprove() {
+  const toApprove = _mrpVisibleQueueRowsDeduped().filter(r => String(r.approved || '').toLowerCase() !== 'true' && !(r.sent_at || '').trim());
+  if (!toApprove.length) { toast('No unapproved rows in visible set', 'err'); return; }
+  if (!confirm('Approve ' + toApprove.length + ' visible lead(s)?')) return;
+  let ok = 0, fail = 0;
+  for (const row of toApprove) {
+    try { await api('/api/approve_row', { index: row.index }); ok++; }
+    catch(e) { fail++; }
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast(`Approved ${ok} lead(s)${fail ? ' â€” ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
+}
+
+async function _mrpBulkSchedule() {
+  const toSched = _mrpVisibleQueueRowsDeduped().filter(r => String(r.approved || '').toLowerCase() === 'true' && !(r.sent_at || '').trim() && !(r.send_after || '').trim());
+  if (!toSched.length) { toast('No approved+unscheduled rows in visible set', 'err'); return; }
+  if (!confirm('Schedule ' + toSched.length + ' approved lead(s) for tomorrow?')) return;
+  let ok = 0, fail = 0;
+  for (const row of toSched) {
+    try {
+      const res = await api('/api/schedule_email', { index: row.index, business_name: row.business_name, days_ahead: 1 });
+      if (res.ok) ok++; else fail++;
+    } catch(e) { fail++; }
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast(`Scheduled ${ok} lead(s)${fail ? ' â€” ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
+}
+
+async function _mrpBulkPrepOutreach() {
+  const readyRows = _mrpVisibleReadyRows();
+  if (!readyRows.length) { toast('No outreach-ready visible leads in this view', 'err'); return; }
+  const readyKeys = readyRows.map(_panelMakeKey);
+  const toApprove = readyRows.filter(row => String(row.approved || '').toLowerCase() !== 'true');
+  const prompt = toApprove.length
+    ? `Approve ${toApprove.length} visible outreach-ready lead(s) and open review for ${readyRows.length}?`
+    : `Open outreach review for ${readyRows.length} visible outreach-ready lead(s)?`;
+  if (!confirm(prompt)) return;
+
+  let ok = 0, fail = 0;
+  for (const row of toApprove) {
+    try {
+      const res = await api('/api/approve_row', { index: row.index });
+      if (res.ok) ok++;
+      else fail++;
+    } catch(e) { fail++; }
+  }
+
+  await loadAll();
+  _mapRenderPanel();
+
+  const freshRows = readyKeys.map(_panelFindRowByKey).filter(row =>
+    row && !(row.sent_at || '').trim() && !!((row.to_email || '').trim().includes('@'))
+  );
+  if (!freshRows.length) {
+    toast(`Prepared ${ok} lead(s) but the visible review set is no longer available`, ok > 0 ? 'ok' : 'err');
+    return;
+  }
+
+  _mrpOpenRowsInOutreach(freshRows);
+  toast(
+    toApprove.length
+      ? `Prepared ${ok}/${toApprove.length} lead(s) for outreach${fail ? ' â€” ' + fail + ' failed' : ''}`
+      : `Opened ${freshRows.length} outreach-ready lead(s) in review`,
+    ok > 0 || !toApprove.length ? 'ok' : 'err'
+  );
+}
+
+async function _mrpBulkDelete() {
+  const toDel = _mrpVisibleQueueRowsDeduped().filter(r => !(r.sent_at || '').trim());
+  if (!toDel.length) { toast('No deletable rows in visible set', 'err'); return; }
+  if (!confirm('Delete ' + toDel.length + ' visible lead(s) from queue? This cannot be undone.')) return;
+  const sorted = toDel.slice().sort((a, b) => b.index - a.index);
+  let ok = 0, fail = 0;
+  for (const row of sorted) {
+    try { await api('/api/delete_row', { index: row.index }); ok++; }
+    catch(e) { fail++; }
+  }
+  await loadAll();
+  _mapRenderPanel();
+  toast(`Deleted ${ok} lead(s)${fail ? ' â€” ' + fail + ' failed' : ''}`, ok > 0 ? 'ok' : 'err');
+}
+
+function _mapPlaceResultMarkers(markers) {
+  if (!_mapInstance || !_mapCenter) return;
+  _mapClearResultMarkers();
+  const count  = markers.length;
+  const baseR  = Math.min(_mapRadiusM * 0.6, 3000);
+  markers.forEach((biz, idx) => {
+    let pos;
+    const hasCoords = biz.lat && biz.lng && parseFloat(biz.lat) !== 0;
+    if (hasCoords) {
+      pos = L.latLng(parseFloat(biz.lat), parseFloat(biz.lng));
+    } else {
+      // Fallback: spiral around center when exact coords are unavailable
+      const angle  = (2 * Math.PI * idx) / count;
+      const spread = baseR * (0.4 + 0.6 * (idx % 3) / 2);
+      const dlat   = (spread * Math.cos(angle)) / 111320;
+      const dlng   = (spread * Math.sin(angle)) / (111320 * Math.cos(_mapCenter.lat * Math.PI / 180));
+      pos = L.latLng(_mapCenter.lat + dlat, _mapCenter.lng + dlng);
+    }
+    const hasEmail = biz.email && biz.email.length > 0;
+    const color  = hasEmail ? '#3ecf72' : '#b87333';
+    const icon   = L.divIcon({
+      className: '',
+      html: `<div style="width:10px;height:10px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.5)" title="${biz.name}"></div>`,
+      iconAnchor: [5, 5],
+    });
+    const marker = L.marker(pos, { icon })
+      .addTo(_mapClusterGroup)
+      .bindPopup(`<strong>${biz.name}</strong><br>${biz.city}<br><em>${biz.channel}${hasEmail ? ' \u2014 ' + biz.email : ''}</em>`);
+    _mapResultMarkers.push(marker);
+    _mapResultItems.push({ biz, marker });
+  });
+  _mapRenderPanel();
+}
+let _mapCircle        = null;   // current L.circle (active, editable)
+let _mapDragMarker    = null;   // edge drag handle marker
+let _mapCenter        = null;   // {lat, lng}
+let _mapRadiusM       = 2000;   // current radius in metres
+let _mapCoverageCircles = [];   // prior search overlays (session only, not persisted)
+let _mapSearchHistory   = [];   // session search history [{lat, lng, radiusM, found}]
+const MAP_HISTORY_MAX   = 10;   // max entries kept, newest-first
+const MAP_DEFAULT_LAT = 42.2711;  // Rockford, IL
+const MAP_DEFAULT_LNG = -89.0940;
+const MAP_GRID_CELL_RADIUS_M = 1000;
+const MAP_GRID_MAX_CELLS = 36;
+const MAP_GRID_MAX_CALLS = 120;
+let _mapVisibleSearchActive = false;  // true while Search Visible Area is running
+let _mapVisibleSeenKeys     = new Set(); // dedup key set for tiled visible-area search
+let _mapGridSweepActive     = false;
+let _mapGridSelectedIndustries = new Set();
+let _mapIndustryOptions = [];
+
+function _mapClearCoverage() {
+  _mapCoverageCircles.forEach(c => c.remove());
+  _mapCoverageCircles = [];
+  const btn = document.getElementById('btnClearCoverage');
+  if (btn) btn.style.display = 'none';
+}
+
+function _mapAreaLabel(markers) {
+  // Derive a human-readable area name from result city data.
+  // No API calls â€” heuristic only. Returns null if data is too sparse.
+  if (!markers || markers.length === 0) return null;
+  const freq = {};
+  markers.forEach((m) => {
+    const c = ((m && m.city) || '').trim();
+    if (c) freq[c] = (freq[c] || 0) + 1;
+  });
+  const cities = Object.keys(freq);
+  if (cities.length === 0) return null;
+  cities.sort((a, b) => freq[b] - freq[a]);
+  const top = cities[0];
+  const cityTotal = Object.values(freq).reduce((s, n) => s + n, 0);
+  // Use top city if it covers >=30% of results that have city data
+  if (freq[top] / cityTotal >= 0.3) return top;
+  return top; // still better than coords even if coverage is low
+}
+
+function _mapRenderHistory() {
+  const wrap = document.getElementById('map-history');
+  const list = document.getElementById('mh-list');
+  if (!wrap || !list) return;
+  if (_mapSearchHistory.length === 0) { wrap.style.display = 'none'; return; }
+  list.innerHTML = '';
+  _mapSearchHistory.forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = 'mh-item';
+    const primaryText = entry.label || `${entry.lat.toFixed(3)}, ${entry.lng.toFixed(3)}`;
+    const secondaryText = _mapHistoryMeta(entry);
+    row.innerHTML =
+      `<span class="mh-item-label" title="${entry.lat.toFixed(4)}, ${entry.lng.toFixed(4)}">${primaryText}</span>` +
+      `<span class="mh-item-meta">${secondaryText}</span>`;
+    row.addEventListener('click', () => {
+      if (entry.radiusM != null) _mapRadiusM = entry.radiusM;
+      _mapDrawCircle(entry.lat, entry.lng);
+      if (_mapInstance) _mapInstance.setView([entry.lat, entry.lng], _mapInstance.getZoom());
+    });
+    list.appendChild(row);
+  });
+  wrap.style.display = '';
+}
+
+function _mapClearHistory() {
+  _mapSearchHistory = [];
+  const wrap = document.getElementById('map-history');
+  const list = document.getElementById('mh-list');
+  if (wrap) wrap.style.display = 'none';
+  if (list) list.innerHTML = '';
+}
+
+function _mapMetresToMiles(m) { return (m / 1609.34).toFixed(2); }
+
+function _mapNormalizeWebsite(url) {
+  return (url || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/+$/, '');
+}
+
+function _mapNormalizePhone(phone) {
+  return (phone || '').replace(/\D+/g, '');
+}
+
+function _mapNormalizeName(name) {
+  return (name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function _mapBizRunKey(biz) {
+  const placeId = (biz?.place_id || '').trim();
+  if (placeId) return `pid:${placeId.toLowerCase()}`;
+  const website = _mapNormalizeWebsite(biz?.website || '');
+  if (website) return `web:${website}`;
+  const phone = _mapNormalizePhone(biz?.phone || '');
+  if (phone) return `phone:${phone}`;
+  const lat = Number(biz?.lat);
+  const lng = Number(biz?.lng);
+  const latKey = Number.isFinite(lat) ? lat.toFixed(3) : '';
+  const lngKey = Number.isFinite(lng) ? lng.toFixed(3) : '';
+  return `fallback:${_mapNormalizeName(biz?.name || '')}|${latKey}|${lngKey}`;
+}
+
+function _mapCurrentResultKeySet() {
+  return new Set(_mapResultItems.map(item => _mapBizRunKey(item.biz)));
+}
+
+function _mapCircleGridPlan() {
+  if (!_mapCenter || !_mapRadiusM) return { cells: [], totalCalls: 0, tooManyCells: false };
+  const cells = [];
+  const step = MAP_GRID_CELL_RADIUS_M * 2;
+  const cosLat = Math.max(Math.cos(_mapCenter.lat * Math.PI / 180), 0.2);
+  for (let y = -_mapRadiusM + MAP_GRID_CELL_RADIUS_M; y <= _mapRadiusM - MAP_GRID_CELL_RADIUS_M + 1; y += step) {
+    for (let x = -_mapRadiusM + MAP_GRID_CELL_RADIUS_M; x <= _mapRadiusM - MAP_GRID_CELL_RADIUS_M + 1; x += step) {
+      if (Math.sqrt((x * x) + (y * y)) > _mapRadiusM) continue;
+      cells.push({
+        lat: _mapCenter.lat + (y / 111320),
+        lng: _mapCenter.lng + (x / (111320 * cosLat)),
+      });
+      if (cells.length > MAP_GRID_MAX_CELLS) {
+        return { cells, totalCalls: cells.length * _mapGridSelectedIndustriesList().length, tooManyCells: true };
+      }
+    }
+  }
+  if (!cells.length) cells.push({ lat: _mapCenter.lat, lng: _mapCenter.lng });
+  return {
+    cells,
+    totalCalls: cells.length * _mapGridSelectedIndustriesList().length,
+    tooManyCells: false,
+  };
+}
+
+function _mapHistoryMeta(entry) {
+  if (entry.runType === 'grid_sweep') {
+    const industries = Array.isArray(entry.industries) ? entry.industries.map(_mapIndustryLabel).join(', ') : '';
+    const prefix = entry.cancelled ? 'grid cancelled' : 'grid sweep';
+    return `${prefix} â€” ${entry.cellCount || 0} cells â€” ${industries || 'no industries'} â€” ${entry.found || 0} unique`;
+  }
+  const miles = entry.radiusM != null ? (entry.radiusM / 1609.34).toFixed(1) + ' mi' : 'tiled';
+  return `${miles} â€” ${entry.found} found`;
+}
+
+// Step 8 â€” additive marker helper: appends without clearing existing markers
+function _mapAppendResultMarkers(markers) {
+  if (!_mapInstance) return;
+  markers.forEach((biz, idx) => {
+    const hasCoords = biz.lat && biz.lng && parseFloat(biz.lat) !== 0;
+    let pos;
+    if (hasCoords) {
+      pos = L.latLng(parseFloat(biz.lat), parseFloat(biz.lng));
+    } else {
+      return; // skip fallback spiral for tiled search â€” no reliable center
+    }
+    const hasEmail = biz.email && biz.email.length > 0;
+    const color    = hasEmail ? '#3ecf72' : '#b87333';
+    const icon     = L.divIcon({
+      className: '',
+      html: `<div style="width:10px;height:10px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.5)" title="${biz.name}"></div>`,
+      iconAnchor: [5, 5],
+    });
+    const marker = L.marker(pos, { icon })
+      .addTo(_mapClusterGroup)
+      .bindPopup(`<strong>${biz.name}</strong><br>${biz.city}<br><em>${biz.channel}${hasEmail ? ' \u2014 ' + biz.email : ''}</em>`);
+    _mapResultMarkers.push(marker);
+    _mapResultItems.push({ biz, marker });
+  });
+  _mapRenderPanel();
+}
+
+// Step 8 â€” tile the current viewport into ~1000m-radius grid cells
+function _mapVisibleTiles() {
+  if (!_mapInstance) return { tiles: [], tooLarge: false };
+  const bounds  = _mapInstance.getBounds();
+  const R       = 1000; // cell radius in metres
+  const stepDeg = (R * 2) / 111320; // degrees per cell step (lat)
+  const minLat  = bounds.getSouth();
+  const maxLat  = bounds.getNorth();
+  const minLng  = bounds.getWest();
+  const maxLng  = bounds.getEast();
+  const midLat  = (minLat + maxLat) / 2;
+  const stepLng = (R * 2) / (111320 * Math.cos(midLat * Math.PI / 180));
+  const tiles   = [];
+  for (let lat = minLat + stepDeg / 2; lat < maxLat; lat += stepDeg) {
+    for (let lng = minLng + stepLng / 2; lng < maxLng; lng += stepLng) {
+      tiles.push({ lat, lng });
+    }
+  }
+  if (tiles.length > 30) return { tiles: [], tooLarge: true };
+  return { tiles, tooLarge: false };
+}
+
+function _mapSetGridRunUi(active) {
+  const btnRun = document.getElementById('btnGridSearch');
+  const btnCancel = document.getElementById('btnGridCancel');
+  const btnMap = document.getElementById('btnMapSearch');
+  const btnVisible = document.getElementById('btnSearchVisible');
+  const btnExhaust = document.getElementById('btnExhaust');
+  const primaryIndustry = document.getElementById('map-industry');
+  const limitInput = document.getElementById('map-limit');
+  const chipButtons = document.querySelectorAll('#map-grid-industries .map-grid-chip');
+  if (btnRun) {
+    btnRun.classList.toggle('loading', active);
+    if (!active) btnRun.classList.remove('loading');
+  }
+  if (btnCancel) btnCancel.style.display = active ? '' : 'none';
+  if (btnMap) btnMap.disabled = active || !_mapCenter;
+  if (btnVisible) btnVisible.disabled = active || !(document.getElementById('map-industry')?.value);
+  if (btnExhaust) btnExhaust.disabled = active || !(document.getElementById('map-industry')?.value) || !_mapCenter;
+  if (primaryIndustry) primaryIndustry.disabled = active;
+  if (limitInput) limitInput.disabled = active;
+  chipButtons.forEach(btn => { btn.disabled = active; });
+}
+
+function _mapGridStatus(cellIndex, cellTotal, industryIndex, industryTotal, industryLabel, uniqueTotal) {
+  return `Grid ${cellIndex}/${cellTotal} | ${industryLabel} ${industryIndex}/${industryTotal} | +${uniqueTotal} unique`;
+}
+
+function mapCancelAreaGrid() {
+  _mapGridSweepActive = false;
+  const statusEl = document.getElementById('map-status');
+  if (statusEl) statusEl.textContent = 'Cancelling grid after current requestâ€¦';
+}
+
+async function mapSearchAreaGrid() {
+  if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+  if (_mapGridSweepActive) { toast('Grid sweep already running', 'err'); return; }
+  const industries = _mapGridSelectedIndustriesList();
+  if (!industries.length) { toast('Select at least one grid industry', 'err'); return; }
+
+  const plan = _mapCircleGridPlan();
+  if (plan.tooManyCells) {
+    toast(`Grid would use more than ${MAP_GRID_MAX_CELLS} cells. Shrink the circle first.`, 'err');
+    _mapUpdateGridControls();
+    return;
+  }
+  if (!plan.cells.length) {
+    toast('Circle is too small to build a grid sweep', 'err');
+    return;
+  }
+  if (plan.totalCalls > MAP_GRID_MAX_CALLS) {
+    toast(`Grid would make ${plan.totalCalls} calls. Max allowed is ${MAP_GRID_MAX_CALLS}.`, 'err');
+    _mapUpdateGridControls();
+    return;
+  }
+
+  const limit = parseInt(document.getElementById('map-limit').value) || 20;
+  const statusEl = document.getElementById('map-status');
+  const seenKeys = _mapCurrentResultKeySet();
+  const runCenter = { ..._mapCenter };
+  const runRadiusM = _mapRadiusM;
+  const industryLabels = industries.map(_mapIndustryLabel);
+
+  _mapGridSweepActive = true;
+  _mapSetGridRunUi(true);
+  _mapUpdateGridControls();
+
+  let uniqueFound = 0;
+  let callsDone = 0;
+
+  try {
+    for (let cellIdx = 0; cellIdx < plan.cells.length; cellIdx++) {
+      const cell = plan.cells[cellIdx];
+      let cellHadFresh = false;
+
+      for (let industryIdx = 0; industryIdx < industries.length; industryIdx++) {
+        if (!_mapGridSweepActive) break;
+
+        const industry = industries[industryIdx];
+        const label = _mapIndustryLabel(industry);
+        if (statusEl) statusEl.textContent = _mapGridStatus(cellIdx + 1, plan.cells.length, industryIdx + 1, industries.length, label, uniqueFound);
+
+        try {
+          const res = await api('/api/discover_area', {
+            industry,
+            lat: cell.lat,
+            lng: cell.lng,
+            radius_m: MAP_GRID_CELL_RADIUS_M,
+            limit,
+          });
+
+          if (res.markers && res.markers.length) {
+            const fresh = res.markers.filter(biz => {
+              const key = _mapBizRunKey(biz);
+              if (seenKeys.has(key)) return false;
+              seenKeys.add(key);
+              return true;
+            });
+            if (fresh.length) {
+              _mapAppendResultMarkers(fresh);
+              uniqueFound += fresh.length;
+              cellHadFresh = true;
+            }
+          }
+        } catch (e) {
+          console.warn('[mapSearchAreaGrid] request error', { cellIdx, industryIdx, cell, industry, error: e });
+        }
+
+        callsDone++;
+        if (_mapGridSweepActive && !(cellIdx === plan.cells.length - 1 && industryIdx === industries.length - 1)) {
+          await new Promise(r => setTimeout(r, 1200));
+        }
+      }
+
+      if (cellHadFresh && _mapInstance) {
+        const cov = L.circle([cell.lat, cell.lng], {
+          radius: MAP_GRID_CELL_RADIUS_M,
+          color: '#4f8ef7',
+          fillColor: '#4f8ef7',
+          fillOpacity: 0.04,
+          weight: 1,
+          dashArray: '4 4',
+          interactive: false,
+        }).addTo(_mapInstance);
+        _mapCoverageCircles.push(cov);
+        const btnCov = document.getElementById('btnClearCoverage');
+        if (btnCov) btnCov.style.display = '';
+      }
+
+      if (!_mapGridSweepActive) break;
+    }
+  } finally {
+    const cancelled = !_mapGridSweepActive;
+    _mapGridSweepActive = false;
+    _mapSetGridRunUi(false);
+    _mapUpdateIndustryControls();
+
+    _mapSearchHistory.unshift({
+      runType: 'grid_sweep',
+      lat: runCenter.lat,
+      lng: runCenter.lng,
+      radiusM: runRadiusM,
+      found: uniqueFound,
+      industries,
+      cellCount: plan.cells.length,
+      cancelled,
+      label: `Grid Sweep Â· ${industryLabels.join(', ')}`,
+    });
+    if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+    _mapRenderHistory();
+
+    await loadAll();
+    _mapRenderPanel();
+
+    if (statusEl) {
+      statusEl.textContent = cancelled
+        ? `Grid cancelled â€” ${callsDone}/${plan.totalCalls} calls â€” ${uniqueFound} unique`
+        : `âœ“ Grid sweep complete â€” ${plan.cells.length} cells â€” ${industries.length} industries â€” ${uniqueFound} unique`;
+    }
+    if (!cancelled) toast(`Grid sweep added ${uniqueFound} unique businesses across ${plan.cells.length} cells`, 'ok');
+    else toast(`Grid sweep cancelled after ${callsDone} call(s)`, 'info');
+  }
+}
+
+// Step 8 â€” sequential tiled visible-area discovery
+async function mapSearchVisible() {
+  if (_mapGridSweepActive || _exhaustSearchActive) { toast('Another discovery run is already active', 'err'); return; }
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first', 'err'); return; }
+  if (_mapVisibleSearchActive) { toast('Visible-area search already running', 'err'); return; }
+
+  const { tiles, tooLarge } = _mapVisibleTiles();
+
+  // Pass 25: when area is too large, fall through to exhaust instead of erroring
+  if (tooLarge) {
+    if (_mapCenter) {
+      const statusEl = document.getElementById('map-status');
+      if (statusEl) statusEl.textContent = 'Area too large â€” scanning in segmentsâ€¦';
+      return mapSearchExhaust();
+    }
+    toast('Zoom in or place a circle to search a smaller area', 'err');
+    return;
+  }
+  if (!tiles.length) {
+    toast('Place a circle or zoom to a specific area first', 'err');
+    return;
+  }
+
+  _mapVisibleSearchActive = true;
+  _mapVisibleSeenKeys     = new Set();
+  _mapUpdateGridControls();
+  const limit    = parseInt(document.getElementById('map-limit').value) || 20;
+  const statusEl = document.getElementById('map-status');
+  const btnSV    = document.getElementById('btnSearchVisible');
+  const btnCanc  = document.getElementById('btnCancelVisible');
+  btnSV.classList.add('loading'); btnSV.disabled = true;
+  if (btnCanc) btnCanc.style.display = '';
+
+  let totalFound = 0;
+  let tilesDone  = 0;
+
+  for (const tile of tiles) {
+    if (!_mapVisibleSearchActive) break; // cancelled
+
+    statusEl.textContent = `Tile ${tilesDone + 1} / ${tiles.length} â€” searching ${industry}â€¦`;
+    try {
+      const res = await api('/api/discover_area', {
+        lat: tile.lat, lng: tile.lng, radius_m: 1000, industry, limit
+      });
+      if (res.ok && res.markers && res.markers.length) {
+        // Filter through seen-keys to avoid duplicate markers
+        const fresh = res.markers.filter(biz => {
+          const key = (biz.place_id || '') || `${biz.name}|${biz.lat}|${biz.lng}`;
+          if (_mapVisibleSeenKeys.has(key)) return false;
+          _mapVisibleSeenKeys.add(key);
+          return true;
+        });
+        if (fresh.length) _mapAppendResultMarkers(fresh);
+        totalFound += res.places_found || 0;
+        // Coverage circle only for tiles that returned results
+        if (_mapInstance && res.places_found > 0) {
+          const cov = L.circle([tile.lat, tile.lng], {
+            radius: 1000,
+            color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.04,
+            weight: 1, dashArray: '4 4', interactive: false
+          }).addTo(_mapInstance);
+          _mapCoverageCircles.push(cov);
+          const btnCov = document.getElementById('btnClearCoverage');
+          if (btnCov) btnCov.style.display = '';
+        }
+      }
+    } catch(e) {
+      // Non-fatal: log tile error, continue to next tile
+      console.warn('[mapSearchVisible] tile error at', tile.lat, tile.lng, e);
+    }
+
+    tilesDone++;
+    if (_mapVisibleSearchActive && tilesDone < tiles.length) {
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  }
+
+  // Append a single history entry summarising the whole visible-area run
+  const _histLabel = _mapAreaLabel(
+    _mapResultItems.map(i => i.biz)
+  );
+  const centerTile = tiles[Math.floor(tiles.length / 2)] || tiles[0];
+  _mapSearchHistory.unshift({
+    lat: centerTile.lat, lng: centerTile.lng,
+    radiusM: null,   // null signals tiled run â€” _mapRenderHistory handles this
+    found: totalFound,
+    label: _histLabel ? `${_histLabel} (tiled)` : `${tiles.length} tiles`
+  });
+  if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+  _mapRenderHistory();
+
+  const didCancel = !_mapVisibleSearchActive;
+  _mapVisibleSearchActive = false;
+  _mapUpdateGridControls();
+  btnSV.classList.remove('loading'); btnSV.disabled = !industry;
+  if (btnCanc) btnCanc.style.display = 'none';
+  statusEl.textContent = didCancel
+    ? `Cancelled â€” ${tilesDone} of ${tiles.length} tiles completed â€” ${totalFound} total found`
+    : `âœ“ Visible-area search complete â€” ${tiles.length} tiles â€” ${totalFound} total found`;
+  if (!didCancel) toast(`Visible-area search done â€” ${totalFound} results across ${tiles.length} tiles`, 'ok');
+}
+
+// Step 8 â€” cancel: flag stops loop after current tile finishes
+function _mapCancelVisible() {
+  _mapVisibleSearchActive = false;
+  const statusEl = document.getElementById('map-status');
+  if (statusEl) statusEl.textContent = 'Cancelling after current tileâ€¦';
+}
+
+// Pass 21 â€” Run Until Exhausted: single batch call to /api/discover_area_batch
+// Pass 25 â€” improved progress feedback, fixed history push, operator-friendly status
+let _exhaustSearchActive = false;
+
+async function mapSearchExhaust() {
+  if (_mapGridSweepActive || _mapVisibleSearchActive) { toast('Another discovery run is already active', 'err'); return; }
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first', 'err'); return; }
+  if (!_mapCenter) { toast('Place a circle on the map first', 'err'); return; }
+  if (_exhaustSearchActive) { toast('Scan already running', 'err'); return; }
+
+  _exhaustSearchActive = true;
+  _mapUpdateGridControls();
+
+  const btn      = document.getElementById('btnExhaust');
+  const btnMap   = document.getElementById('btnMapSearch');
+  const btnSV    = document.getElementById('btnSearchVisible');
+  const btnCanc  = document.getElementById('btnCancelVisible');
+  const statusEl = document.getElementById('map-status');
+  const limit    = parseInt(document.getElementById('map-limit').value) || 20;
+
+  btn.classList.add('loading'); btn.disabled = true;
+  if (btnMap) btnMap.disabled = true;
+  if (btnSV)  btnSV.disabled  = true;
+  if (btnCanc) { btnCanc.style.display = ''; btnCanc.title = 'Cancel after current scan batch finishes'; }
+
+  // Animated progress text â€” updates every 4s since the HTTP is one blocking call
+  const statusMessages = [
+    `Scanning ${industry} near this areaâ€¦`,
+    `Still scanning â€” checking for more leadsâ€¦`,
+    `Working through the area â€” almost thereâ€¦`,
+    `Finalizing resultsâ€¦`,
+  ];
+  let msgIdx = 0;
+  if (statusEl) statusEl.textContent = statusMessages[0];
+  const progressTimer = setInterval(() => {
+    msgIdx = Math.min(msgIdx + 1, statusMessages.length - 1);
+    if (statusEl) statusEl.textContent = statusMessages[msgIdx];
+  }, 4000);
+
+  try {
+    const res = await api('/api/discover_area_batch', {
+      industry,
+      lat:      _mapCenter.lat,
+      lng:      _mapCenter.lng,
+      radius_m: _mapRadiusM,
+      limit,
+    });
+
+    clearInterval(progressTimer);
+
+    if (res.ok) {
+      const reasonLabels = {
+        no_results:          'area exhausted',
+        diminishing_returns: 'area nearly exhausted',
+        max_iterations:      'safety cap reached',
+        error:               'an error occurred',
+      };
+      const reason = reasonLabels[res.stopped_reason] || res.stopped_reason;
+      const summary = `âœ“ ${res.total_new} new leads found across ${res.iterations_run} scan(s)`;
+      if (statusEl) statusEl.textContent = `${summary} â€” ${reason}`;
+      toast(`${summary}`, 'ok');
+
+      if (res.markers && res.markers.length) {
+        _mapAppendResultMarkers(res.markers);
+      }
+
+      // Fix: push to _mapSearchHistory then render, don't pass history as argument
+      _mapSearchHistory.unshift({
+        lat:     _mapCenter.lat,
+        lng:     _mapCenter.lng,
+        radiusM: _mapRadiusM,
+        found:   res.total_new,
+        label:   `Exhausted: ${industry} (${res.total_new} new)`,
+      });
+      if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+      _mapRenderHistory();
+
+      loadAll();
+    } else {
+      if (statusEl) statusEl.textContent = 'Scan stopped.';
+      toast('Scan error: ' + (res.error || 'unknown'), 'err');
+    }
+  } catch(e) {
+    clearInterval(progressTimer);
+    if (statusEl) statusEl.textContent = 'Connection error.';
+    toast('Connection error during scan', 'err');
+  } finally {
+    _exhaustSearchActive = false;
+    _mapUpdateGridControls();
+    btn.classList.remove('loading'); btn.disabled = false;
+    if (btnMap) btnMap.disabled = !_mapCenter;
+    if (btnSV)  btnSV.disabled  = !industry;
+    if (btnCanc) btnCanc.style.display = 'none';
+  }
+}
+
+function _mapUpdateRadiusLabel() {
+  const el = document.getElementById('map-radius-label');
+  if (el && _mapRadiusM) el.textContent = `Radius: ${_mapMetresToMiles(_mapRadiusM)} mi (${(_mapRadiusM/1000).toFixed(1)} km)`;
+}
+
+function _mapPlaceDragHandle() {
+  if (!_mapInstance || !_mapCircle || !_mapCenter) return;
+  const edgeLat = _mapCenter.lat;
+  const edgeLng = _mapCenter.lng + (_mapRadiusM / (111320 * Math.cos(_mapCenter.lat * Math.PI / 180)));
+  const pos = L.latLng(edgeLat, edgeLng);
+  if (_mapDragMarker) {
+    _mapDragMarker.setLatLng(pos);
+  } else {
+    _mapDragMarker = L.marker(pos, {
+      draggable: true,
+      icon: L.divIcon({ className:'', html:'<div style="width:14px;height:14px;background:var(--copper);border:2px solid #fff;border-radius:50%;cursor:ew-resize;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>', iconAnchor:[7,7] })
+    }).addTo(_mapInstance);
+    _mapDragMarker.on('drag', (e) => {
+      const newPos = e.target.getLatLng();
+      _mapRadiusM = Math.round(_mapInstance.distance(_mapCenter, newPos));
+      if (_mapRadiusM < 500) _mapRadiusM = 500;
+      if (_mapRadiusM > 50000) _mapRadiusM = 50000;
+      _mapCircle.setRadius(_mapRadiusM);
+      _mapUpdateRadiusLabel();
+      _mapUpdateGridControls();
+    });
+  }
+}
+
+function _mapDrawCircle(lat, lng) {
+  if (!_mapInstance) return;
+  _mapCenter = { lat, lng };
+  // Pass 21b: do NOT clear result markers when moving the circle.
+  // Results from prior searches remain visible in the panel.
+  // _mapClearResultMarkers() is only called on explicit Reset.
+  if (_mapCircle) { _mapCircle.setLatLng([lat, lng]); _mapCircle.setRadius(_mapRadiusM); }
+  else {
+    _mapCircle = L.circle([lat, lng], {
+      radius: _mapRadiusM,
+      color: '#b87333', fillColor: '#b87333', fillOpacity: 0.12, weight: 2
+    }).addTo(_mapInstance);
+  }
+  _mapPlaceDragHandle();
+  _mapUpdateRadiusLabel();
+  document.getElementById('btnMapSearch').disabled = false;
+  const _btnEx = document.getElementById('btnExhaust');
+  if (_btnEx && document.getElementById('map-industry').value) _btnEx.disabled = false;
+  _mapUpdateGridControls();
+  document.getElementById('map-status').textContent = `Center: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+}
+
+function mapClearCircle() {
+  if (_mapCircle)     { _mapCircle.remove();     _mapCircle = null; }
+  if (_mapDragMarker) { _mapDragMarker.remove();  _mapDragMarker = null; }
+  _mapClearResultMarkers();
+  _mapCenter = null;
+  document.getElementById('btnMapSearch').disabled = true;
+  const _btnEx2 = document.getElementById('btnExhaust');
+  if (_btnEx2) _btnEx2.disabled = true;
+  _mapUpdateGridControls();
+  document.getElementById('map-status').textContent = 'Circle cleared.';
+  document.getElementById('map-radius-label').textContent = '';
+}
+
+function _mapInit() {
+  console.log('[_mapInit] called. _mapInstance:', !!_mapInstance, '| L defined:', typeof L !== 'undefined');
+  if (_mapInstance) {
+    setTimeout(() => _mapInstance.invalidateSize(), 50);
+    return;
+  }
+  if (typeof L === 'undefined') {
+    console.warn('[_mapInit] L not yet defined â€” retrying in 100ms');
+    setTimeout(_mapInit, 100);
+    return;
+  }
+  const container = document.getElementById('map-container');
+  console.log('[_mapInit] container:', container, '| offsetHeight:', container?.offsetHeight);
+  if (!container) return;
+  _mapInstance = L.map('map-container', { zoomControl: true }).setView([MAP_DEFAULT_LAT, MAP_DEFAULT_LNG], 12);
+  console.log('[_mapInit] map created:', !!_mapInstance);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18,
+  }).addTo(_mapInstance);
+  console.log('[_mapInit] tile layer added');
+  _mapClusterGroup = L.markerClusterGroup();
+  _mapInstance.addLayer(_mapClusterGroup);
+  console.log('[_mapInit] cluster group initialized');
+  _mapInstance.on('click', (e) => {
+    // Pass 21b: always reposition circle on click â€” no longer gated on empty results.
+    // Results in the panel accumulate across searches; they're only cleared on Reset.
+    _mapDrawCircle(e.latlng.lat, e.latlng.lng);
+  });
+  setTimeout(() => { _mapInstance.invalidateSize(); console.log('[_mapInit] invalidateSize @50ms, size:', _mapInstance.getSize()); }, 50);
+  setTimeout(() => _mapInstance.invalidateSize(), 300);
+}
+
+async function mapSearch() {
+  if (_mapGridSweepActive || _mapVisibleSearchActive || _exhaustSearchActive) { toast('Another discovery run is already active', 'err'); return; }
+  if (!_mapCenter) { toast('Click the map to set a search area first','err'); return; }
+  const industry = document.getElementById('map-industry').value;
+  if (!industry) { toast('Select an industry first','err'); return; }
+  const limit = parseInt(document.getElementById('map-limit').value) || 20;
+  const btn = document.getElementById('btnMapSearch');
+  btn.classList.add('loading'); btn.disabled = true;
+  const statusEl = document.getElementById('map-status');
+  statusEl.textContent = `Searching for ${industry} within ${_mapMetresToMiles(_mapRadiusM)} miles\u2026`;
+  try {
+    const res = await api('/api/discover_area', {
+      industry, lat: _mapCenter.lat, lng: _mapCenter.lng,
+      radius_m: _mapRadiusM, limit
+    });
+    if (res.ok) {
+      // Auto-refresh Outreach queue so results are immediately visible
+      await loadAll();
+      const summary = `\u2713 Added ${res.prospects_added} new \u2014 ${res.drafts_created} drafted \u2014 ${res.queue_total} total in queue`;
+      toast(summary, 'ok');
+      statusEl.innerHTML =
+        `<strong style="color:var(--green)">\u2713 Done</strong> &nbsp;` +
+        `Places found: <strong>${res.places_found}</strong> &nbsp;|&nbsp; ` +
+        `Prospects added: <strong>${res.prospects_added}</strong> &nbsp;|&nbsp; ` +
+        `Skipped (dupes): <strong>${res.prospects_skipped}</strong> &nbsp;|&nbsp; ` +
+        `Drafts created: <strong>${res.drafts_created}</strong> &nbsp;|&nbsp; ` +
+        `Queue total: <strong>${res.queue_total}</strong>`;
+      // Place name-only markers for discovered businesses
+      if (res.markers && res.markers.length) _mapPlaceResultMarkers(res.markers);
+      // Snapshot this search area as a coverage overlay (session memory only)
+      if (_mapInstance && _mapCenter && res.places_found > 0) {
+        const cov = L.circle([_mapCenter.lat, _mapCenter.lng], {
+          radius: _mapRadiusM,
+          color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.04,
+          weight: 1, dashArray: '4 4', interactive: false
+        }).addTo(_mapInstance);
+        _mapCoverageCircles.push(cov);
+        const btn = document.getElementById('btnClearCoverage');
+        if (btn) btn.style.display = '';
+      }
+      // Append to session search history
+      const _histLabel = _mapAreaLabel(res.markers || []);
+      _mapSearchHistory.unshift({ lat: _mapCenter.lat, lng: _mapCenter.lng, radiusM: _mapRadiusM, found: res.places_found || 0, label: _histLabel });
+      if (_mapSearchHistory.length > MAP_HISTORY_MAX) _mapSearchHistory.length = MAP_HISTORY_MAX;
+      _mapRenderHistory();
+    } else {
+      toast('Search error: ' + res.error, 'err');
+      statusEl.textContent = res.error || 'Search returned no new results.';
+    }
+  } catch(e) { toast('Connection error','err'); statusEl.textContent = 'Connection error.'; }
+  btn.classList.remove('loading'); btn.disabled = !_mapCenter;
+}
+

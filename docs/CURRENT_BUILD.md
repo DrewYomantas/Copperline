@@ -1,10 +1,10 @@
 # Current Build Pass
 
 ## Active System
-Pass 79 -- RTS map visual overhaul iteration 2
+Pass 82 -- Command Center unified layout (map + queue rail + bottom command bar)
 
 ## Status
-Pass 79 complete.
+Pass 82 complete.
 
 ---
 

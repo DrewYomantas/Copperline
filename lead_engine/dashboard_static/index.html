@@ -725,8 +725,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .mrp-group-toggle{cursor:pointer;user-select:none;font-size:10px;color:var(--dim)}
 
 /* ── Pass 75: Command Center split layout ─────────────────────────── */
-.cc-wrap{display:flex;width:100%;height:calc(100vh - 118px);min-height:560px;overflow:hidden}
-.cc-map-pane{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px 8px 0 16px;box-sizing:border-box}
+.cc-wrap{display:flex;flex-direction:column;width:100%;height:calc(100vh - 118px);min-height:560px;overflow:hidden}
+.cc-main-row{display:flex;flex:1;min-height:0;overflow:hidden}
+.cc-map-pane{flex:7;min-width:0;display:flex;flex-direction:column;padding:12px 8px 0 16px;box-sizing:border-box}
 .cc-tp-pane{width:380px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);background:linear-gradient(180deg,var(--surface),rgba(9,11,16,.97));overflow:hidden}
 .cc-tp-header{padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
 .cc-tp-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
@@ -742,6 +743,60 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .cc-map-pane #map-layout{height:calc(100vh - 230px);min-height:480px}
 .cc-map-pane .map-page-wrap{padding:0}
 .cc-map-pane .cmd-bar{border-radius:var(--r) var(--r) 0 0}
+
+/* ── Pass 82: Queue rail ──────────────────────────────────────────── */
+.cc-queue-rail{width:360px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);overflow:hidden}
+.cc-qr-header{padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cc-qr-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.cc-qr-search{flex:1;min-width:80px;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:11px;outline:none}
+.cc-qr-search:focus{border-color:var(--blue)}
+.cc-qr-filters{display:flex;gap:3px;padding:5px 10px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.cc-qr-filters::-webkit-scrollbar{display:none}
+.cc-qrf{padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.12s}
+.cc-qrf.active{background:var(--blue-glow);border-color:rgba(79,142,247,.35);color:var(--blue)}
+.cc-qrf:hover:not(.active){color:var(--text);border-color:var(--border-hi)}
+.cc-qr-stats{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.cc-qr-stat{flex:1;padding:5px 8px;text-align:center;border-right:1px solid var(--border)}
+.cc-qr-stat:last-child{border-right:none}
+.cc-qr-stat-n{font-family:var(--mono);font-size:14px;font-weight:600;line-height:1}
+.cc-qr-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.cc-qr-body{flex:1;overflow-y:auto;padding:0}
+.cc-qr-empty{padding:20px 14px;font-size:12px;color:var(--muted);text-align:center}
+/* Compact queue row cards */
+.cc-qrow{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;border-left:2px solid transparent}
+.cc-qrow:hover{background:var(--surface2)}
+.cc-qrow.cc-qrow-approved{border-left-color:var(--green)}
+.cc-qrow.cc-qrow-sent{border-left-color:var(--muted);opacity:.5}
+.cc-qrow.cc-qrow-replied{border-left-color:var(--copper)}
+.cc-qrow.cc-qrow-pending{border-left-color:var(--border)}
+.cc-qrow.cc-qrow-stale{border-left-color:var(--amber)}
+.cc-qrow-top{display:flex;align-items:center;gap:6px}
+.cc-qrow-name{font-size:12px;font-weight:600;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-qrow-score{font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:4px;background:var(--surface3);color:var(--muted);flex-shrink:0}
+.cc-qrow-score.high{background:rgba(62,207,114,.12);color:var(--green)}
+.cc-qrow-bot{display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap}
+.cc-qrow-city{font-size:10px;color:var(--dim)}
+.cc-qrow-badge{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;flex-shrink:0}
+.cc-qrow-badge.approved{background:rgba(79,142,247,.12);color:var(--blue)}
+.cc-qrow-badge.sent{background:rgba(62,207,114,.12);color:var(--green)}
+.cc-qrow-badge.replied{background:rgba(200,136,74,.18);color:var(--copper)}
+.cc-qrow-badge.pending{background:rgba(255,255,255,.06);color:var(--dim)}
+.cc-qrow-badge.stale{background:rgba(245,166,35,.1);color:var(--amber)}
+.cc-qrow-subj{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* ── Pass 82: Bottom command bar ─────────────────────────────────── */
+.cc-cmd-bar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 14px;border-top:1px solid var(--border);background:linear-gradient(0deg,rgba(8,10,15,1),rgba(11,13,18,.96));flex-wrap:wrap}
+.cc-cmd-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px}
+.cc-cmd-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);white-space:nowrap}
+.cc-cmd-input{padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:11px;outline:none;min-width:0}
+.cc-cmd-input:focus{border-color:var(--blue)}
+.cc-cmd-select{padding:4px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--muted);font-family:var(--sans);font-size:11px;outline:none;cursor:pointer}
+.cc-cmd-select option{background:var(--surface2)}
+.cc-cmd-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--rs);font-family:var(--sans);font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.cc-cmd-btn-primary{background:linear-gradient(135deg,#4f8ef7,#3a7ae8);color:#fff;border:1px solid rgba(79,142,247,.3)}.cc-cmd-btn-primary:hover{box-shadow:0 3px 12px rgba(79,142,247,.3)}
+.cc-cmd-btn-success{background:linear-gradient(135deg,#3ecf72,#2fb85c);color:#0e1a12;border:1px solid rgba(62,207,114,.2)}.cc-cmd-btn-success:hover{opacity:.9}
+.cc-cmd-btn-ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}.cc-cmd-btn-ghost:hover{color:var(--text);border-color:var(--border-hi)}
+.cc-cmd-btn:disabled{opacity:.38;cursor:not-allowed}
 
 /* ── Pass 75: Territory indicator on map click ───────────────────── */
 .cc-city-flash{animation:cc-flash .6s ease}
@@ -1001,8 +1056,8 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 
 <!-- App Navigation -->
 <nav class="app-nav" id="top-nav">
-  <div class="nav-tab active" data-parent="pipeline"  onclick="switchParent('pipeline',this)">📤 Pipeline</div>
-  <div class="nav-tab"        data-parent="discovery" onclick="switchParent('discovery',this)">🗺 Command Center</div>
+  <div class="nav-tab"        data-parent="pipeline"  onclick="switchParent('pipeline',this)">📤 Pipeline</div>
+  <div class="nav-tab active" data-parent="discovery" onclick="switchParent('discovery',this)">🗺 Command Center</div>
   <div class="nav-tab"        data-parent="clients"   onclick="switchParent('clients',this)">📞 Clients</div>
   <div class="nav-tab"        data-parent="health"    onclick="switchParent('health',this)" id="nav-health-top">🩺 Health<span id="nav-health-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span><span id="nav-exceptions-badge" style="display:none;margin-left:4px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;vertical-align:middle"></span></div>
   <div class="nav-tab"        data-parent="tools"     onclick="switchParent('tools',this)">⚙ Tools <span class="tag" style="font-size:9px;padding:1px 5px;vertical-align:middle">Stub</span></div>
@@ -1011,13 +1066,13 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 <!-- Sub-tab bar — shown below top nav, content changes per parent -->
 <nav class="sub-nav" id="sub-nav">
   <!-- Pipeline sub-tabs -->
-  <div class="sub-tab active" data-parent="pipeline" data-page="outreach"      onclick="switchSubPage('pipeline','outreach',this)">📤 Outreach</div>
+  <div class="sub-tab" data-parent="pipeline" data-page="outreach"      onclick="switchSubPage('pipeline','outreach',this)">📤 Outreach</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="followup"      onclick="switchSubPage('pipeline','followup',this)" id="nav-followup">🔁 Follow-Up</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="social"        onclick="switchSubPage('pipeline','social',this)"   id="nav-social">📲 Social</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="sprint"        onclick="switchSubPage('pipeline','sprint',this)"   id="nav-sprint">⚡ Sprint</div>
   <div class="sub-tab"        data-parent="pipeline" data-page="conversations" onclick="switchSubPage('pipeline','conversations',this)" id="nav-conversations">💬 Conversations</div>
   <!-- Discovery sub-tabs -->
-  <div class="sub-tab" data-parent="discovery" data-page="command-center" onclick="switchSubPage('discovery','command-center',this)" id="nav-map" style="display:none">🗺 Map + Territory</div>
+  <div class="sub-tab active" data-parent="discovery" data-page="command-center" onclick="switchSubPage('discovery','command-center',this)" id="nav-map" style="display:block">🗺 Map + Territory</div>
   <div class="sub-tab" data-parent="discovery" data-page="searches" onclick="switchSubPage('discovery','searches',this)" style="display:none">🔍 History</div>
   <!-- Clients sub-tabs -->
   <div class="sub-tab" data-parent="clients" data-page="mc-clients" onclick="switchSubPage('clients','mc-clients',this)" style="display:none">📋 Clients</div>
@@ -1029,7 +1084,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 </nav>
 
 <!-- ══════════════ PAGE: OUTREACH ══════════════ -->
-<div class="page active" id="page-outreach">
+<div class="page" id="page-outreach">
 
 <div class="stats">
   <div class="stat" title="Total businesses in discovery pool (prospects.csv) — independent of outreach queue"><div class="stat-n blue" id="s-prospects">—</div><div class="stat-lbl">Discovered</div></div>
@@ -1534,8 +1589,9 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 </div>
 
 <!-- ══════════════ PAGE: COMMAND CENTER (Map + Territory combined) ══════════════ -->
-<div class="page" id="page-command-center">
+<div class="page active" id="page-command-center">
 <div class="cc-wrap">
+<div class="cc-main-row">
 
   <!-- LEFT: Map pane — full map experience -->
   <div class="cc-map-pane">
@@ -1911,6 +1967,58 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
       </div>
 </div>
 </div>
+
+<!-- /cc-main-row (implicitly closed above by page-map closing) -->
+
+<!-- ── Pass 82: Queue Rail ──────────────────────────────────────── -->
+<div class="cc-queue-rail" id="cc-queue-rail">
+  <!-- Header + search -->
+  <div class="cc-qr-header">
+    <span class="cc-qr-title">Outreach Queue</span>
+    <input class="cc-qr-search" id="cc-qr-search" type="text" placeholder="Search…" oninput="ccQueueRender()">
+  </div>
+  <!-- Stat strip -->
+  <div class="cc-qr-stats">
+    <div class="cc-qr-stat"><div class="cc-qr-stat-n blue" id="ccqr-s-approved">—</div><div class="cc-qr-stat-l">Approved</div></div>
+    <div class="cc-qr-stat"><div class="cc-qr-stat-n" style="color:var(--amber)" id="ccqr-s-pending">—</div><div class="cc-qr-stat-l">Pending</div></div>
+    <div class="cc-qr-stat"><div class="cc-qr-stat-n green" id="ccqr-s-sent">—</div><div class="cc-qr-stat-l">Sent</div></div>
+    <div class="cc-qr-stat"><div class="cc-qr-stat-n" style="color:var(--copper)" id="ccqr-s-replied">—</div><div class="cc-qr-stat-l">Replied</div></div>
+  </div>
+  <!-- Filters -->
+  <div class="cc-qr-filters">
+    <span class="cc-qrf active" data-ccqf="active"    onclick="ccQueueFilter('active',this)">⚡ Actionable</span>
+    <span class="cc-qrf"       data-ccqf="approved"  onclick="ccQueueFilter('approved',this)">Approved</span>
+    <span class="cc-qrf"       data-ccqf="pending"   onclick="ccQueueFilter('pending',this)">Pending</span>
+    <span class="cc-qrf"       data-ccqf="stale"     onclick="ccQueueFilter('stale',this)" style="color:var(--amber)">⚠ Stale</span>
+    <span class="cc-qrf"       data-ccqf="replied"   onclick="ccQueueFilter('replied',this)" style="color:var(--copper)">★ Replied</span>
+    <span class="cc-qrf"       data-ccqf="all"       onclick="ccQueueFilter('all',this)">All</span>
+  </div>
+  <!-- Row list -->
+  <div class="cc-qr-body" id="cc-qr-body">
+    <div class="cc-qr-empty">Loading queue…</div>
+  </div>
+</div>
+
+<!-- ── Pass 82: Bottom Command Bar ───────────────────────────────── -->
+<div class="cc-cmd-bar" id="cc-cmd-bar">
+  <!-- Discovery group -->
+  <span class="cc-cmd-label">Discover</span>
+  <select id="cc-cmd-industry" class="cc-cmd-select" style="width:120px"><option value="">Industry…</option></select>
+  <input id="cc-cmd-city" class="cc-cmd-input" type="text" placeholder="City" style="width:90px" value="Rockford">
+  <input id="cc-cmd-state" class="cc-cmd-input" type="text" placeholder="ST" style="width:36px" maxlength="2" value="IL">
+  <button id="cc-cmd-discover" class="cc-cmd-btn cc-cmd-btn-primary" onclick="ccCmdDiscover()"><span class="spin"></span>⚡ Discover + Draft</button>
+  <div class="cc-cmd-sep"></div>
+  <!-- Queue actions -->
+  <span class="cc-cmd-label">Queue</span>
+  <button class="cc-cmd-btn cc-cmd-btn-ghost" onclick="approveAll()" title="Approve all actionable drafts with email">✓ Approve All</button>
+  <button class="cc-cmd-btn cc-cmd-btn-ghost" onclick="bulkRegenStale()" title="Regenerate all stale drafts"><span class="spin"></span>↻ Regen Stale</button>
+  <div class="cc-cmd-sep"></div>
+  <!-- Send -->
+  <button class="cc-cmd-btn cc-cmd-btn-success" onclick="confirmSend()" title="Send all approved emails"><span class="spin"></span>▶ Send Approved</button>
+  <button class="cc-cmd-btn cc-cmd-btn-ghost" onclick="switchParent('pipeline',document.querySelector('[data-parent=pipeline]'))" title="Open full Pipeline view">Full View →</button>
+</div>
+
+<!-- /cc-wrap -->
 
 <!-- ══════════════ PAGE: TOOLS (stub) ══════════════ -->
 <div class="page" id="page-tools">
@@ -2567,6 +2675,7 @@ function _panelRenderFlowActions(row) {
   const isApproved = String(row.approved || '').toLowerCase() === 'true';
   const isScheduled = !!(row.send_after || '').trim();
   const needsRefresh = _leadNeedsDraftRefresh(record);
+  const isFallbackDraft = (record._qrow || {}).draft_type === 'industry_fallback';
   const hasObservation = !!((row.business_specific_observation || '').trim());
   const buttons = [];
   if (needsRefresh) {
@@ -2580,6 +2689,10 @@ function _panelRenderFlowActions(row) {
     if (nextStaleIdx >= 0) {
       buttons.push('<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelJumpNextStale()">Next Stale →</button>');
     }
+  }
+  // Industry fallback drafts are not "stale" but still benefit from an observation
+  if (isFallbackDraft && !hasObservation && !row.sent_at) {
+    buttons.push(`<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="panelFocusObservation(true)">Add Observation</button>`);
   }
   if (!isApproved && canApprove) {
     buttons.push('<button class="btn btn-success" style="font-size:11px;padding:5px 10px" onclick="panelApproveAndNext()">Approve + Next</button>');
@@ -2950,6 +3063,7 @@ function escHtml(s) {
 function renderTable() {
   applyFiltersAndSort();
   _renderQueueTimelineNote();
+  ccQueueRender(); // Pass 82: keep rail in sync
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty-state');
   document.getElementById('row-count').textContent = filteredRows.length + ' rows';
@@ -3178,6 +3292,14 @@ async function fillPanel(row, fi, totalRows) {
         `<span class="sched-time">Refresh before send</span>` +
         `<div class="sched-sub">${escHtml(record.nextAction || 'Regenerate draft before sending.')} - ${escHtml(queueMeta.detail || 'Draft version is behind current prompt.')}</div>` +
         refreshButtons.join('');
+      schedEl.style.display = '';
+    } else if ((record._qrow || {}).draft_type === 'industry_fallback' && !((row.business_specific_observation || '').trim()) && !row.sent_at) {
+      schedEl.className = 'panel-sched-info pending-review';
+      schedEl.innerHTML =
+        `<span class="sched-time">Add observation + regenerate draft</span>` +
+        `<div class="sched-sub">Included in Send Approved immediately.</div>` +
+        `<button class="btn-sched-act" onclick="panelFocusObservation(true)">Add observation</button>` +
+        (nextStaleIdx >= 0 ? '<button class="btn-sched-act" onclick="panelJumpNextStale()">Next stale</button>' : '');
       schedEl.style.display = '';
     } else if (row.approved === 'true' && !row.sent_at) {
       schedEl.className = 'panel-sched-info ready-now';
@@ -5081,6 +5203,7 @@ async function loadIndustries() {
     const sel = document.getElementById('d-industry');
     sel.innerHTML = list.map(i=>`<option value="${i}">${i.replace('_',' ')}</option>`).join('');
     sel.value='plumbing';
+    _ccSyncIndustryDropdown(); // Pass 82: keep command bar in sync
   } catch(e) {}
 }
 
@@ -7184,6 +7307,158 @@ function qlfJump(gi) {
   }, 150);
 }
 
+// ══════════════════════════════════════════════════════════════════
+// Pass 82 — Command Center Queue Rail
+// Reads from global allRows (same data as Pipeline table).
+// Has its own filter state independent of the Pipeline tab.
+// ══════════════════════════════════════════════════════════════════
+
+let _ccQueueFilter = 'active';
+
+function ccQueueFilter(f, el) {
+  _ccQueueFilter = f;
+  document.querySelectorAll('.cc-qrf').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  ccQueueRender();
+}
+
+function _ccQueueFilterRow(row) {
+  if (!row) return false;
+  const sent     = !!(row.sent_at || '').trim();
+  const replied  = String(row.replied || '').toLowerCase() === 'true';
+  const approved = String(row.approved || '').toLowerCase() === 'true';
+  const stale    = _rowNeedsDraftRefresh(row);
+  const hasDraft = !!(row.subject || '').trim();
+  const search   = (document.getElementById('cc-qr-search')?.value || '').toLowerCase().trim();
+
+  if (search) {
+    const hay = ((row.business_name||'') + (row.city||'') + (row.to_email||'') + (row.industry||'')).toLowerCase();
+    if (!hay.includes(search)) return false;
+  }
+
+  switch (_ccQueueFilter) {
+    case 'active':   return !sent && hasDraft;
+    case 'approved': return !sent && approved;
+    case 'pending':  return !sent && !approved && hasDraft;
+    case 'stale':    return !sent && stale;
+    case 'replied':  return replied;
+    case 'all':      return true;
+    default:         return !sent && hasDraft;
+  }
+}
+
+function _ccRowBadge(row) {
+  const sent    = !!(row.sent_at || '').trim();
+  const replied = String(row.replied || '').toLowerCase() === 'true';
+  const approved = String(row.approved || '').toLowerCase() === 'true';
+  const stale   = _rowNeedsDraftRefresh(row);
+  if (replied)  return ['replied', '★ Replied'];
+  if (sent)     return ['sent',    '✓ Sent'];
+  if (stale)    return ['stale',   '⚠ Stale'];
+  if (approved) return ['approved','Approved'];
+  return ['pending', 'Pending'];
+}
+
+function _ccRowClass(row) {
+  const sent    = !!(row.sent_at || '').trim();
+  const replied = String(row.replied || '').toLowerCase() === 'true';
+  const approved = String(row.approved || '').toLowerCase() === 'true';
+  const stale   = _rowNeedsDraftRefresh(row);
+  if (replied)  return 'cc-qrow-replied';
+  if (sent)     return 'cc-qrow-sent';
+  if (stale)    return 'cc-qrow-stale';
+  if (approved) return 'cc-qrow-approved';
+  return 'cc-qrow-pending';
+}
+
+function ccQueueRender() {
+  const body = document.getElementById('cc-qr-body');
+  if (!body) return;
+  if (!Array.isArray(allRows) || !allRows.length) {
+    body.innerHTML = '<div class="cc-qr-empty">No leads loaded.</div>';
+    ccQueueUpdateStats();
+    return;
+  }
+  const visible = allRows.filter(_ccQueueFilterRow);
+  if (!visible.length) {
+    body.innerHTML = '<div class="cc-qr-empty">No rows match this filter.</div>';
+    ccQueueUpdateStats();
+    return;
+  }
+  body.innerHTML = visible.map(row => {
+    const gi = allRows.indexOf(row);
+    const [badgeClass, badgeLabel] = _ccRowBadge(row);
+    const rowClass = _ccRowClass(row);
+    const score = parseInt(row.final_priority_score) || 0;
+    const scoreClass = score >= 4 ? 'high' : '';
+    const subj = (row.subject || '').replace(/^Re:\s*/i,'');
+    return `<div class="cc-qrow ${rowClass}" onclick="ccQueueOpenRow(${gi})">
+      <div class="cc-qrow-top">
+        <span class="cc-qrow-name">${escHtml(row.business_name || '—')}</span>
+        <span class="cc-qrow-score ${scoreClass}">${score}</span>
+      </div>
+      <div class="cc-qrow-bot">
+        <span class="cc-qrow-city">${escHtml(row.city || '')}${row.state ? ', '+escHtml(row.state) : ''}</span>
+        <span class="cc-qrow-badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      ${subj ? `<div class="cc-qrow-subj">${escHtml(subj)}</div>` : ''}
+    </div>`;
+  }).join('');
+  ccQueueUpdateStats();
+}
+
+function ccQueueUpdateStats() {
+  if (!Array.isArray(allRows)) return;
+  const el = id => document.getElementById(id);
+  const approved = allRows.filter(r => !r.sent_at && String(r.approved||'').toLowerCase()==='true').length;
+  const pending  = allRows.filter(r => !r.sent_at && String(r.approved||'').toLowerCase()!=='true' && (r.subject||'').trim()).length;
+  const sent     = allRows.filter(r => !!(r.sent_at||'').trim()).length;
+  const replied  = allRows.filter(r => String(r.replied||'').toLowerCase()==='true').length;
+  if (el('ccqr-s-approved')) el('ccqr-s-approved').textContent = approved;
+  if (el('ccqr-s-pending'))  el('ccqr-s-pending').textContent  = pending;
+  if (el('ccqr-s-sent'))     el('ccqr-s-sent').textContent     = sent;
+  if (el('ccqr-s-replied'))  el('ccqr-s-replied').textContent  = replied;
+}
+
+function ccQueueOpenRow(gi) {
+  // Open the full panel — switch to Pipeline Outreach context, set filter
+  // to 'all' so the row is visible, then open it.
+  const row = allRows[gi];
+  if (!row) return;
+  // Bring panel up directly without switching tabs — row exists in allRows
+  const fi = filteredRows.indexOf(row);
+  if (fi >= 0) {
+    openPanel(fi);
+  } else {
+    // Row not in current filteredRows — switch Pipeline to All filter first
+    setFilter('all', document.querySelector('[data-filter=all]'));
+    const fi2 = filteredRows.indexOf(row);
+    if (fi2 >= 0) openPanel(fi2);
+  }
+}
+
+function ccCmdDiscover() {
+  // Mirror Pipeline discover: sync inputs then call discoverLeads()
+  const city  = (document.getElementById('cc-cmd-city')?.value  || '').trim();
+  const state = (document.getElementById('cc-cmd-state')?.value || '').trim();
+  const ind   = document.getElementById('cc-cmd-industry')?.value || '';
+  if (city)  { const el = document.getElementById('d-city');  if (el) el.value = city; }
+  if (state) { const el = document.getElementById('d-state'); if (el) el.value = state; }
+  if (ind)   { const el = document.getElementById('d-industry'); if (el) el.value = ind; }
+  discoverLeads();
+}
+
+function _ccSyncIndustryDropdown() {
+  // Copy industry options from the Pipeline dropdown into the command bar one
+  const src = document.getElementById('d-industry');
+  const dst = document.getElementById('cc-cmd-industry');
+  if (!src || !dst) return;
+  dst.innerHTML = src.innerHTML;
+  // Also sync map-industry if set
+  const mapInd = document.getElementById('map-industry');
+  if (mapInd && mapInd.value) dst.value = mapInd.value;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   _loadPresets();
   loadAll();
@@ -7201,12 +7476,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); qlfOpen(); }
     if (e.key === 'Escape') qlfClose();
   });
-  // Boot nav: show Pipeline sub-tabs, hide all others, Outreach active
+  // Boot nav: show Discovery sub-tabs, hide all others, Command Center active
   document.querySelectorAll('#sub-nav .sub-tab').forEach(t => {
-    t.style.display = (t.dataset.parent === 'pipeline') ? '' : 'none';
+    t.style.display = (t.dataset.parent === 'discovery') ? '' : 'none';
     t.classList.remove('active');
-    if (t.dataset.page === 'outreach') t.classList.add('active');
+    if (t.dataset.page === 'command-center') t.classList.add('active');
   });
+  // Sync command bar industry dropdown after industries load
+  setTimeout(_ccSyncIndustryDropdown, 800);
 });
 
 
@@ -8420,10 +8697,11 @@ function _mapShowRegions() {
     // Draw as a rectangle polygon
     const poly = L.rectangle([[s, w], [n, e]], {
       color: region.color,
-      weight: 2,
-      opacity: 0.85,
+      weight: 2.5,
+      opacity: 0.9,
       fillColor: region.color,
-      fillOpacity: 0.13,
+      fillOpacity: 0.04,
+      dashArray: null,
       className: 'map-region-poly',
     }).addTo(_mapInstance);
 
@@ -8431,18 +8709,19 @@ function _mapShowRegions() {
     const label = L.divIcon({
       className: '',
       html: `<div style="
-        background:rgba(14,15,18,0.82);
+        background:transparent;
         color:${region.color};
-        border:1.5px solid ${region.color};
+        border:none;
         border-radius:6px;
         padding:5px 11px;
         font-size:12px;
         font-weight:700;
         white-space:nowrap;
-        letter-spacing:.04em;
+        letter-spacing:.08em;
         font-family:'DM Sans',system-ui,sans-serif;
-        box-shadow:0 2px 12px rgba(0,0,0,.4);
+        text-shadow:0 1px 4px rgba(0,0,0,.7);
         pointer-events:none;
+        text-transform:uppercase;
       ">${region.name}</div>`,
       iconAnchor: [50, 14],
       iconSize: [100, 28],
@@ -8451,8 +8730,8 @@ function _mapShowRegions() {
       .addTo(_mapInstance);
 
     poly.on('click', () => _mapSelectRegion(region));
-    poly.on('mouseover', () => poly.setStyle({ fillOpacity: 0.25 }));
-    poly.on('mouseout',  () => poly.setStyle({ fillOpacity: 0.13 }));
+    poly.on('mouseover', () => poly.setStyle({ fillOpacity: 0.10, dashArray: '6 4', weight: 3 }));
+    poly.on('mouseout',  () => poly.setStyle({ fillOpacity: 0.04, dashArray: null, weight: 2.5 }));
     poly.bindTooltip(`<strong>${region.name}</strong><br>Click to explore`, { sticky: true });
 
     _mapRegionLayers.push(poly, marker);
@@ -10466,7 +10745,7 @@ function _mapInit() {
   const container = document.getElementById('map-container');
   if (!container) return;
   _mapInstance = L.map('map-container', { zoomControl: true }).setView([MAP_DEFAULT_LAT, MAP_DEFAULT_LNG], MAP_DEFAULT_ZOOM);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,

@@ -42,6 +42,7 @@ PROSPECTS_COLUMNS = [
     "social_dm_text",
     "lat",   # decimal degrees — populated by area search, empty for city search
     "lng",   # decimal degrees — populated by area search, empty for city search
+    "lead_quality_score",  # computed at discovery time; appended last per schema rules
 ]
 
 TIMEOUT = 8
