@@ -927,6 +927,14 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 /* Lead count floating badges */
 .rts-badge{display:flex;align-items:center;justify-content:center;min-width:22px;height:18px;padding:0 5px;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);white-space:nowrap;pointer-events:none;backdrop-filter:blur(2px)}
 
+/* Searched cells: subtle copper outline only, fills barely visible */
+.rts-core-searched path { mix-blend-mode: screen; }
+/* Leads: additive bright green so clusters glow brighter not muddier */
+.rts-core-leads path    { mix-blend-mode: screen; }
+.rts-core-contacted path{ mix-blend-mode: screen; }
+/* Exhausted stays flat */
+.rts-core-exhausted path{ mix-blend-mode: normal; opacity: .5; }
+
 /* Pulse animation for active/selected territory cell */
 @keyframes rts-pulse{0%{opacity:.7;stroke-width:2}50%{opacity:1;stroke-width:3}100%{opacity:.7;stroke-width:2}}
 .rts-core-leads path,.rts-core-contacted path{animation:rts-pulse 2.4s ease-in-out infinite}
@@ -8615,11 +8623,17 @@ function _mapDrawCoverageFill(territoryData) {
   _mapClearCoverageGlows();
   if (!territoryData || !territoryData.cells || !territoryData.cells.length) return;
 
-  const glowGroup   = L.layerGroup().addTo(_mapInstance);
-  const badgeGroup  = L.layerGroup().addTo(_mapInstance);
+  const glowGroup  = L.layerGroup().addTo(_mapInstance);
+  const badgeGroup = L.layerGroup().addTo(_mapInstance);
   _mapCoverageGlowLayers.push(glowGroup, badgeGroup);
 
-  territoryData.cells.forEach(cell => {
+  // Sort: render searched first (bottom), then leads/contacted on top
+  const sorted = [...territoryData.cells].sort((a, b) => {
+    const rank = c => (c.exhausted ? 0 : c.leads_found > 0 ? 2 : 1);
+    return rank(a) - rank(b);
+  });
+
+  sorted.forEach(cell => {
     if (!cell.center_lat || !cell.center_lng) return;
     const lat   = parseFloat(cell.center_lat);
     const lng   = parseFloat(cell.center_lng);
@@ -8634,30 +8648,28 @@ function _mapDrawCoverageFill(territoryData) {
 
     const c = _RTS_COLORS[status];
 
-    // Outer glow ring — wide, very transparent
-    L.circle([lat, lng], {
-      radius: r * 1.6,
-      color: c.glow,
-      weight: 0,
-      fillColor: c.glow,
-      fillOpacity: status === 'exhausted' ? 0.02 : 0.04,
-      interactive: false,
-      className: 'rts-glow-outer',
-    }).addTo(glowGroup);
+    // Single circle per cell — no outer halo (it caused opacity stacking mud)
+    // Searched: border only, nearly invisible fill so clusters don't wash
+    // Leads/contacted: visible fill that pops against dark map
+    const styleMap = {
+      searched:  { weight: 1.2, opacity: 0.45, fillOpacity: 0.03, dashArray: null },
+      leads:     { weight: 2,   opacity: 0.85, fillOpacity: 0.22, dashArray: null },
+      contacted: { weight: 2,   opacity: 0.85, fillOpacity: 0.18, dashArray: null },
+      exhausted: { weight: 0.8, opacity: 0.2,  fillOpacity: 0.02, dashArray: '5 5' },
+    };
+    const s = styleMap[status];
 
-    // Inner core — tighter, more visible
-    const coreOpts = {
-      radius: r,
+    const core = L.circle([lat, lng], {
+      radius: r * 0.85,  // slight shrink so adjacent cells have visible gap
       color: c.core,
-      weight: status === 'exhausted' ? 1 : 1.5,
-      opacity: status === 'exhausted' ? 0.2 : 0.6,
+      weight: s.weight,
+      opacity: s.opacity,
       fillColor: c.core,
-      fillOpacity: status === 'exhausted' ? 0.03 : status === 'leads' ? 0.14 : 0.08,
-      dashArray: status === 'exhausted' ? '5 5' : null,
+      fillOpacity: s.fillOpacity,
+      dashArray: s.dashArray,
       interactive: true,
       className: 'rts-core rts-core-' + status,
-    };
-    const core = L.circle([lat, lng], coreOpts).addTo(glowGroup);
+    }).addTo(glowGroup);
 
     // Tooltip
     const sl = { searched:'Searched', leads:'Has Leads', contacted:'Contacted', exhausted:'Exhausted' }[status];
@@ -8670,42 +8682,34 @@ function _mapDrawCoverageFill(territoryData) {
       { className: '', sticky: false, opacity: 1 }
     );
 
-    // Floating lead count badge — only show when leads > 0
+    // Lead count badge — only for cells with leads
     if (leads > 0) {
       const badgeColor = c.badge;
       const icon = L.divIcon({
         className: '',
-        html: `<div class="rts-badge" style="background:${badgeColor}20;border:1px solid ${badgeColor}80;color:${badgeColor}">${leads}</div>`,
+        html: `<div class="rts-badge" style="background:${badgeColor}25;border:1px solid ${badgeColor}90;color:${badgeColor}">${leads}</div>`,
         iconSize: [28, 18],
         iconAnchor: [14, 9],
       });
       L.marker([lat, lng], { icon, interactive: false, zIndexOffset: 100 }).addTo(badgeGroup);
     }
   });
-
-  // Bring glow behind markers but above tile layer
-  glowGroup.eachLayer(l => { if (l._path) l._path.style.pointerEvents = 'none'; });
 }
 
 // Helper: add a single RTS glow circle for live search results
 function _mapAddRtsSearchGlow(lat, lng, radiusM, hasLeads) {
   if (!_mapInstance) return;
   const c = hasLeads ? _RTS_COLORS.leads : _RTS_COLORS.searched;
-  // Outer glow
-  const outer = L.circle([lat, lng], {
-    radius: radiusM * 1.5,
-    color: c.glow, weight: 0,
-    fillColor: c.glow, fillOpacity: hasLeads ? 0.06 : 0.035,
+  const s = hasLeads
+    ? { weight: 2, opacity: 0.85, fillOpacity: 0.22 }
+    : { weight: 1.2, opacity: 0.45, fillOpacity: 0.03 };
+  const circle = L.circle([lat, lng], {
+    radius: radiusM * 0.85,
+    color: c.core, weight: s.weight, opacity: s.opacity,
+    fillColor: c.core, fillOpacity: s.fillOpacity,
     interactive: false,
   }).addTo(_mapInstance);
-  // Inner core
-  const inner = L.circle([lat, lng], {
-    radius: radiusM,
-    color: c.core, weight: 1.5, opacity: 0.6,
-    fillColor: c.core, fillOpacity: hasLeads ? 0.13 : 0.07,
-    interactive: false,
-  }).addTo(_mapInstance);
-  _mapCoverageCircles.push(outer, inner);
+  _mapCoverageCircles.push(circle);
   const btn = document.getElementById('btnClearCoverage');
   if (btn) btn.style.display = '';
 }

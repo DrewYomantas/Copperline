@@ -1,50 +1,44 @@
 # Current Build Pass
 
 ## Active System
-Pass 77 -- Command Center polish: real city names, industry lead drill-down, map init fix
+Pass 79 -- RTS map visual overhaul iteration 2
 
 ## Status
-Pass 77 complete.
+Pass 79 complete.
 
 ---
 
-## Completed: Pass 77 -- Command Center Polish
+## Completed: Pass 79 -- RTS Coverage Visual Fix
 
-**Files:** `dashboard_static/index.html`, `city_planner.py`, `dashboard_server.py`
+**File:** `lead_engine/dashboard_static/index.html`
 
-### Real city names for Map Area entries
-`CityPlanner._display_name()` — reverse-geocodes coordinate entries via Nominatim
-once, caches result in `city_planner.json`. AREA entries now show real place names.
-`_tpCityDisplay(c)` updated to accept full city object and use `display_name`.
+### Problem solved
+Pass 78 outer glow halos (radius * 1.6) caused opacity stacking when 30+
+circles overlapped — turned the searched area into a solid amber wash with
+no visual hierarchy. Green leads cells were invisible in the noise.
 
-### Industry lead drill-down
-Click any industry row in the territory panel → expands inline lead list:
-- Lead name, email, status badge (Replied/Sent/Approved/Draft)
-- Summary counts: X replied, X sent, X approved, X draft
-- Click any lead row → opens panel directly via `qlfJump(gi)`
-- Up to 20 leads shown, overflow count displayed
-- Click again to collapse. Arrow indicator ▸/▾ per row.
-Backend: `/api/territory/leads` — matches by city+state (exact) or lat/lng
-proximity for AREA entries.
+### Fix
+- Removed outer halo entirely — single circle per cell, no layering
+- Radius reduced to r * 0.85 so adjacent cells have a visible gap
+- Per-status style map:
+  searched:  weight 1.2, opacity 0.45, fillOpacity 0.03 (border-only feel)
+  leads:     weight 2,   opacity 0.85, fillOpacity 0.22 (clearly visible)
+  contacted: weight 2,   opacity 0.85, fillOpacity 0.18
+  exhausted: weight 0.8, opacity 0.2,  fillOpacity 0.02, dashed
+- Render order: searched at bottom, leads/contacted on top
+- mix-blend-mode: screen on rts-core path elements — overlapping circles
+  add light instead of mud (RTS-style territory glow)
+- Same fix applied to _mapAddRtsSearchGlow live search circles
 
-### Map init fix (first-load blank)
-`_runPageHooks` now fires 5x `invalidateSize` at 30/100/300/700/1200ms after
-`requestAnimationFrame`. Leaflet now renders correctly on first Discovery click.
-
-### Nav renamed
-Top nav: "🔍 Discovery" → "🗺 Command Center"
-Sub-tab: "⚡ Command Center" → "🗺 Map + Territory"
-
-### Territory panel bottom cutoff fixed
-`.cc-tp-body` padding-bottom 14px → 60px. Last card no longer clipped.
-
-### event.stopPropagation on Run/Skip/X buttons
-Industry row click triggers lead list. Run/Skip/X buttons stop propagation
-so they don't accidentally toggle the lead list.
+### Kept from Pass 78
+- Floating lead count badges (green number, only when leads > 0)
+- Active territory pulse ring (3 copper rings + center dot on county click)
+- Tile brightness/contrast filter
+- Upgraded tooltips and legend
 
 ---
 
-## Pass 76 -- Email/Lead Search + Global Lead Finder (Ctrl+K)
+## Pass 78 -- RTS Map Overhaul (radial glows, badges, pulse ring)
+## Pass 77 -- Command Center polish (real names, drill-down, map init)
+## Pass 76 -- Email/phone search, Ctrl+K global lead finder
 ## Pass 75 -- Command Center split-pane (map + territory combined)
-## Pass 74 -- MX validation before send
-## Pass 73 -- Follow-up voice rewrite
