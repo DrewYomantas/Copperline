@@ -16583,10 +16583,10 @@ function _drCountChecks(offerKey) {
 }
 
 const DR_REVIEW_STATUS_LABELS = {
-  not_ready: 'Not ready for review',
-  ready_for_manual_review: 'Ready for manual review',
-  reviewed_insufficient: 'Reviewed, evidence insufficient',
-  reviewed_complete: 'Reviewed, evidence complete',
+  not_ready: 'Not ready',
+  ready_for_manual_review: 'Queued for review',
+  reviewed_insufficient: 'Insufficient — needs evidence',
+  reviewed_complete: 'Review complete',
 };
 
 function _drOfferLabel(offerKey) {
@@ -16739,7 +16739,7 @@ function _drReadinessStripHtml(offerKey) {
   html += row(hasAfterProof  ? 'rs-done' : 'rs-pending', hasAfterProof  ? '\u2713' : '\u25cb', hasAfterProof  ? 'After proof captured'  : 'After proof missing');
   html += row(closeoutCaptured ? 'rs-done' : 'rs-pending', closeoutCaptured ? '\u2713' : '\u25cb', closeoutCaptured ? 'Closeout on file' : 'Closeout pending');
   html += row(hasBlockers ? 'rs-warn' : 'rs-done', hasBlockers ? '\u26a0' : '\u2713', hasBlockers ? 'Blockers present' : 'No blockers');
-  const rvLabel = { not_ready: 'Review not ready', ready_for_manual_review: 'Queued for review', reviewed_insufficient: 'Insufficient \u2014 needs more evidence', reviewed_complete: 'Review complete' };
+  const rvLabel = { not_ready: 'Not ready', ready_for_manual_review: 'Queued for review', reviewed_insufficient: 'Insufficient \u2014 needs evidence', reviewed_complete: 'Review complete' };
   const rvCls   = { not_ready: 'rs-pending', ready_for_manual_review: 'rs-partial', reviewed_insufficient: 'rs-warn', reviewed_complete: 'rs-done' };
   const rvIcon  = { not_ready: '\u25cb', ready_for_manual_review: '\u25d1', reviewed_insufficient: '\u26a0', reviewed_complete: '\u2713' };
   html += row(rvCls[reviewStatus] || 'rs-pending', rvIcon[reviewStatus] || '\u25cb', rvLabel[reviewStatus] || 'Review not ready');
@@ -16824,7 +16824,7 @@ function drRender() {
           <div class="dr-label">Closeout status</div>
           <select class="dr-closeout-sel" id="dr-closeout-status" onchange="drScheduleSave()">
             <option value="open"${(_drState.closeout_status||'open')==='open'?' selected':''}>Open \u2014 in progress</option>
-            <option value="in_progress"${_drState.closeout_status==='in_progress'?' selected':''}>Wrapping up</option>
+            <option value="in_progress"${_drState.closeout_status==='in_progress'?' selected':''}>In progress — wrapping up</option>
             <option value="captured"${_drState.closeout_status==='captured'?' selected':''}>Captured \u2014 on file</option>
           </select>
         </div>
@@ -16878,11 +16878,11 @@ function drRender() {
     <div class="dr-rail-hdr"><span class="dr-rail-hdr-icon">\U0001f4f8</span> Proof &amp; Artifacts</div>
     <div class="dr-rail-body">
       <div>
-        <div class="dr-rail-label">Before-state proof</div>
+        <div class="dr-rail-label">Before proof</div>
         <input class="dr-rail-input${beforeHasCls}" id="dr-before-proof" type="text" placeholder="Screenshot path or URL\u2026" value="${escHtml(_drState.before_proof_link || '')}" oninput="drScheduleSave()">
       </div>
       <div>
-        <div class="dr-rail-label">After-state proof</div>
+        <div class="dr-rail-label">After proof</div>
         <input class="dr-rail-input${afterHasCls}" id="dr-after-proof" type="text" placeholder="Screenshot path or URL\u2026" value="${escHtml(_drState.after_proof_link || '')}" oninput="drScheduleSave()">
       </div>
       <div>
@@ -16908,10 +16908,10 @@ function drRender() {
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
         <div class="dr-rail-label">Manual review state</div>
         <select class="dr-closeout-sel" id="dr-verification-review-status" onchange="drScheduleSave()">
-          <option value="not_ready"${(_drState.verification_review_status||'not_ready')==='not_ready'?' selected':''}>Not ready for review</option>
-          <option value="ready_for_manual_review"${_drState.verification_review_status==='ready_for_manual_review'?' selected':''}>Ready for manual review</option>
-          <option value="reviewed_insufficient"${_drState.verification_review_status==='reviewed_insufficient'?' selected':''}>Reviewed \u2014 insufficient</option>
-          <option value="reviewed_complete"${_drState.verification_review_status==='reviewed_complete'?' selected':''}>Reviewed \u2014 complete</option>
+          <option value="not_ready"${(_drState.verification_review_status||'not_ready')==='not_ready'?' selected':''}>Not ready</option>
+          <option value="ready_for_manual_review"${_drState.verification_review_status==='ready_for_manual_review'?' selected':''}>Queued for review</option>
+          <option value="reviewed_insufficient"${_drState.verification_review_status==='reviewed_insufficient'?' selected':''}>Insufficient \u2014 needs evidence</option>
+          <option value="reviewed_complete"${_drState.verification_review_status==='reviewed_complete'?' selected':''}>Review complete</option>
         </select>
       </div>
       <div>
@@ -17480,7 +17480,7 @@ function drOpenReviewRunFromButton(btn) {
 <div class="dr-wrap">
   <div class="dr-hdr">
     <div>
-      <h2>Manual Verification Review</h2>
+      <h2>Manual Review</h2>
       <div style="font-size:11px;color:var(--muted);margin-top:2px">Review captured runs and record verdicts inline. Open Run only if you need full detail.</div>
     </div>
     <div class="dr-hdr-actions">
@@ -17489,7 +17489,7 @@ function drOpenReviewRunFromButton(btn) {
     </div>
   </div>
   <div id="drv-list">
-    <div class="drv-empty">Open the review queue to see captured delivery runs.</div>
+    <div class="drv-empty">Loading delivery runs…</div>
   </div>
 </div>
 </div>
@@ -17681,7 +17681,7 @@ function drOpenReviewRunFromButton(btn) {
           <div class="da-card-hdr">
             <div>
               <div class="da-card-title">Step 3 · Draft Recommendation</div>
-              <div class="da-card-sub">Rules-first internal guidance. This is not a public promise generator.</div>
+              <div class="da-card-sub">Review the recommended offer and add-ons, then confirm before moving forward.</div>
             </div>
             <button class="btn btn-ghost" style="font-size:11px" onclick="daUseRecommendation()">Confirm Draft Stack</button>
           </div>
