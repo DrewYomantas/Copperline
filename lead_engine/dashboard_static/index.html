@@ -1633,6 +1633,12 @@ input.dr-textarea{min-height:auto;resize:none;display:block;width:100%;box-sizin
 .drv-chip.good{color:var(--green);border-color:rgba(62,207,114,.25)}
 .drv-chip.warn{color:var(--amber);border-color:rgba(245,166,35,.25)}
 .drv-chip.bad{color:#ef4444;border-color:rgba(239,68,68,.25)}
+.drv-verdict-bar{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.drv-verdict-btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.drv-note{width:100%;box-sizing:border-box;padding:6px 8px;font-size:11px;font-family:var(--sans);background:var(--surface3);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);resize:vertical;min-height:40px;line-height:1.4}
+.drv-note::placeholder{color:var(--muted)}
+.drv-note:focus{outline:none;border-color:var(--border-hi)}
+.drv-btn-complete:disabled{opacity:.38;cursor:not-allowed}
 .drv-empty{padding:44px 0;text-align:center;color:var(--muted);font-size:13px}
 
 </style>
@@ -17319,13 +17325,48 @@ function _drvChip(label, status) {
   return `<span class="drv-chip ${status || ''}">${escHtml(label)}</span>`;
 }
 
+async function drvSaveVerdict(runKey, leadKey, offerKey, status, notes) {
+  try {
+    const res = await fetch('/api/delivery_run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        run_key: runKey, lead_key: leadKey, offer_key: offerKey,
+        verification_review_status: status,
+        verification_review_notes: notes
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) console.error('drvSaveVerdict error', data);
+  } catch(e) {
+    console.error('drvSaveVerdict failed', e);
+  }
+  loadDeliveryReviewQueue();
+}
+
+function _drvCardKeys(el) {
+  return { runKey: el.dataset.runKey || '', leadKey: el.dataset.leadKey || '', offerKey: el.dataset.offerKey || '' };
+}
+function _drvNoteVal(btn) {
+  const note = btn.closest('.drv-card')?.querySelector('.drv-note');
+  return note ? note.value : '';
+}
+function drvMarkInsufficient(btn) {
+  const k = _drvCardKeys(btn);
+  drvSaveVerdict(k.runKey, k.leadKey, k.offerKey, 'reviewed_insufficient', _drvNoteVal(btn));
+}
+function drvMarkComplete(btn) {
+  const k = _drvCardKeys(btn);
+  drvSaveVerdict(k.runKey, k.leadKey, k.offerKey, 'reviewed_complete', _drvNoteVal(btn));
+}
+
 function renderDeliveryReviewQueue(rows) {
   const list = document.getElementById('drv-list');
   const count = document.getElementById('drv-count');
   if (count) count.textContent = rows.length ? `${rows.length} run${rows.length === 1 ? '' : 's'}` : 'No runs';
   if (!list) return;
   if (!rows.length) {
-    list.innerHTML = '<div class="drv-empty">No delivery runs have been captured yet.</div>';
+    list.innerHTML = '<div class="drv-empty">No delivery runs in the queue yet.</div>';
     return;
   }
   list.innerHTML = rows.map(row => {
@@ -17334,22 +17375,30 @@ function renderDeliveryReviewQueue(rows) {
     const closeoutStatus = row.closeout_status === 'captured' ? _drvChip('Closeout captured', 'good') : _drvChip('Closeout pending', 'warn');
     const reviewClass = row.verification_review_status === 'reviewed_complete' ? 'good'
       : row.verification_review_status === 'reviewed_insufficient' ? 'bad'
-      : row.verification_review_status === 'ready_for_manual_review' ? 'warn'
-      : '';
+      : row.verification_review_status === 'ready_for_manual_review' ? 'warn' : '';
     const reviewStatus = _drvChip(row.verification_review_label || DR_REVIEW_STATUS_LABELS[row.verification_review_status] || 'Not ready for review', reviewClass);
     const ackStatus = row.owner_ack_status === 'acknowledged' ? _drvChip('Owner acknowledged', 'good') : _drvChip('Owner ack pending', 'warn');
     const artifactStatus = row.artifact_refs_present ? _drvChip('Artifacts referenced', 'good') : _drvChip('Artifacts not referenced', '');
+    const rk = escHtml(row.run_key || ''), lk = escHtml(row.lead_key || ''), ok = escHtml(row.offer_key || '');
+    const canComplete = !!row.candidate_for_review;
+    const completeAttrs = `class="btn btn-primary drv-btn-complete" data-run-key="${rk}" data-lead-key="${lk}" data-offer-key="${ok}" onclick="drvMarkComplete(this)"${canComplete ? '' : ' disabled title="Needs closeout + proof + no blockers"'}`;
     return `<article class="drv-card">
       <div class="drv-card-hdr">
         <div>
           <div class="drv-title">${escHtml(row.business_name || 'Practice run')}</div>
           <div class="drv-meta">${escHtml(row.offer_label || row.offer_key || 'Offer')} · ${escHtml(row.run_key || '')}${row.updated_at ? ` · Updated ${escHtml(row.updated_at)}` : ''}</div>
         </div>
-        <button class="dr-run-btn" data-run-key="${escHtml(row.run_key || '')}" data-lead-key="${escHtml(row.lead_key || '')}" data-offer-key="${escHtml(row.offer_key || '')}" onclick="drOpenReviewRunFromButton(this)">Open Run</button>
+        <button class="dr-run-btn" data-run-key="${rk}" data-lead-key="${lk}" data-offer-key="${ok}" onclick="drOpenReviewRunFromButton(this)">Open Run ↗</button>
       </div>
       <div class="drv-chip-row">${[closeoutStatus, proofStatus, artifactStatus, blockerStatus, ackStatus, reviewStatus].join('')}</div>
-      <div class="drv-meta">Checklist items tracked: ${Number(row.checks_done || 0)} done / ${Number(row.checks_tracked || 0)} saved. ${row.candidate_for_review ? 'Evidence looks reviewable, pending operator judgment.' : 'Needs manual evidence review before any promotion decision.'}</div>
       ${row.blockers ? `<div class="db-blocker" style="margin-top:8px">${escHtml(row.blockers)}</div>` : ''}
+      <div class="drv-verdict-bar">
+        <textarea class="drv-note" placeholder="Review note — what was checked, what's missing, or why complete…" data-run-key="${rk}" data-lead-key="${lk}" data-offer-key="${ok}">${escHtml(row.verification_review_notes || '')}</textarea>
+        <div class="drv-verdict-btns">
+          <button class="btn btn-ghost drv-btn-insufficient" data-run-key="${rk}" data-lead-key="${lk}" data-offer-key="${ok}" onclick="drvMarkInsufficient(this)">Mark Insufficient</button>
+          <button ${completeAttrs}>Mark Complete</button>
+        </div>
+      </div>
     </article>`;
   }).join('');
 }
@@ -17432,7 +17481,7 @@ function drOpenReviewRunFromButton(btn) {
   <div class="dr-hdr">
     <div>
       <h2>Manual Verification Review</h2>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px">Run-level evidence queue. Review closeout and proof without promoting offer status automatically.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">Review captured runs and record verdicts inline. Open Run only if you need full detail.</div>
     </div>
     <div class="dr-hdr-actions">
       <div class="dr-save-status" id="drv-count"></div>

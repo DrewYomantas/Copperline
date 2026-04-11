@@ -1,4 +1,4 @@
-"""
+﻿"""
 Copperline — Lead Operations Dashboard
 Run: python lead_engine/dashboard_server.py
 Then open: http://localhost:5000
@@ -1440,6 +1440,8 @@ _CONSULT_BUILDER_KEYS = (
     "transcript_summary",
     "do_not_recommend_notes",
 )
+_PROPOSAL_OPTION_OFFER_KEYS = _DELIVERY_CORE_KEYS | _DELIVERY_BUNDLE_KEYS | (_DELIVERY_SPECIALTY_KEYS - {"mobile_admin_workflow_helper"})
+_ACCEPTED_OPTION_STATUSES = {"draft_only", "client_leaning", "client_accepted"}
 
 
 def _coerce_bool(value) -> bool:
@@ -1472,11 +1474,30 @@ def _normalize_discovery(value: dict | None) -> dict:
 
 def _normalize_consult_builder(value: dict | None) -> dict:
     base = {k: "" for k in _CONSULT_BUILDER_KEYS}
+    base["quick_wins"] = []
     if not isinstance(value, dict):
         return base
     for key in _CONSULT_BUILDER_KEYS:
         if isinstance(value.get(key), str):
             base[key] = value.get(key, "").strip()[:2000]
+    quick_wins = value.get("quick_wins")
+    if isinstance(quick_wins, list):
+        clean_wins = []
+        for item in quick_wins[:12]:
+            if not isinstance(item, dict):
+                continue
+            offer_key = str(item.get("offer_key") or "").strip().lower()
+            clean_wins.append({
+                "id": str(item.get("id") or "")[:80],
+                "category": str(item.get("category") or "other").strip()[:40],
+                "what_noticed": str(item.get("what_noticed") or "").strip()[:1000],
+                "why_matters": str(item.get("why_matters") or "").strip()[:1000],
+                "quick_win": str(item.get("quick_win") or "").strip()[:1000],
+                "priority": str(item.get("priority") or "soon").strip()[:20],
+                "offer_key": offer_key if offer_key in (_DELIVERY_CORE_KEYS | _DELIVERY_SPECIALTY_KEYS) else "",
+                "is_easy_fix": _coerce_bool(item.get("is_easy_fix")),
+            })
+        base["quick_wins"] = clean_wins
     return base
 
 
@@ -1498,6 +1519,35 @@ def _clean_string_list(value) -> list[str]:
 
 def _clean_link_list(value) -> list[str]:
     return _clean_string_list(value)
+
+
+def _normalize_proposal_options(value) -> list[dict]:
+    if not isinstance(value, list):
+        return []
+    clean_options = []
+    for item in value[:6]:
+        if not isinstance(item, dict):
+            continue
+        offers = []
+        raw_offers = item.get("offer_keys")
+        if raw_offers is None:
+            raw_offers = item.get("included_offers")
+        for offer_key in raw_offers or []:
+            if not isinstance(offer_key, str):
+                continue
+            key = offer_key.strip().lower()
+            if key in _PROPOSAL_OPTION_OFFER_KEYS and key not in offers:
+                offers.append(key)
+        clean_options.append({
+            "id": str(item.get("id") or "")[:80],
+            "label": str(item.get("label") or "")[:120],
+            "offer_keys": offers[:8],
+            "price_note": str(item.get("price_note") or "")[:120],
+            "scope_note": str(item.get("scope_note") or "")[:1000],
+            "recommended": _coerce_bool(item.get("recommended", item.get("is_recommended"))),
+            "assumptions": str(item.get("assumptions", item.get("notes") or "") or "")[:1000],
+        })
+    return clean_options
 
 
 def _deploy_task_templates(profile: dict | None) -> list[str]:
@@ -1596,8 +1646,16 @@ def _delivery_profile_default(row: dict | None = None) -> dict:
     return {
         "snapshot": {k: (False if k in {"google_presence", "facebook_presence"} else "") for k in _DEPLOY_SNAPSHOT_KEYS},
         "discovery": {k: False for k in _DEPLOY_DISCOVERY_KEYS},
-        "consult_builder": {k: "" for k in _CONSULT_BUILDER_KEYS},
+        "consult_builder": {**{k: "" for k in _CONSULT_BUILDER_KEYS}, "quick_wins": []},
         "draft_recommendation": {},
+        "proposal_options": [],
+        "accepted_option_id": "",
+        "accepted_option_status": "draft_only",
+        "accepted_option_date": "",
+        "accepted_option_label": "",
+        "accepted_option_note": "",
+        "accepted_scope_note": "",
+        "accepted_assumptions": "",
         "core_offer": "",
         "bundle_key": "",
         "selected_modules": [],
@@ -1696,6 +1754,23 @@ def _finalize_activation_patch(clean_patch: dict, current_profile: dict) -> dict
         clean_patch["consult_builder"] = _normalize_consult_builder(merged["consult_builder"])
     if "draft_recommendation" in merged and isinstance(merged["draft_recommendation"], dict):
         clean_patch["draft_recommendation"] = dict(merged["draft_recommendation"])
+    if "proposal_options" in merged:
+        clean_patch["proposal_options"] = _normalize_proposal_options(merged.get("proposal_options"))
+    if "accepted_option_id" in merged:
+        clean_patch["accepted_option_id"] = str(merged.get("accepted_option_id") or "").strip()[:80]
+    if "accepted_option_status" in merged:
+        status = str(merged.get("accepted_option_status") or "").strip().lower()
+        clean_patch["accepted_option_status"] = status if status in _ACCEPTED_OPTION_STATUSES else "draft_only"
+    if "accepted_option_date" in merged:
+        clean_patch["accepted_option_date"] = str(merged.get("accepted_option_date") or "").strip()[:40]
+    if "accepted_option_label" in merged:
+        clean_patch["accepted_option_label"] = str(merged.get("accepted_option_label") or "").strip()[:120]
+    if "accepted_option_note" in merged:
+        clean_patch["accepted_option_note"] = str(merged.get("accepted_option_note") or "").strip()[:1000]
+    if "accepted_scope_note" in merged:
+        clean_patch["accepted_scope_note"] = str(merged.get("accepted_scope_note") or "").strip()[:1000]
+    if "accepted_assumptions" in merged:
+        clean_patch["accepted_assumptions"] = str(merged.get("accepted_assumptions") or "").strip()[:1000]
 
     pricing_mode = (merged.get("pricing_mode") or "").strip().lower()
     if pricing_mode in _DEPLOY_QUOTE_MODES:
@@ -1806,6 +1881,28 @@ def _normalize_delivery_profile(raw_profile: dict | None, row: dict | None = Non
     draft_recommendation = raw_profile.get("draft_recommendation")
     if isinstance(draft_recommendation, dict):
         base["draft_recommendation"] = dict(draft_recommendation)
+    base["proposal_options"] = _normalize_proposal_options(raw_profile.get("proposal_options"))
+    accepted_option_id = raw_profile.get("accepted_option_id")
+    if isinstance(accepted_option_id, str):
+        base["accepted_option_id"] = accepted_option_id.strip()
+    accepted_option_status = (raw_profile.get("accepted_option_status") or "").strip().lower()
+    if accepted_option_status in _ACCEPTED_OPTION_STATUSES:
+        base["accepted_option_status"] = accepted_option_status
+    accepted_option_date = raw_profile.get("accepted_option_date")
+    if isinstance(accepted_option_date, str):
+        base["accepted_option_date"] = accepted_option_date.strip()
+    accepted_option_label = raw_profile.get("accepted_option_label")
+    if isinstance(accepted_option_label, str):
+        base["accepted_option_label"] = accepted_option_label.strip()
+    accepted_option_note = raw_profile.get("accepted_option_note")
+    if isinstance(accepted_option_note, str):
+        base["accepted_option_note"] = accepted_option_note.strip()
+    accepted_scope_note = raw_profile.get("accepted_scope_note")
+    if isinstance(accepted_scope_note, str):
+        base["accepted_scope_note"] = accepted_scope_note.strip()
+    accepted_assumptions = raw_profile.get("accepted_assumptions")
+    if isinstance(accepted_assumptions, str):
+        base["accepted_assumptions"] = accepted_assumptions.strip()
 
     price = raw_profile.get("price")
     if isinstance(price, (int, float)):
@@ -1977,7 +2074,13 @@ def _normalize_delivery_profile(raw_profile: dict | None, row: dict | None = Non
 
 @app.route("/api/delivery_catalog")
 def api_delivery_catalog():
-    return jsonify({"ok": True, "catalog": get_catalog_payload()})
+    catalog = get_catalog_payload()
+    offer_evidence = _build_offer_evidence_summary()
+    catalog["offer_evidence_summary"] = offer_evidence["offers_by_key"]
+    catalog["offer_evidence_overview"] = offer_evidence["overview"]
+    for item in catalog.get("hardening_items", []):
+        item["evidence_summary"] = offer_evidence["offers_by_key"].get(item.get("key"), {})
+    return jsonify({"ok": True, "catalog": catalog})
 
 
 DELIVERY_EXEC_LOG = BASE_DIR / "data" / "delivery_execution_log.json"
@@ -1994,12 +2097,297 @@ def _save_exec_log(data):
     DELIVERY_EXEC_LOG.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+_DELIVERY_REVIEW_STATUSES = {"not_ready", "ready_for_manual_review", "reviewed_insufficient", "reviewed_complete"}
+
+
+def _delivery_review_label(status: str) -> str:
+    return {
+        "ready_for_manual_review": "Ready for manual review",
+        "reviewed_insufficient": "Reviewed, evidence insufficient",
+        "reviewed_complete": "Reviewed, evidence complete",
+    }.get(status, "Not ready for review")
+
+
+def _delivery_run_sort_stamp(state: dict) -> str:
+    if not isinstance(state, dict):
+        return ""
+    for key in ("updated_at", "closeout_date", "delivery_date", "started_at"):
+        value = str(state.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _empty_offer_evidence_summary(offer_key: str, offer: dict | None = None) -> dict:
+    offer = offer or {}
+    return {
+        "offer_key": offer_key,
+        "offer_label": offer.get("label") or offer_key,
+        "offer_type": offer.get("offer_type") or "",
+        "build_status": offer.get("build_status") or "",
+        "launch_eligible": bool(offer.get("launch_eligible")),
+        "total_runs": 0,
+        "closeout_captured_count": 0,
+        "ready_for_manual_review_count": 0,
+        "reviewed_complete_count": 0,
+        "reviewed_insufficient_count": 0,
+        "candidate_for_review_count": 0,
+        "proof_present_count": 0,
+        "proof_missing_count": 0,
+        "artifact_refs_count": 0,
+        "owner_acknowledged_count": 0,
+        "open_blocker_count": 0,
+        "open_blocker_present": False,
+        "last_run_key": "",
+        "last_run_date": "",
+        "last_client_business_name": "",
+        "last_reviewed_run_key": "",
+        "last_reviewed_run_date": "",
+        "last_reviewed_status": "",
+        "last_reviewed_business_name": "",
+        "last_evidence_run_key": "",
+        "last_evidence_run_date": "",
+        "last_evidence_business_name": "",
+        "proof_coverage_summary": "No delivery runs yet",
+        "evidence_presence": "No run evidence yet",
+        "promotion_readiness": {
+            "status": "no_reviewed_runs",
+            "label": "No reviewed runs yet",
+            "note": "No reviewed delivery evidence exists for this offer yet.",
+        },
+        "recent_runs": [],
+    }
+
+
+def _build_delivery_review_row(run_key: str, state: dict, records: dict) -> dict | None:
+    if not isinstance(state, dict):
+        return None
+    lead_key = str(state.get("lead_key") or "").strip()
+    offer_key = str(state.get("offer_key") or "").strip()
+    if not offer_key and "|" in run_key:
+        parts = run_key.split("|", 1)
+        lead_key = lead_key or ("" if parts[0] == "practice" else parts[0])
+        offer_key = parts[1]
+    if lead_key == "practice":
+        lead_key = ""
+    offer = DELIVERY_CATALOG.get(offer_key, {})
+    record = records.get(lead_key, {}) if lead_key else {}
+    checks = state.get("checks") if isinstance(state.get("checks"), dict) else {}
+    blockers = (state.get("blockers") or "").strip()
+    before_proof = (state.get("before_proof_link") or state.get("proof_links") or "").strip()
+    after_proof = (state.get("after_proof_link") or "").strip()
+    artifact_refs = (state.get("artifact_refs") or "").strip()
+    proof_present = bool(before_proof and after_proof)
+    review_status = (state.get("verification_review_status") or "not_ready").strip()
+    if review_status not in _DELIVERY_REVIEW_STATUSES:
+        review_status = "not_ready"
+    closeout_status = state.get("closeout_status") or "open"
+    candidate = closeout_status == "captured" and proof_present and not blockers
+    return {
+        "run_key": run_key,
+        "lead_key": lead_key,
+        "offer_key": offer_key,
+        "business_name": state.get("business_name") or record.get("business_name", "") or "Practice run",
+        "offer_label": offer.get("label") or offer_key,
+        "closeout_status": closeout_status,
+        "owner_ack_status": state.get("owner_ack_status") or "pending",
+        "verification_review_status": review_status,
+        "verification_review_label": _delivery_review_label(review_status),
+        "proof_present": proof_present,
+        "before_proof_present": bool(before_proof),
+        "after_proof_present": bool(after_proof),
+        "artifact_refs_present": bool(artifact_refs),
+        "blockers_present": bool(blockers),
+        "blockers": blockers,
+        "candidate_for_review": candidate,
+        "checks_done": sum(1 for v in checks.values() if v is True),
+        "checks_tracked": len(checks),
+        "updated_at": state.get("updated_at", ""),
+        "closeout_date": state.get("closeout_date", ""),
+        "delivery_date": state.get("delivery_date", ""),
+        "sort_stamp": _delivery_run_sort_stamp(state),
+        "verification_review_notes": (state.get("verification_review_notes") or "").strip(),
+    }
+
+
+def _offer_promotion_readiness(summary: dict) -> dict:
+    reviewed_complete = int(summary.get("reviewed_complete_count") or 0)
+    reviewed_insufficient = int(summary.get("reviewed_insufficient_count") or 0)
+    ready_for_review = int(summary.get("ready_for_manual_review_count") or 0)
+    proof_present = int(summary.get("proof_present_count") or 0)
+    closeout_captured = int(summary.get("closeout_captured_count") or 0)
+    blocker_count = int(summary.get("open_blocker_count") or 0)
+    last_reviewed_status = summary.get("last_reviewed_status") or ""
+
+    if reviewed_complete > 0 and proof_present > 0 and closeout_captured > 0 and blocker_count == 0:
+        return {
+            "status": "ready_for_human_verification",
+            "label": "Ready for human verification decision",
+            "note": "A reviewed-complete run exists with proof, closeout, and no open blockers. Promotion still requires an operator decision.",
+        }
+    if reviewed_complete > 0 or reviewed_insufficient > 0:
+        if last_reviewed_status == "reviewed_insufficient" or proof_present == 0 or closeout_captured == 0:
+            return {
+                "status": "reviewed_proof_incomplete",
+                "label": "Reviewed evidence exists, but proof incomplete",
+                "note": "At least one run was reviewed, but the available evidence still shows proof, closeout, or blocker gaps.",
+            }
+        return {
+            "status": "criteria_partially_supported",
+            "label": "Reviewed evidence exists, criteria partially supported",
+            "note": "Reviewed evidence exists, but the catalog promotion criteria still need human verification against the actual run proof.",
+        }
+    if ready_for_review > 0:
+        return {
+            "status": "awaiting_manual_review",
+            "label": "Evidence captured, waiting for manual review",
+            "note": "Run evidence has been marked ready for manual review, but no reviewed decision exists yet.",
+        }
+    return {
+        "status": "no_reviewed_runs",
+        "label": "No reviewed runs yet",
+        "note": "No reviewed delivery evidence exists for this offer yet.",
+    }
+
+
+def _build_offer_evidence_summary(log: dict | None = None, records: dict | None = None) -> dict:
+    log = log if isinstance(log, dict) else _load_exec_log()
+    records = records if isinstance(records, dict) else _lm.get_all_records()
+    offers_by_key = {
+        key: _empty_offer_evidence_summary(key, offer)
+        for key, offer in DELIVERY_CATALOG.items()
+    }
+    for run_key, state in log.items():
+        row = _build_delivery_review_row(run_key, state, records)
+        if not row:
+            continue
+        offer_key = row.get("offer_key") or ""
+        if offer_key not in offers_by_key:
+            offers_by_key[offer_key] = _empty_offer_evidence_summary(offer_key, DELIVERY_CATALOG.get(offer_key))
+        summary = offers_by_key[offer_key]
+        summary["total_runs"] += 1
+        if row["closeout_status"] == "captured":
+            summary["closeout_captured_count"] += 1
+        if row["verification_review_status"] == "ready_for_manual_review":
+            summary["ready_for_manual_review_count"] += 1
+        if row["verification_review_status"] == "reviewed_complete":
+            summary["reviewed_complete_count"] += 1
+        if row["verification_review_status"] == "reviewed_insufficient":
+            summary["reviewed_insufficient_count"] += 1
+        if row["candidate_for_review"]:
+            summary["candidate_for_review_count"] += 1
+        if row["proof_present"]:
+            summary["proof_present_count"] += 1
+        if row["artifact_refs_present"]:
+            summary["artifact_refs_count"] += 1
+        if row["owner_ack_status"] == "acknowledged":
+            summary["owner_acknowledged_count"] += 1
+        if row["blockers_present"]:
+            summary["open_blocker_count"] += 1
+            summary["open_blocker_present"] = True
+
+        light_run = {
+            "run_key": row["run_key"],
+            "lead_key": row["lead_key"],
+            "offer_key": row["offer_key"],
+            "business_name": row["business_name"],
+            "verification_review_status": row["verification_review_status"],
+            "verification_review_label": row["verification_review_label"],
+            "closeout_status": row["closeout_status"],
+            "proof_present": row["proof_present"],
+            "artifact_refs_present": row["artifact_refs_present"],
+            "blockers_present": row["blockers_present"],
+            "updated_at": row["updated_at"],
+            "closeout_date": row["closeout_date"],
+            "delivery_date": row["delivery_date"],
+            "sort_stamp": row["sort_stamp"],
+        }
+        summary["recent_runs"].append(light_run)
+
+        if row["sort_stamp"] >= (summary["last_run_date"] or ""):
+            summary["last_run_key"] = row["run_key"]
+            summary["last_run_date"] = row["sort_stamp"]
+            summary["last_client_business_name"] = row["business_name"]
+
+        if row["proof_present"] or row["artifact_refs_present"] or row["closeout_status"] == "captured":
+            if row["sort_stamp"] >= (summary["last_evidence_run_date"] or ""):
+                summary["last_evidence_run_key"] = row["run_key"]
+                summary["last_evidence_run_date"] = row["sort_stamp"]
+                summary["last_evidence_business_name"] = row["business_name"]
+
+        if row["verification_review_status"] in {"reviewed_complete", "reviewed_insufficient"}:
+            if row["sort_stamp"] >= (summary["last_reviewed_run_date"] or ""):
+                summary["last_reviewed_run_key"] = row["run_key"]
+                summary["last_reviewed_run_date"] = row["sort_stamp"]
+                summary["last_reviewed_status"] = row["verification_review_status"]
+                summary["last_reviewed_business_name"] = row["business_name"]
+
+    overview = {
+        "offers_with_runs": 0,
+        "offers_with_review_ready_runs": 0,
+        "offers_with_reviewed_complete_runs": 0,
+        "offers_ready_for_human_verification": 0,
+    }
+    for summary in offers_by_key.values():
+        summary["proof_missing_count"] = max(0, summary["total_runs"] - summary["proof_present_count"])
+        if summary["total_runs"]:
+            summary["proof_coverage_summary"] = f"{summary['proof_present_count']} / {summary['total_runs']} runs with before/after proof"
+            if summary["proof_present_count"] > 0:
+                summary["evidence_presence"] = "Evidence present"
+            elif summary["artifact_refs_count"] > 0 or summary["closeout_captured_count"] > 0:
+                summary["evidence_presence"] = "Partial evidence present"
+            else:
+                summary["evidence_presence"] = "Runs exist, but proof is still missing"
+        summary["recent_runs"].sort(key=lambda item: item.get("sort_stamp", ""), reverse=True)
+        summary["recent_runs"] = summary["recent_runs"][:5]
+        summary["promotion_readiness"] = _offer_promotion_readiness(summary)
+        if summary["total_runs"] > 0:
+            overview["offers_with_runs"] += 1
+        if summary["ready_for_manual_review_count"] > 0:
+            overview["offers_with_review_ready_runs"] += 1
+        if summary["reviewed_complete_count"] > 0:
+            overview["offers_with_reviewed_complete_runs"] += 1
+        if summary["promotion_readiness"]["status"] == "ready_for_human_verification":
+            overview["offers_ready_for_human_verification"] += 1
+    offers = sorted(offers_by_key.values(), key=lambda item: (item.get("offer_type") != "public", item.get("offer_label", "")))
+    return {"offers": offers, "offers_by_key": offers_by_key, "overview": overview}
+
+
+@app.route("/api/delivery_run_clients")
+def api_delivery_run_clients():
+    all_records = _lm.get_all_records()
+    clients = []
+    for key, record in all_records.items():
+        raw_profile = record.get("delivery_profile")
+        if not isinstance(raw_profile, dict):
+            continue
+        stage = (raw_profile.get("stage") or "").strip().lower()
+        if not stage:
+            continue
+        clients.append({
+            "key":              key,
+            "business_name":    record.get("business_name", ""),
+            "city":             record.get("city", ""),
+            "stage":            stage,
+            "core_offer":       raw_profile.get("core_offer", ""),
+            "bundle_key":       raw_profile.get("bundle_key", ""),
+            "selected_modules": raw_profile.get("selected_modules", []),
+        })
+    stage_order = {"won": 0, "deployment_pending": 1, "live": 2, "call_booked": 3}
+    clients.sort(key=lambda c: stage_order.get(c.get("stage", ""), 9))
+    return jsonify({"ok": True, "clients": clients})
+
+
 @app.route("/api/delivery_run", methods=["GET"])
 def api_delivery_run_get():
-    offer_key = (request.args.get("offer_key") or "").strip()
+    run_key   = (request.args.get("run_key")   or "").strip()
+    offer_key = (request.args.get("offer_key") or "").strip()  # backward compat
+    if not run_key and offer_key:
+        run_key = offer_key
     log = _load_exec_log()
-    if offer_key:
-        return jsonify({"ok": True, "offer_key": offer_key, "state": log.get(offer_key, {})})
+    if run_key:
+        state = log.get(run_key) or log.get("practice|" + run_key) or {}
+        return jsonify({"ok": True, "run_key": run_key, "state": state})
     return jsonify({"ok": True, "all": log})
 
 
@@ -2007,18 +2395,34 @@ def api_delivery_run_get():
 def api_delivery_run_save():
     import datetime
     body = request.json or {}
-    offer_key = (body.get("offer_key") or "").strip()
-    if not offer_key:
-        return jsonify({"ok": False, "error": "offer_key required"}), 400
-    allowed_offer_keys = set(DELIVERY_CATALOG.keys())
-    if offer_key not in allowed_offer_keys:
+    run_key       = (body.get("run_key")       or "").strip()
+    offer_key     = (body.get("offer_key")     or "").strip()
+    lead_key      = (body.get("lead_key")      or "practice").strip()
+    business_name = (body.get("business_name") or "").strip()[:200]
+
+    if not run_key:
+        if offer_key:
+            run_key = offer_key  # backward compat
+        else:
+            return jsonify({"ok": False, "error": "run_key or offer_key required"}), 400
+
+    if not offer_key and "|" in run_key:
+        offer_key = run_key.split("|", 1)[1]
+
+    if offer_key and offer_key not in DELIVERY_CATALOG:
         return jsonify({"ok": False, "error": "unknown offer_key"}), 400
 
     log = _load_exec_log()
-    existing = log.get(offer_key, {})
+    merged = dict(log.get(run_key, {}))
+
+    if lead_key and lead_key != "practice":
+        merged["lead_key"] = lead_key
+    if offer_key:
+        merged["offer_key"] = offer_key
+    if business_name:
+        merged["business_name"] = business_name
 
     patch = body.get("state", {})
-    merged = dict(existing)
 
     if "checks" in patch and isinstance(patch["checks"], dict):
         existing_checks = merged.get("checks", {})
@@ -2027,21 +2431,51 @@ def api_delivery_run_save():
                 existing_checks[k] = v
         merged["checks"] = existing_checks
 
-    for field in ("work_notes", "proof_links", "blockers", "closeout_notes"):
+    text_fields = ("work_notes", "before_proof_link", "after_proof_link",
+                   "artifact_refs", "blockers", "closeout_notes", "post_closeout_notes",
+                   "proof_links", "delivery_date", "closeout_date", "remaining_recommendations",
+                   "verification_review_notes")  # proof_links kept for backward compat
+    for field in text_fields:
         if field in patch and isinstance(patch[field], str):
             merged[field] = patch[field].strip()[:2000]
 
     if "closeout_status" in patch and patch["closeout_status"] in ("open", "in_progress", "captured"):
         merged["closeout_status"] = patch["closeout_status"]
 
+    if "owner_ack_status" in patch and patch["owner_ack_status"] in ("pending", "acknowledged"):
+        merged["owner_ack_status"] = patch["owner_ack_status"]
+
+    if "verification_review_status" in patch and patch["verification_review_status"] in _DELIVERY_REVIEW_STATUSES:
+        merged["verification_review_status"] = patch["verification_review_status"]
+
     now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     if "started_at" not in merged:
         merged["started_at"] = now
     merged["updated_at"] = now
 
-    log[offer_key] = merged
+    log[run_key] = merged
     _save_exec_log(log)
-    return jsonify({"ok": True, "offer_key": offer_key, "state": merged})
+    return jsonify({"ok": True, "run_key": run_key, "state": merged})
+
+
+@app.route("/api/delivery_review_queue")
+def api_delivery_review_queue():
+    records = _lm.get_all_records()
+    log = _load_exec_log()
+    rows = []
+    for run_key, state in log.items():
+        row = _build_delivery_review_row(run_key, state, records)
+        if row:
+            rows.append(row)
+    status_order = {"ready_for_manual_review": 0, "not_ready": 1, "reviewed_insufficient": 2, "reviewed_complete": 3}
+    rows.sort(key=lambda row: (status_order.get(row["verification_review_status"], 9), not row["candidate_for_review"], row.get("updated_at", "")), reverse=False)
+    return jsonify({"ok": True, "rows": rows})
+
+
+@app.route("/api/delivery_offer_evidence")
+def api_delivery_offer_evidence():
+    payload = _build_offer_evidence_summary()
+    return jsonify({"ok": True, **payload})
 
 
 @app.route("/api/conversation_queue")
@@ -2273,6 +2707,9 @@ def api_delivery_board():
             "invoice_status": profile.get("invoice_status", ""),
             "deposit_status": profile.get("deposit_status", ""),
             "offer_notes":   profile.get("offer_notes", ""),
+            "accepted_option_status": profile.get("accepted_option_status", "draft_only"),
+            "accepted_option_label": profile.get("accepted_option_label", ""),
+            "accepted_scope_note": profile.get("accepted_scope_note", ""),
             "prelaunch_mode": profile.get("prelaunch_mode", PRELAUNCH_MODE),
             "offer_type":    profile.get("offer_type", "public"),
             "build_status":  profile.get("build_status", "planned"),
@@ -2551,6 +2988,35 @@ def api_deploy_activation():
         if not isinstance(draft_recommendation, dict):
             return jsonify({"ok": False, "error": "draft_recommendation must be an object"}), 400
         clean_patch["draft_recommendation"] = dict(draft_recommendation)
+    if "proposal_options" in patch:
+        proposal_options = patch.get("proposal_options")
+        if not isinstance(proposal_options, list):
+            return jsonify({"ok": False, "error": "proposal_options must be an array"}), 400
+        clean_patch["proposal_options"] = _normalize_proposal_options(proposal_options)
+    for field in (
+        "accepted_option_id",
+        "accepted_option_status",
+        "accepted_option_date",
+        "accepted_option_label",
+        "accepted_option_note",
+        "accepted_scope_note",
+        "accepted_assumptions",
+    ):
+        if field in patch:
+            value = patch.get(field)
+            if not isinstance(value, str):
+                return jsonify({"ok": False, "error": f"{field} must be a string"}), 400
+            if field == "accepted_option_status":
+                status = value.strip().lower()
+                if status and status not in _ACCEPTED_OPTION_STATUSES:
+                    return jsonify({"ok": False, "error": "Invalid accepted_option_status"}), 400
+                clean_patch[field] = status or "draft_only"
+            elif field in {"accepted_option_note", "accepted_scope_note", "accepted_assumptions"}:
+                clean_patch[field] = value.strip()[:1000]
+            elif field == "accepted_option_label":
+                clean_patch[field] = value.strip()[:120]
+            else:
+                clean_patch[field] = value.strip()[:80]
     if "consult_builder" in patch:
         consult_builder = patch.get("consult_builder")
         if not isinstance(consult_builder, dict):
