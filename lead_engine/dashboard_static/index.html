@@ -1447,6 +1447,16 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
   .da-wizard{flex-direction:column}
   .da-summary-panel{width:100%;position:static}
 }
+/* ── Fast-Capture additions ──────────────────────────────────────────────── */
+.da-mini{font-size:11px}
+.da-progress-step.active{border-color:rgba(79,142,247,.65);background:rgba(79,142,247,.16);color:var(--blue);font-weight:700}
+.da-detail-block{margin-top:12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2)}
+.da-detail-block summary{font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 12px;user-select:none;list-style:none;display:flex;align-items:center;gap:7px;border-radius:var(--rs)}
+.da-detail-block summary::-webkit-details-marker{display:none}
+.da-detail-block summary::before{content:"▸";font-size:9px;transition:transform .15s;flex-shrink:0}
+.da-detail-block[open] summary::before{transform:rotate(90deg)}
+.da-detail-block summary:hover{color:var(--text);background:var(--surface3)}
+.da-detail-block > :not(summary){padding:0 12px 12px}
 .db-wrap{max-width:1200px;margin:0 auto;padding:28px}
 .db-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
 .db-hdr h2{font-size:16px;font-weight:600}
@@ -1639,10 +1649,10 @@ input.dr-textarea{min-height:auto;resize:none;display:block;width:100%;box-sizin
   <div class="sub-tab" data-parent="tools" data-page="tools"       onclick="switchSubPage('tools','tools',this)">⚙ Tools</div>
   <div class="sub-tab" data-parent="tools" data-page="lead-memory" onclick="switchSubPage('tools','lead-memory',this)">🧠 Lead Memory</div>
   <!-- Delivery sub-tabs -->
+  <div class="sub-tab" data-parent="delivery" data-page="deploy-activation" onclick="switchSubPage('delivery','deploy-activation',this)">🚀 Deploy Activation</div>
   <div class="sub-tab" data-parent="delivery" data-page="hardening-command" onclick="switchSubPage('delivery','hardening-command',this)">🛠 Hardening Command</div>
   <div class="sub-tab" data-parent="delivery" data-page="delivery-run" onclick="switchSubPage('delivery','delivery-run',this)">📋 Delivery Run</div>
   <div class="sub-tab" data-parent="delivery" data-page="delivery-review" onclick="switchSubPage('delivery','delivery-review',this)">Manual Review</div>
-  <div class="sub-tab" data-parent="delivery" data-page="deploy-activation" onclick="switchSubPage('delivery','deploy-activation',this)">🚀 Deploy Activation</div>
   <div class="sub-tab" data-parent="delivery" data-page="delivery-board" onclick="switchSubPage('delivery','delivery-board',this)" style="display:none">&#128230; Board</div>
 </nav>
 
@@ -17328,8 +17338,7 @@ function drOpenReviewRunFromButton(btn) {
   <div class="da-hdr">
     <div>
       <h2>Deploy Activation</h2>
-      <div class="da-hdr-sub">Prelaunch hardening mode. Internal operator guidance only.</div>
-      <div class="da-status" id="da-status" style="margin-top:8px">No client loaded yet.</div>
+      <div class="da-status" id="da-status" style="margin-top:6px">No client loaded yet.</div>
     </div>
     <div class="da-actions">
       <button class="btn btn-ghost" onclick="loadDeliveryActivation()">&#8635; Refresh</button>
@@ -17358,10 +17367,12 @@ function drOpenReviewRunFromButton(btn) {
           <div class="da-card-hdr">
             <div>
               <div class="da-card-title">Step 1 · Business Snapshot</div>
-              <div class="da-card-sub">Capture the basics before the call gets moving.</div>
+              <div class="da-card-sub">Name, phone, urgency. Everything else can wait.</div>
             </div>
             <span class="tag" id="da-key-tag">Unsaved</span>
           </div>
+
+          <!-- Fast-capture fields: always visible -->
           <div class="da-grid-2">
             <div>
               <label class="da-mini">Business Name</label>
@@ -17376,24 +17387,6 @@ function drOpenReviewRunFromButton(btn) {
               <input class="form-input" id="da-phone" type="text" placeholder="+18155550100" oninput="daScheduleSave()">
             </div>
             <div>
-              <label class="da-mini">Email</label>
-              <input class="form-input" id="da-email" type="email" placeholder="owner@business.com" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Category / Type</label>
-              <input class="form-input" id="da-category" type="text" placeholder="Plumbing / HVAC / Roofing" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Website</label>
-              <input class="form-input" id="da-website" type="text" placeholder="https://example.com" oninput="daScheduleSave()">
-            </div>
-          </div>
-          <div class="da-grid-2" style="margin-top:10px">
-            <label class="da-check"><input type="checkbox" id="da-google" onchange="daScheduleSave()"><span>Has Google presence<small>Google Business Profile exists and feels current.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-facebook" onchange="daScheduleSave()"><span>Has Facebook presence<small>Social presence exists and is usable.</small></span></label>
-          </div>
-          <div class="da-grid-2" style="margin-top:10px">
-            <div>
               <label class="da-mini">Urgency</label>
               <select class="form-select" id="da-consult-urgency" onchange="daScheduleSave()">
                 <option value="">Unset</option>
@@ -17405,9 +17398,33 @@ function drOpenReviewRunFromButton(btn) {
             </div>
           </div>
           <div style="margin-top:10px">
-            <label class="da-mini">Notes</label>
-            <textarea class="form-textarea da-note" id="da-notes" placeholder="Quick call notes, objections, timing, budget, or what they want fixed…" oninput="daScheduleSave()"></textarea>
+            <label class="da-mini">Live Call Notes</label>
+            <textarea class="form-textarea da-note" id="da-notes" placeholder="Raw signal — objections, timing, budget, what they need fixed. Flesh out after the call." oninput="daScheduleSave()"></textarea>
           </div>
+
+          <!-- Deferred: complete after call -->
+          <details class="da-detail-block">
+            <summary>Complete after call — email, category, website, online presence</summary>
+            <div class="da-grid-2" style="margin-top:10px">
+              <div>
+                <label class="da-mini">Email</label>
+                <input class="form-input" id="da-email" type="email" placeholder="owner@business.com" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <label class="da-mini">Category / Type</label>
+                <input class="form-input" id="da-category" type="text" placeholder="Plumbing / HVAC / Roofing" oninput="daScheduleSave()">
+              </div>
+              <div class="da-grid-2-span">
+                <label class="da-mini">Website</label>
+                <input class="form-input" id="da-website" type="text" placeholder="https://example.com" oninput="daScheduleSave()">
+              </div>
+            </div>
+            <div class="da-grid-2" style="margin-top:10px">
+              <label class="da-check"><input type="checkbox" id="da-google" onchange="daScheduleSave()"><span>Has Google presence<small>Google Business Profile exists and feels current.</small></span></label>
+              <label class="da-check"><input type="checkbox" id="da-facebook" onchange="daScheduleSave()"><span>Has Facebook presence<small>Social presence exists and is usable.</small></span></label>
+            </div>
+          </details>
+
         </section>
         <div class="da-step-nav">
           <div class="da-step-nav-left"></div>
@@ -17423,10 +17440,12 @@ function drOpenReviewRunFromButton(btn) {
           <div class="da-card-hdr">
             <div>
               <div class="da-card-title">Step 2 · Pain &amp; Discovery</div>
-              <div class="da-card-sub">What the owner actually needs fixed, plus consult context.</div>
+              <div class="da-card-sub">Tag what they need. One note dump. Details can wait.</div>
             </div>
             <span class="tag" id="da-discovery-count">0 selected</span>
           </div>
+
+          <!-- Pain chips: always visible, tap to capture live -->
           <div class="da-checklist">
             <label class="da-check"><input type="checkbox" id="da-weak-website" onchange="daScheduleSave()"><span>Poor or missing website<small>No site, dated site, or site does not help them get calls.</small></span></label>
             <label class="da-check"><input type="checkbox" id="da-weak-presence" onchange="daScheduleSave()"><span>Weak Google/Facebook presence<small>They are hard to find or do not look trustworthy online.</small></span></label>
@@ -17437,32 +17456,40 @@ function drOpenReviewRunFromButton(btn) {
             <label class="da-check"><input type="checkbox" id="da-estimate-problem" onchange="daScheduleSave()"><span>Estimate / job-status communication problem<small>They need better update flow for quotes and job progress.</small></span></label>
             <label class="da-check"><input type="checkbox" id="da-ongoing-support" onchange="daScheduleSave()"><span>Wants ongoing support after refresh<small>They want a light owner workflow helper beyond the initial fix.</small></span></label>
           </div>
-          <div class="da-grid-2" style="margin-top:12px">
-            <div>
-              <label class="da-mini">Business Type</label>
-              <input class="form-input" id="da-consult-business-type" type="text" placeholder="Owner-operated plumbing shop" oninput="daScheduleSave()">
+
+          <!-- Primary note dump: use this during the call -->
+          <div style="margin-top:12px">
+            <label class="da-mini">Live Call Notes</label>
+            <textarea class="form-textarea da-note" id="da-consult-freeform" placeholder="Raw consult notes — anything worth capturing now. Flesh out the rest after the call." oninput="daScheduleSave()"></textarea>
+          </div>
+
+          <!-- Deferred: complete after call -->
+          <details class="da-detail-block">
+            <summary>Complete after call — business type, tools, preferences, transcript, constraints</summary>
+            <div class="da-grid-2" style="margin-top:10px">
+              <div>
+                <label class="da-mini">Business Type</label>
+                <input class="form-input" id="da-consult-business-type" type="text" placeholder="Owner-operated plumbing shop" oninput="daScheduleSave()">
+              </div>
             </div>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Current Tools / Accounts</label>
-            <textarea class="form-textarea da-note" id="da-consult-tools" placeholder="Current website host, Google/Facebook status, phone system, CRM, inbox, forms…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Owner Preferences</label>
-            <textarea class="form-textarea da-note" id="da-consult-preferences" placeholder="How they like updates, who should get leads, preferred channels, support expectations…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Transcript / Recording Summary</label>
-            <textarea class="form-textarea da-note" id="da-consult-transcript" placeholder="Short summary of the call or recording…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Freeform Consult Notes</label>
-            <textarea class="form-textarea da-note" id="da-consult-freeform" placeholder="Any raw notes worth keeping before they become activation details…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Do Not Recommend</label>
-            <textarea class="form-textarea da-note" id="da-consult-do-not-recommend" placeholder="Any offer, module, channel, or tool you want the draft recommender to avoid…" oninput="daScheduleSave()"></textarea>
-          </div>
+            <div style="margin-top:10px">
+              <label class="da-mini">Current Tools / Accounts</label>
+              <textarea class="form-textarea da-note" id="da-consult-tools" placeholder="Current website host, Google/Facebook status, phone system, CRM, inbox, forms…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div style="margin-top:10px">
+              <label class="da-mini">Owner Preferences</label>
+              <textarea class="form-textarea da-note" id="da-consult-preferences" placeholder="How they like updates, who should get leads, preferred channels, support expectations…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div style="margin-top:10px">
+              <label class="da-mini">Transcript / Recording Summary</label>
+              <textarea class="form-textarea da-note" id="da-consult-transcript" placeholder="Short summary of the call or recording…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div style="margin-top:10px">
+              <label class="da-mini">Do Not Recommend</label>
+              <textarea class="form-textarea da-note" id="da-consult-do-not-recommend" placeholder="Any offer, module, channel, or tool you want the draft recommender to avoid…" oninput="daScheduleSave()"></textarea>
+            </div>
+          </details>
+
           <div class="qw-section">
             <div class="qw-section-hdr">
               <div class="qw-section-title">Quick Wins</div>
