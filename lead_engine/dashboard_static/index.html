@@ -1431,7 +1431,7 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .da-progress-step:hover{border-color:var(--border-hi);color:var(--text)}
 .da-progress-step.active{border-color:rgba(79,142,247,.5);background:rgba(79,142,247,.1);color:var(--blue)}
 .da-progress-step .da-ps-n{font-family:var(--mono);font-size:9px;opacity:.7}
-.da-summary-panel{width:220px;flex-shrink:0;position:sticky;top:16px;display:flex;flex-direction:column;gap:8px}
+.da-summary-panel{width:220px;flex-shrink:0;position:sticky;top:16px;display:flex;flex-direction:column;gap:10px}
 .da-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
 .da-summary-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
 .da-summary-row{margin-bottom:6px}
@@ -9510,6 +9510,7 @@ const _DA_MODULE_PRICING = {
 let _daPendingLead = null;
 let _daActiveKey = '';
 let _daSaveTimer = null;
+let _daRenderTimer = null;
 let _daQuickWins = [];
 let _daProposalOptions = [];
 let _deliveryCatalog = null;
@@ -10302,7 +10303,7 @@ function daRender() {
   const tag = document.getElementById('da-key-tag');
   if (tag) tag.textContent = _daActiveKey || 'Unsaved';
 
-  _daUpdateSummaryPanel(state, rec, truth, gates);
+  _daUpdateSummaryPanel(state, rec, truth, gates, pricing);
 }
 
 let _daCurrentStep = 1;
@@ -10851,20 +10852,28 @@ async function qwCopyLeaveBehind() {
   }
 }
 
-function _daUpdateSummaryPanel(state, rec, truth, gates) {
+function _daUpdateSummaryPanel(state, rec, truth, gates, pricing) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
   const clientName = (state.snapshot.business_name || '').trim() || '—';
   const contactName = (state.snapshot.contact_name || '').trim();
   set('da-summary-client', escHtml(contactName ? `${clientName} · ${contactName}` : clientName));
+
+  // Package builder fields
   const stackLabel = rec.packageLabel
-    ? escHtml(rec.packageLabel) + (rec.selected_modules?.length ? `<br><span style="font-size:10px;color:var(--muted)">${escHtml(rec.selected_modules.join(', '))}</span>` : '')
-    : 'No recommendation yet';
+    ? escHtml(rec.packageLabel)
+    : 'Fill needs to build';
   set('da-summary-stack', stackLabel);
-  const buildLabel = escHtml(truth.build_status ? (truth.build_status.charAt(0).toUpperCase() + truth.build_status.slice(1)) : 'Planned');
-  const buildCls = truth.build_status === 'ready' ? 'ok' : (truth.build_status === 'hardening' || truth.build_status === 'verification' ? 'wait' : 'wait');
-  set('da-summary-build', `<span class="da-summary-chip ${buildCls}">${buildLabel}</span>`);
-  const launchCls = truth.launch_eligible ? 'ok' : 'block';
-  const launchLabel = truth.launch_eligible ? 'Eligible' : 'Blocked';
+  const includesText = rec.includes?.length ? escHtml(rec.includes.join(' + ')) : '—';
+  set('da-summary-includes', includesText);
+  set('da-summary-reason', rec.reason ? escHtml(rec.reason) : '<em style="color:var(--muted)">Tag needs on Step 2 to see the fit.</em>');
+  set('da-summary-price', pricing?.label ? escHtml(pricing.label) : '—');
+  const accessNeeded = truth.access_requirements?.length ? escHtml(truth.access_requirements.slice(0, 2).join(', ')) : 'None surfaced';
+  const accessCollected = document.getElementById('da-access-collected')?.checked;
+  set('da-summary-access', accessCollected ? '<span style="color:var(--green)">Collected ✓</span>' : escHtml(accessNeeded));
+
+  // Consult status fields
+  const launchCls = truth.launch_eligible ? 'ok' : (rec.packageLabel ? 'wait' : 'wait');
+  const launchLabel = truth.launch_eligible ? 'Eligible' : (rec.packageLabel ? 'Pending hardening' : 'Not set');
   set('da-summary-launch', `<span class="da-summary-chip ${launchCls}">${launchLabel}</span>`);
   const urgency = state.snapshot.urgency || state.consult_builder?.urgency || '';
   set('da-summary-urgency', escHtml(urgency || '—'));
@@ -10875,10 +10884,11 @@ function _daUpdateSummaryPanel(state, rec, truth, gates) {
   const gateBlockers = (gates.blockers || []).map((b) => b.title);
   const allBlockers = [...new Set([...blockerLines, ...gateBlockers])];
   set('da-summary-blockers', allBlockers.length ? escHtml(allBlockers.slice(0, 3).join(' · ')) : '<span style="color:var(--green)">Clear</span>');
-  const accessNeeded = truth.access_requirements?.length ? escHtml(truth.access_requirements.slice(0, 2).join(', ')) : 'None surfaced';
-  const accessCollected = document.getElementById('da-access-collected')?.checked;
-  set('da-summary-access', accessCollected ? '<span style="color:var(--green)">Collected</span>' : escHtml(accessNeeded));
   set('da-summary-key', escHtml(_daActiveKey || 'Unsaved'));
+
+  // Step 4 accepted label mirror
+  const acceptedLabelEl = document.getElementById('da-confirm-accepted-label');
+  if (acceptedLabelEl) acceptedLabelEl.textContent = rec.packageLabel || '—';
 }
 
 function _daSnapshotPayload() {
@@ -11044,7 +11054,8 @@ async function daSaveNow(extraPatch = {}) {
 function daScheduleSave() {
   clearTimeout(_daSaveTimer);
   _daSaveTimer = setTimeout(() => daSaveNow(), 450);
-  daRender();
+  clearTimeout(_daRenderTimer);
+  _daRenderTimer = setTimeout(() => daRender(), 120);
 }
 
 async function daSaveOnly() {
@@ -17515,12 +17526,12 @@ function drOpenReviewRunFromButton(btn) {
 
       <!-- Progress Bar -->
       <div class="da-progress" id="da-progress-bar">
-        <div class="da-progress-step active" onclick="daGoToStep(1)"><span class="da-ps-n">1</span> Snapshot</div>
-        <div class="da-progress-step" onclick="daGoToStep(2)"><span class="da-ps-n">2</span> Discovery</div>
-        <div class="da-progress-step" onclick="daGoToStep(3)"><span class="da-ps-n">3</span> Recommend</div>
+        <div class="da-progress-step active" onclick="daGoToStep(1)"><span class="da-ps-n">1</span> Owner</div>
+        <div class="da-progress-step" onclick="daGoToStep(2)"><span class="da-ps-n">2</span> Needs</div>
+        <div class="da-progress-step" onclick="daGoToStep(3)"><span class="da-ps-n">3</span> Package</div>
         <div class="da-progress-step" onclick="daGoToStep(4)"><span class="da-ps-n">4</span> Confirm</div>
-        <div class="da-progress-step" onclick="daGoToStep(5)"><span class="da-ps-n">5</span> Packet</div>
-        <div class="da-progress-step" onclick="daGoToStep(6)"><span class="da-ps-n">6</span> Action</div>
+        <div class="da-progress-step" onclick="daGoToStep(5)"><span class="da-ps-n">5</span> Deliver</div>
+        <div class="da-progress-step" onclick="daGoToStep(6)"><span class="da-ps-n">6</span> Next Move</div>
       </div>
 
       <!-- ── Step 1: Business Snapshot ── -->
@@ -17528,7 +17539,7 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 1 · Business Snapshot</div>
+              <div class="da-card-title">Step 1 · Owner Snapshot</div>
               <div class="da-card-sub">Name, phone, urgency. Everything else can wait.</div>
             </div>
             <span class="tag" id="da-key-tag">Unsaved</span>
@@ -17591,7 +17602,7 @@ function drOpenReviewRunFromButton(btn) {
         <div class="da-step-nav">
           <div class="da-step-nav-left"></div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(2)">Next: Discovery &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(2)">Next: What They Need &#8594;</button>
           </div>
         </div>
       </div>
@@ -17601,8 +17612,8 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 2 · Pain &amp; Discovery</div>
-              <div class="da-card-sub">Tag what they need. One note dump. Details can wait.</div>
+              <div class="da-card-title">Step 2 · What They Need</div>
+              <div class="da-card-sub">Tag what the owner is dealing with. One notes field. Keep moving.</div>
             </div>
             <span class="tag" id="da-discovery-count">0 selected</span>
           </div>
@@ -17667,10 +17678,10 @@ function drOpenReviewRunFromButton(btn) {
         </section>
         <div class="da-step-nav">
           <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(1)">&#8592; Snapshot</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(1)">&#8592; Owner</button>
           </div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(3)">Next: Recommend &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(3)">Next: Package &#8594;</button>
           </div>
         </div>
       </div>
@@ -17680,8 +17691,8 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 3 · Draft Recommendation</div>
-              <div class="da-card-sub">Review the recommended offer and add-ons, then confirm before moving forward.</div>
+              <div class="da-card-title">Step 3 · Recommended Package</div>
+              <div class="da-card-sub">Here's what fits based on what they told you. Adjust and confirm before moving on.</div>
             </div>
             <button class="btn btn-ghost" style="font-size:11px" onclick="daUseRecommendation()">Confirm Draft Stack</button>
           </div>
@@ -17827,7 +17838,7 @@ function drOpenReviewRunFromButton(btn) {
         </section>
         <div class="da-step-nav">
           <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(2)">&#8592; Discovery</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(2)">&#8592; Needs</button>
           </div>
           <div class="da-step-nav-right">
             <button class="btn btn-ghost" onclick="daGoToStep(4)">Next: Confirm &#8594;</button>
@@ -17840,67 +17851,96 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 4 · Confirm Stack</div>
-              <div class="da-card-sub">Verify the offer type, kit, and hardening state before moving to packet.</div>
+              <div class="da-card-title">Step 4 · Confirm &amp; Accept</div>
+              <div class="da-card-sub">Owner has heard the package. Capture acceptance and any scope notes.</div>
             </div>
           </div>
           <div class="po-accepted-context" id="da-accepted-context-step4"></div>
-          <div class="da-grid-2">
+
+          <!-- Acceptance fields — primary consult path -->
+          <div class="da-grid-2" style="margin-top:8px">
             <div>
-              <div class="da-mini">Offer Type / Build</div>
-              <div class="da-answer-copy" id="da-visibility-state">Public · Planned</div>
+              <label class="da-mini">Accepted Option</label>
+              <div class="da-answer-copy" id="da-confirm-accepted-label" style="min-height:24px;color:var(--text)">—</div>
             </div>
             <div>
-              <div class="da-mini">Launch Eligibility</div>
-              <div class="da-answer-subtle" id="da-target-visibility-state">Launch blocked</div>
+              <label class="da-mini">Stage</label>
+              <select class="form-select" id="da-stage" onchange="daScheduleSave()">
+                <option value="call_booked">Consultation Saved</option>
+                <option value="proposal_ready">Recommended Package Built</option>
+                <option value="won">Owner Accepted</option>
+                <option value="deployment_pending">Deploy Ready</option>
+                <option value="live">Live</option>
+              </select>
             </div>
-            <div>
-              <div class="da-mini">Kit</div>
-              <div class="da-answer-copy" id="da-kit-key">No kit selected</div>
-            </div>
-            <div>
-              <div class="da-mini">Ownership</div>
-              <div class="da-answer-copy" id="da-ownership-mode">Unset</div>
-            </div>
-            <div>
-              <div class="da-mini">Support</div>
-              <div class="da-answer-subtle" id="da-support-mode">Optional support by default.</div>
-            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label class="da-mini">Scope / Acceptance Notes</label>
+            <textarea class="form-textarea da-note" id="da-scope-acceptance-notes" placeholder="What the owner agreed to, any verbal scope details, special requests…" oninput="daScheduleSave()"></textarea>
           </div>
           <div class="da-blocker" id="da-truth-warning" style="margin-top:12px">Ready: this stack has an active delivery kit behind it.</div>
-          <div style="margin-top:12px">
-            <div class="da-mini">Current Truth Notes</div>
-            <div class="da-list-box" id="da-current-truth-notes"></div>
-          </div>
-          <div class="da-grid-2" style="margin-top:12px">
-            <div>
-              <div class="da-mini">Missing Artifacts</div>
-              <div class="da-list-box" id="da-missing-artifacts"></div>
+
+          <!-- Internal hardening detail — deferred -->
+          <details class="da-detail-block" style="margin-top:14px">
+            <summary>🔧 Internal Stack Detail <span style="font-size:10px;color:var(--muted);margin-left:6px">operator reference — not needed during the consult</span></summary>
+            <div style="padding-top:4px">
+              <div class="da-grid-2">
+                <div>
+                  <div class="da-mini">Offer Type / Build</div>
+                  <div class="da-answer-copy" id="da-visibility-state">Public · Planned</div>
+                </div>
+                <div>
+                  <div class="da-mini">Launch Eligibility</div>
+                  <div class="da-answer-subtle" id="da-target-visibility-state">Launch blocked</div>
+                </div>
+                <div>
+                  <div class="da-mini">Kit</div>
+                  <div class="da-answer-copy" id="da-kit-key">No kit selected</div>
+                </div>
+                <div>
+                  <div class="da-mini">Ownership</div>
+                  <div class="da-answer-copy" id="da-ownership-mode">Unset</div>
+                </div>
+                <div>
+                  <div class="da-mini">Support</div>
+                  <div class="da-answer-subtle" id="da-support-mode">Optional support by default.</div>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <div class="da-mini">Current Truth Notes</div>
+                <div class="da-list-box" id="da-current-truth-notes"></div>
+              </div>
+              <div class="da-grid-2" style="margin-top:12px">
+                <div>
+                  <div class="da-mini">Missing Artifacts</div>
+                  <div class="da-list-box" id="da-missing-artifacts"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Missing QA</div>
+                  <div class="da-list-box" id="da-missing-qa"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Missing Closeout</div>
+                  <div class="da-list-box" id="da-missing-closeout"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Missing Rollback</div>
+                  <div class="da-list-box" id="da-missing-rollback"></div>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <div class="da-mini">Next Hardening Step</div>
+                <div class="da-answer-subtle" id="da-next-hardening-step">No next hardening step yet.</div>
+              </div>
             </div>
-            <div>
-              <div class="da-mini">Missing QA</div>
-              <div class="da-list-box" id="da-missing-qa"></div>
-            </div>
-            <div>
-              <div class="da-mini">Missing Closeout</div>
-              <div class="da-list-box" id="da-missing-closeout"></div>
-            </div>
-            <div>
-              <div class="da-mini">Missing Rollback</div>
-              <div class="da-list-box" id="da-missing-rollback"></div>
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <div class="da-mini">Next Hardening Step</div>
-            <div class="da-answer-subtle" id="da-next-hardening-step">No next hardening step yet.</div>
-          </div>
+          </details>
         </section>
         <div class="da-step-nav">
           <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(3)">&#8592; Recommend</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(3)">&#8592; Package</button>
           </div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(5)">Next: Packet &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(5)">Next: Deliver &#8594;</button>
           </div>
         </div>
       </div>
@@ -17910,61 +17950,14 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 5 · Activation Packet</div>
-              <div class="da-card-sub">Track readiness, access, artifacts, and the packet state before deploy.</div>
+              <div class="da-card-title">Step 5 · Delivery Prep</div>
+              <div class="da-card-sub">Track what still needs collecting before you can hand off and go live.</div>
             </div>
           </div>
           <div class="po-accepted-context" id="da-accepted-context-step5"></div>
-          <div class="da-grid-2">
-            <div>
-              <label class="da-mini">Activation Packet Status</label>
-              <select class="form-select" id="da-activation-packet-status" onchange="daScheduleSave()">
-                <option value="draft">Draft</option>
-                <option value="collecting">Collecting</option>
-                <option value="ready_for_start">Ready for start</option>
-                <option value="ready_for_qa">Ready for QA</option>
-                <option value="ready_for_go_live">Ready for go-live</option>
-                <option value="delivered">Delivered</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-mini">Credential / Access Status</label>
-              <input class="form-input" id="da-credential-status" type="text" placeholder="requested / partial / verified" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Handoff Status</label>
-              <input class="form-input" id="da-handoff-status" type="text" placeholder="not ready / queued / delivered" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Closeout Status</label>
-              <input class="form-input" id="da-closeout-status" type="text" placeholder="open / awaiting confirmation / closed" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Revision Round</label>
-              <input class="form-input" id="da-revision-round" type="number" min="0" step="1" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Revision Status</label>
-              <input class="form-input" id="da-revision-status" type="text" placeholder="not started / in review / complete" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Change-Order Status</label>
-              <select class="form-select" id="da-change-order-status" onchange="daScheduleSave()">
-                <option value="in_scope">In scope</option>
-                <option value="review_needed">Review needed</option>
-                <option value="sent">Change order sent</option>
-                <option value="approved">Change order approved</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-check"><input type="checkbox" id="da-change-order-needed" onchange="daScheduleSave()"><span>Change order needed<small>Use when the client asks for new deliverables, channels, or integrations outside the sold scope.</small></span></label>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Change-Order Notes</label>
-            <textarea class="form-textarea da-note" id="da-change-order-notes" placeholder="What changed, what is out of scope, and what needs approval…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
+
+          <!-- Primary delivery tracking — always visible -->
+          <div style="margin-top:8px">
             <label class="da-mini">Next Step</label>
             <input class="form-input" id="da-next-step" type="text" placeholder="Immediate operator next step" oninput="daScheduleSave()">
           </div>
@@ -17982,35 +17975,91 @@ function drOpenReviewRunFromButton(btn) {
             <label class="da-check"><input type="checkbox" id="da-rollback-ready" onchange="daScheduleSave()"><span>Rollback ready<small>Safe mode / rollback is documented where needed.</small></span></label>
             <label class="da-check"><input type="checkbox" id="da-handoff-ready" onchange="daScheduleSave()"><span>Handoff ready<small>The client handoff packet is ready.</small></span></label>
           </div>
-          <div class="da-grid-2" style="margin-top:12px">
-            <div>
-              <div class="da-mini">Activation Packet</div>
-              <div class="da-list-box" id="da-activation-packet"></div>
+
+          <!-- Packet / admin detail — deferred -->
+          <details class="da-detail-block" style="margin-top:14px">
+            <summary>📦 Packet &amp; Admin Detail <span style="font-size:10px;color:var(--muted);margin-left:6px">post-acceptance tracking — open after owner commits</span></summary>
+            <div style="padding-top:4px">
+              <div class="da-grid-2">
+                <div>
+                  <label class="da-mini">Activation Packet Status</label>
+                  <select class="form-select" id="da-activation-packet-status" onchange="daScheduleSave()">
+                    <option value="draft">Draft</option>
+                    <option value="collecting">Collecting</option>
+                    <option value="ready_for_start">Ready for start</option>
+                    <option value="ready_for_qa">Ready for QA</option>
+                    <option value="ready_for_go_live">Ready for go-live</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="da-mini">Credential / Access Status</label>
+                  <input class="form-input" id="da-credential-status" type="text" placeholder="requested / partial / verified" oninput="daScheduleSave()">
+                </div>
+                <div>
+                  <label class="da-mini">Handoff Status</label>
+                  <input class="form-input" id="da-handoff-status" type="text" placeholder="not ready / queued / delivered" oninput="daScheduleSave()">
+                </div>
+                <div>
+                  <label class="da-mini">Closeout Status</label>
+                  <input class="form-input" id="da-closeout-status" type="text" placeholder="open / awaiting confirmation / closed" oninput="daScheduleSave()">
+                </div>
+                <div>
+                  <label class="da-mini">Revision Round</label>
+                  <input class="form-input" id="da-revision-round" type="number" min="0" step="1" oninput="daScheduleSave()">
+                </div>
+                <div>
+                  <label class="da-mini">Revision Status</label>
+                  <input class="form-input" id="da-revision-status" type="text" placeholder="not started / in review / complete" oninput="daScheduleSave()">
+                </div>
+                <div>
+                  <label class="da-mini">Change-Order Status</label>
+                  <select class="form-select" id="da-change-order-status" onchange="daScheduleSave()">
+                    <option value="in_scope">In scope</option>
+                    <option value="review_needed">Review needed</option>
+                    <option value="sent">Change order sent</option>
+                    <option value="approved">Change order approved</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="da-check"><input type="checkbox" id="da-change-order-needed" onchange="daScheduleSave()"><span>Change order needed<small>Use when the client asks for new deliverables, channels, or integrations outside the sold scope.</small></span></label>
+                </div>
+              </div>
+              <div style="margin-top:10px">
+                <label class="da-mini">Change-Order Notes</label>
+                <textarea class="form-textarea da-note" id="da-change-order-notes" placeholder="What changed, what is out of scope, and what needs approval…" oninput="daScheduleSave()"></textarea>
+              </div>
+              <div class="da-grid-2" style="margin-top:12px">
+                <div>
+                  <div class="da-mini">Activation Packet</div>
+                  <div class="da-list-box" id="da-activation-packet"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Definition of Done</div>
+                  <div class="da-list-box" id="da-definition-of-done"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Required Artifacts</div>
+                  <div class="da-list-box" id="da-required-artifacts"></div>
+                </div>
+                <div>
+                  <div class="da-mini">Required Access</div>
+                  <div class="da-list-box" id="da-required-access"></div>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <div class="da-mini">Rollback / Safe Mode</div>
+                <div class="da-list-box" id="da-rollback-plan"></div>
+              </div>
             </div>
-            <div>
-              <div class="da-mini">Definition of Done</div>
-              <div class="da-list-box" id="da-definition-of-done"></div>
-            </div>
-            <div>
-              <div class="da-mini">Required Artifacts</div>
-              <div class="da-list-box" id="da-required-artifacts"></div>
-            </div>
-            <div>
-              <div class="da-mini">Required Access</div>
-              <div class="da-list-box" id="da-required-access"></div>
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <div class="da-mini">Rollback / Safe Mode</div>
-            <div class="da-list-box" id="da-rollback-plan"></div>
-          </div>
+          </details>
         </section>
         <div class="da-step-nav">
           <div class="da-step-nav-left">
             <button class="btn btn-ghost" onclick="daGoToStep(4)">&#8592; Confirm</button>
           </div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(6)">Next: Action &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(6)">Next: Next Move &#8594;</button>
           </div>
         </div>
       </div>
@@ -18020,7 +18069,7 @@ function drOpenReviewRunFromButton(btn) {
         <section class="da-card">
           <div class="da-card-hdr">
             <div>
-              <div class="da-card-title">Step 6 · Action</div>
+              <div class="da-card-title">Step 6 · Next Move</div>
               <div class="da-card-sub">Price safely, capture approvals, and only launch when the stack is actually ready.</div>
             </div>
             <span class="tag" id="da-price-badge">Recommendation only</span>
@@ -18142,53 +18191,66 @@ function drOpenReviewRunFromButton(btn) {
 
     </div><!-- /da-wizard-body -->
 
-    <!-- ── Summary Panel ── -->
+    <!-- ── Package Builder Rail ── -->
     <div class="da-summary-panel" id="da-summary-panel">
-      <div class="da-summary-card">
-        <div class="da-summary-title">Stack at a Glance</div>
+
+      <!-- Live package being built -->
+      <div class="da-summary-card" style="border-color:rgba(200,136,74,.28);background:linear-gradient(180deg,rgba(200,136,74,.07),rgba(200,136,74,.02))">
+        <div class="da-summary-title" style="color:var(--copper);letter-spacing:.09em">📦 Package Building</div>
         <div class="da-summary-row">
           <div class="da-summary-label">Client</div>
-          <div class="da-summary-val" id="da-summary-client">—</div>
+          <div class="da-summary-val" id="da-summary-client" style="font-weight:600">—</div>
         </div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Stack</div>
-          <div class="da-summary-val" id="da-summary-stack">No recommendation yet</div>
+        <div class="da-summary-row" style="margin-top:8px">
+          <div class="da-summary-label">Recommended</div>
+          <div class="da-summary-val" id="da-summary-stack" style="font-weight:700;color:var(--text);line-height:1.3">Fill needs to build</div>
         </div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Build</div>
-          <div class="da-summary-val" id="da-summary-build"><span class="da-summary-chip wait">Planned</span></div>
+        <div class="da-summary-row" style="margin-top:6px">
+          <div class="da-summary-label">What's included</div>
+          <div class="da-summary-val" id="da-summary-includes" style="font-size:11px;color:var(--muted);line-height:1.5">—</div>
         </div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Launch</div>
-          <div class="da-summary-val" id="da-summary-launch"><span class="da-summary-chip block">Blocked</span></div>
+        <div class="da-summary-row" style="margin-top:6px">
+          <div class="da-summary-label">Why it fits</div>
+          <div class="da-summary-val" id="da-summary-reason" style="font-size:11px;color:var(--muted);line-height:1.5;font-style:italic">Tag needs on Step 2 to see the fit.</div>
         </div>
+        <div class="da-summary-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div class="da-summary-label">Price range</div>
+          <div class="da-summary-val" id="da-summary-price" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)">—</div>
+        </div>
+        <div class="da-summary-row" style="margin-top:6px">
+          <div class="da-summary-label">Likely access</div>
+          <div class="da-summary-val" id="da-summary-access" style="font-size:11px;color:var(--muted);line-height:1.5">—</div>
+        </div>
+      </div>
+
+      <!-- Consult status -->
+      <div class="da-summary-card" style="margin-top:0">
+        <div class="da-summary-title">Consult Status</div>
         <div class="da-summary-row">
           <div class="da-summary-label">Urgency</div>
           <div class="da-summary-val" id="da-summary-urgency">—</div>
         </div>
-      </div>
-      <div class="da-summary-card">
-        <div class="da-summary-title">Operator Status</div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Next step</div>
-          <div class="da-summary-val" id="da-summary-next-step">—</div>
+        <div class="da-summary-row" style="margin-top:4px">
+          <div class="da-summary-label">Launch</div>
+          <div class="da-summary-val" id="da-summary-launch"><span class="da-summary-chip wait">Not set</span></div>
         </div>
-        <div class="da-summary-row">
+        <div class="da-summary-row" style="margin-top:8px">
+          <div class="da-summary-label">Next best action</div>
+          <div class="da-summary-val" id="da-summary-next-step" style="font-size:11px;line-height:1.45;color:var(--text)">—</div>
+        </div>
+        <div class="da-summary-row" style="margin-top:6px">
           <div class="da-summary-label">Blockers</div>
-          <div class="da-summary-val" id="da-summary-blockers">—</div>
-        </div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Access</div>
-          <div class="da-summary-val" id="da-summary-access">—</div>
+          <div class="da-summary-val" id="da-summary-blockers" style="font-size:11px;color:var(--amber)">—</div>
         </div>
         <div class="da-summary-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div class="da-summary-label">Record</div>
-          <div class="da-summary-val" id="da-summary-key">Unsaved</div>
+          <div class="da-summary-val" id="da-summary-key" style="font-family:var(--mono);font-size:10px">Unsaved</div>
         </div>
-        <div class="da-summary-row" style="margin-top:4px">
+        <div class="da-summary-row" style="margin-top:3px">
           <div class="da-summary-val" id="da-summary-save-status" style="font-size:10px;color:var(--muted)"></div>
         </div>
       </div>
+
     </div><!-- /da-summary-panel -->
 
   </div><!-- /da-wizard -->
