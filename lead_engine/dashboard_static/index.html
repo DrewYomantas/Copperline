@@ -1542,51 +1542,88 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .lb-pre{font-size:11px;line-height:1.75;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:14px;white-space:pre-wrap;font-family:inherit;color:var(--text);max-height:380px;overflow-y:auto;display:none}
 .lb-pre.open{display:block}
 .lb-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-/* ── Delivery Run ────────────────────────────────────────────────────────── */
-.dr-wrap{max-width:900px;margin:0 auto;padding:28px}
-.dr-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
-.dr-hdr h2{font-size:16px;font-weight:600}
-.dr-hdr-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+/* ── Delivery Run ──────────────────────────────────────────────────────────────────────── */
+.dr-wrap{max-width:1380px;margin:0 auto;padding:22px 28px 28px}
+.dr-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.dr-hdr-left{display:flex;flex-direction:column;gap:4px}
+.dr-hdr h2{font-size:15px;font-weight:700;letter-spacing:-.02em}
+.dr-hdr-kicker{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--copper);margin-bottom:2px}
+.dr-hdr-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
 .dr-offer-sel{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;min-width:240px;cursor:pointer}
 .dr-offer-sel option{background:var(--surface2)}
-.dr-progress-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.dr-progress-bar{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.dr-console{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.dr-checklist-col{min-width:0}
+.dr-proof-col{position:sticky;top:116px;display:flex;flex-direction:column;gap:12px}
+.dr-progress-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs)}
+.dr-progress-bar{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
 .dr-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
 .dr-progress-label{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
-.dr-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
-.dr-section-hdr{padding:10px 16px;font-size:12px;font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.dr-section-count{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
-.dr-section-body{padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.dr-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.dr-section.sec-complete{border-color:rgba(62,207,114,.3)}
+.dr-section-hdr{padding:9px 14px;font-size:12px;font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;transition:background .15s}
+.dr-section-hdr:hover{background:var(--surface3)}
+.dr-section.sec-complete .dr-section-hdr{background:linear-gradient(135deg,rgba(62,207,114,.1),rgba(62,207,114,.04));border-bottom-color:rgba(62,207,114,.2)}
+.dr-section-icon{font-size:13px;flex-shrink:0}
+.dr-section-title{flex:1}
+.dr-section-badge{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--dim);background:rgba(255,255,255,.04);white-space:nowrap}
+.dr-section.sec-complete .dr-section-badge{color:var(--green);border-color:rgba(62,207,114,.3);background:rgba(62,207,114,.1)}
+.dr-section.sec-partial .dr-section-badge{color:var(--copper);border-color:rgba(200,136,74,.28);background:rgba(200,136,74,.08)}
+.dr-section-count{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.dr-section-chevron{font-size:11px;color:var(--dim);margin-left:4px;transition:transform .2s}
+.dr-section.collapsed .dr-section-chevron{transform:rotate(-90deg)}
+.dr-section-body{padding:10px 14px;display:flex;flex-direction:column;gap:5px}
+.dr-section.collapsed .dr-section-body{display:none}
 .dr-check{display:flex;align-items:center;gap:9px;padding:5px 6px;border-radius:4px;cursor:pointer;transition:background .1s}
 .dr-check:hover{background:var(--surface2)}
 .dr-check-box{width:14px;height:14px;border-radius:3px;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:.12s;cursor:pointer}
 .dr-check.done .dr-check-box{background:var(--green);border-color:var(--green);color:#0e1a12}
 .dr-check-label{font-size:12px;color:var(--muted);line-height:1.4;user-select:none}
 .dr-check.done .dr-check-label{color:var(--text)}
-.dr-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.dr-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
 .dr-field-full{grid-column:1/-1}
 .dr-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
-.dr-textarea{width:100%;box-sizing:border-box;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;line-height:1.5;resize:vertical;min-height:72px;outline:none;transition:border .12s}
+.dr-textarea{width:100%;box-sizing:border-box;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;line-height:1.5;resize:vertical;min-height:68px;outline:none;transition:border .12s}
 .dr-textarea:focus{border-color:var(--border-hi)}
 .dr-closeout-sel{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer;width:100%}
 .dr-closeout-sel option{background:var(--surface2)}
-.dr-verif-rail{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-.dr-verif-item{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);text-align:center}
-.dr-verif-icon{font-size:16px;margin-bottom:4px}
-.dr-verif-label{font-size:10px;color:var(--muted);line-height:1.3}
-.dr-verif-item.done .dr-verif-icon{color:var(--green)}
-.dr-verif-item.done .dr-verif-label{color:var(--text)}
+.dr-rail-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.dr-rail-hdr{padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.dr-rail-hdr-icon{font-size:13px}
+.dr-rail-body{padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.dr-rail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+.dr-rail-input{width:100%;box-sizing:border-box;padding:7px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:border .12s}
+.dr-rail-input:focus{border-color:var(--border-hi);box-shadow:0 0 0 2px rgba(255,255,255,.04)}
+.dr-rail-textarea{width:100%;box-sizing:border-box;padding:7px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;line-height:1.45;resize:vertical;min-height:60px;outline:none;transition:border .12s}
+.dr-rail-textarea:focus{border-color:var(--border-hi)}
+.dr-rail-textarea.has-content{border-color:rgba(62,207,114,.3)}
+.dr-rail-input.has-content{border-color:rgba(62,207,114,.3)}
+.dr-readiness-strip{display:flex;flex-direction:column;gap:5px}
+.dr-rstat{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:5px;font-size:11px;border:1px solid transparent;transition:.12s}
+.dr-rstat.rs-done{background:rgba(62,207,114,.07);border-color:rgba(62,207,114,.18);color:var(--text)}
+.dr-rstat.rs-warn{background:rgba(245,101,101,.07);border-color:rgba(245,101,101,.18);color:#f87171}
+.dr-rstat.rs-partial{background:rgba(200,136,74,.07);border-color:rgba(200,136,74,.18);color:var(--copper)}
+.dr-rstat.rs-pending{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.07);color:var(--muted)}
+.dr-rstat-icon{font-size:12px;flex-shrink:0;width:14px;text-align:center}
+.dr-rstat-label{flex:1;line-height:1.3}
+.dr-closeout-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dr-closeout-full{grid-column:1/-1}
 .dr-save-status{font-size:11px;color:var(--muted);min-height:18px}
-.dr-empty{padding:48px 0;text-align:center;color:var(--muted);font-size:13px}
+.dr-empty{padding:52px 0;text-align:center;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.dr-empty-icon{font-size:28px;opacity:.4}
+.dr-empty-title{font-size:13px;color:var(--text)}
+.dr-empty-sub{font-size:11px;color:var(--muted);max-width:340px;line-height:1.5}
 .dr-run-btn{font-size:11px;padding:4px 10px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--rs);color:var(--muted);cursor:pointer;transition:.12s;white-space:nowrap}
 .dr-run-btn:hover{color:var(--text);border-color:var(--border-hi)}
 input.dr-textarea{min-height:auto;resize:none;display:block;width:100%;box-sizing:border-box}
-.dr-context{font-size:11px;color:var(--muted);margin-bottom:14px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);display:none}
+.dr-context{font-size:11px;color:var(--text);margin-bottom:12px;padding:7px 12px;background:linear-gradient(135deg,rgba(200,136,74,.1),rgba(200,136,74,.04));border:1px solid rgba(200,136,74,.25);border-radius:var(--rs);display:flex;align-items:center;gap:8px}
+.dr-context-dot{width:7px;height:7px;border-radius:50%;background:var(--copper);flex-shrink:0}
+.dr-context-text{flex:1;line-height:1.4}
 .dr-client-sel{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;min-width:200px;cursor:pointer}
 .dr-client-sel option,.dr-client-sel optgroup{background:var(--surface2)}
 .dr-hdr-selectors{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.dr-summary-pre{font-size:11px;line-height:1.7;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:12px;white-space:pre-wrap;font-family:inherit;color:var(--text);max-height:340px;overflow-y:auto}
+.dr-summary-pre{font-size:11px;line-height:1.7;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:12px;white-space:pre-wrap;font-family:inherit;color:var(--text);max-height:280px;overflow-y:auto}
 .dr-section-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:1080px){.dr-console{grid-template-columns:1fr}.dr-proof-col{position:relative;top:auto}.dr-wrap{padding:16px}}
 .drv-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:10px}
 .drv-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
 .drv-title{font-size:13px;font-weight:700;color:var(--text)}
@@ -16651,32 +16688,72 @@ function _drVerifRail(offerKey) {
 }
 
 function _drUpdateContext() {
-  const ctx = document.getElementById('dr-context');
+  const ctx  = document.getElementById('dr-context');
+  const ctxt = document.getElementById('dr-context-text');
   if (!ctx) return;
   if (!_drCurrentOfferKey) { ctx.style.display = 'none'; return; }
   const client    = _drClients.find(c => c.key === _drCurrentLeadKey);
   const offerItem = _drCatalogItems.find(i => i.key === _drCurrentOfferKey);
   const stageMap  = { won: 'Won', deployment_pending: 'Deployment Pending', live: 'Live', call_booked: 'Call Booked' };
   const parts = [];
-  if (client) parts.push(client.business_name + (client.stage ? ' · ' + (stageMap[client.stage] || client.stage) : ''));
+  if (client) parts.push(client.business_name + (client.stage ? ' \u00b7 ' + (stageMap[client.stage] || client.stage) : ''));
   else parts.push('Practice run');
   if (offerItem) parts.push(offerItem.label);
-  if (_drCurrentRunKey) parts.push('Run key: ' + _drCurrentRunKey);
-  ctx.textContent = parts.join('  ·  ');
-  ctx.style.display = 'block';
+  if (ctxt) ctxt.textContent = parts.join('  \u00b7  ');
+  ctx.style.display = 'flex';
+}
+
+function _drReadinessStripHtml(offerKey) {
+  const { total, done } = _drCountChecks(offerKey);
+  const hasKit         = _drCatalogItems.find(i => i.key === offerKey)?.artifact_files;
+  const hasKitFiles    = hasKit && Object.keys(hasKit).length > 0;
+  const runStarted     = !!_drState.started_at;
+  const runComplete    = total > 0 && done === total;
+  const hasBeforeProof = !!(_drState.before_proof_link || '').trim();
+  const hasAfterProof  = !!(_drState.after_proof_link  || '').trim();
+  const proofCaptured  = hasBeforeProof && hasAfterProof;
+  const hasBlockers    = !!(_drState.blockers || '').trim();
+  const closeoutCaptured = _drState.closeout_status === 'captured';
+  const clientBound    = !!_drCurrentLeadKey;
+  const reviewStatus   = _drState.verification_review_status || 'not_ready';
+
+  function row(cls, icon, label) {
+    return `<div class="dr-rstat ${cls}"><div class="dr-rstat-icon">${icon}</div><div class="dr-rstat-label">${label}</div></div>`;
+  }
+  let html = '<div class="dr-readiness-strip">';
+  html += row(clientBound ? 'rs-done' : 'rs-partial', clientBound ? '\u2713' : '\u25cb', clientBound ? 'Client bound' : 'Practice run');
+  if (!runStarted) {
+    html += row('rs-pending', '\u25cb', 'Checklist not started');
+  } else if (runComplete) {
+    html += row('rs-done', '\u2713', `All ${total} items complete`);
+  } else {
+    html += row('rs-partial', '\u25d1', `${done}\u2009/\u2009${total} checklist items`);
+  }
+  html += row(hasBeforeProof ? 'rs-done' : 'rs-pending', hasBeforeProof ? '\u2713' : '\u25cb', hasBeforeProof ? 'Before proof captured' : 'Before proof missing');
+  html += row(hasAfterProof  ? 'rs-done' : 'rs-pending', hasAfterProof  ? '\u2713' : '\u25cb', hasAfterProof  ? 'After proof captured'  : 'After proof missing');
+  html += row(closeoutCaptured ? 'rs-done' : 'rs-pending', closeoutCaptured ? '\u2713' : '\u25cb', closeoutCaptured ? 'Closeout on file' : 'Closeout pending');
+  html += row(hasBlockers ? 'rs-warn' : 'rs-done', hasBlockers ? '\u26a0' : '\u2713', hasBlockers ? 'Blockers present' : 'No blockers');
+  const rvLabel = { not_ready: 'Review not ready', ready_for_manual_review: 'Queued for review', reviewed_insufficient: 'Insufficient \u2014 needs more evidence', reviewed_complete: 'Review complete' };
+  const rvCls   = { not_ready: 'rs-pending', ready_for_manual_review: 'rs-partial', reviewed_insufficient: 'rs-warn', reviewed_complete: 'rs-done' };
+  const rvIcon  = { not_ready: '\u25cb', ready_for_manual_review: '\u25d1', reviewed_insufficient: '\u26a0', reviewed_complete: '\u2713' };
+  html += row(rvCls[reviewStatus] || 'rs-pending', rvIcon[reviewStatus] || '\u25cb', rvLabel[reviewStatus] || 'Review not ready');
+  html += '</div>';
+  return html;
 }
 
 function drRender() {
   const offerKey = _drCurrentOfferKey;
   const body     = document.getElementById('dr-body');
-  const progRow  = document.getElementById('dr-progress-row');
   if (!body) return;
 
   _drUpdateContext();
 
   if (!offerKey) {
-    body.innerHTML = '<div class="dr-empty">Select a client and offer above to open the delivery checklist.</div>';
-    if (progRow) progRow.style.display = 'none';
+    body.innerHTML = `<div class="dr-empty">
+      <div class="dr-empty-icon">\U0001f4cb</div>
+      <div class="dr-empty-title">Select a client and offer to open the run</div>
+      <div class="dr-empty-sub">Choose a client and offer above. The checklist and proof rail will open automatically.</div>
+    </div>`;
     return;
   }
 
@@ -16685,62 +16762,50 @@ function drRender() {
   const { total, done } = _drCountChecks(offerKey);
   const pct = total ? Math.round(done / total * 100) : 0;
 
-  if (progRow) {
-    progRow.style.display = 'flex';
-    const fill = document.getElementById('dr-progress-fill');
-    const lbl  = document.getElementById('dr-progress-label');
-    if (fill) fill.style.width = pct + '%';
-    if (lbl)  lbl.textContent  = done + ' / ' + total + ' (' + pct + '%)';
-  }
+  // Progress strip (inline in checklist col)
+  const progressHtml = `<div class="dr-progress-row">
+    <div class="dr-progress-bar"><div class="dr-progress-fill" id="dr-progress-fill" style="width:${pct}%"></div></div>
+    <div class="dr-progress-label" id="dr-progress-label">${done} / ${total} (${pct}%)</div>
+    <div class="dr-save-status" id="dr-save-status"></div>
+  </div>`;
 
+  // Section cards with completion state + collapsible
   const sectionsHtml = sections.map(section => {
     const secDone = section.items.filter(item => checks[section.id + '_' + item.key]).length;
-    return `<div class="dr-section">
-      <div class="dr-section-hdr">${escHtml(section.label)}<span class="dr-section-count">${secDone}/${section.items.length}</span></div>
+    const secTotal = section.items.length;
+    const isComplete = secDone === secTotal && secTotal > 0;
+    const isPartial  = secDone > 0 && !isComplete;
+    const secCls     = isComplete ? 'sec-complete' : (isPartial ? 'sec-partial' : '');
+    const badgeText  = isComplete ? 'Complete' : (isPartial ? `${secDone}/${secTotal}` : `0/${secTotal}`);
+    const sectionIcons = { gbp: '\U0001f4cd', fb: '\U0001f4f1', setup: '\u2699\ufe0f', testing: '\u2705', handoff: '\U0001f91d', qa: '\U0001f50d' };
+    const icon = sectionIcons[section.id] || '\U0001f4cb';
+    return `<div class="dr-section ${secCls}">
+      <div class="dr-section-hdr" onclick="drToggleSection(this)">
+        <span class="dr-section-icon">${icon}</span>
+        <span class="dr-section-title">${escHtml(section.label)}</span>
+        <span class="dr-section-badge">${badgeText}</span>
+        <span class="dr-section-chevron">\u25be</span>
+      </div>
       <div class="dr-section-body">${section.items.map(item => {
         const isDone = !!checks[section.id + '_' + item.key];
         return `<div class="dr-check${isDone ? ' done' : ''}" onclick="drToggleCheck('${section.id}','${item.key}')">
-          <div class="dr-check-box">${isDone ? '✓' : ''}</div>
+          <div class="dr-check-box">${isDone ? '\u2713' : ''}</div>
           <div class="dr-check-label">${escHtml(item.label)}</div>
         </div>`;
       }).join('')}</div>
     </div>`;
   }).join('');
 
-  const proofHtml = `
-  <div class="dr-section">
-    <div class="dr-section-hdr">Proof &amp; Artifacts</div>
-    <div class="dr-section-body">
-      <div class="dr-fields">
-        <div>
-          <div class="dr-label">Before-state proof</div>
-          <input class="dr-textarea" id="dr-before-proof" type="text" placeholder="Screenshot path, URL, or Drive/Before-name.png" value="${escHtml(_drState.before_proof_link || '')}" oninput="drScheduleSave()">
-        </div>
-        <div>
-          <div class="dr-label">After-state proof</div>
-          <input class="dr-textarea" id="dr-after-proof" type="text" placeholder="Screenshot path, URL, or Drive/After-name.png" value="${escHtml(_drState.after_proof_link || '')}" oninput="drScheduleSave()">
-        </div>
-        <div class="dr-field-full">
-          <div class="dr-label">Artifact references</div>
-          <textarea class="dr-textarea" id="dr-artifact-refs" placeholder="Kit files used, handoff doc location, client email thread…" oninput="drScheduleSave()">${escHtml(_drState.artifact_refs || '')}</textarea>
-        </div>
-        <div class="dr-field-full">
-          <div class="dr-label">Work notes</div>
-          <textarea class="dr-textarea" id="dr-work-notes" placeholder="What you did, what you found, what needs follow-up…" oninput="drScheduleSave()">${escHtml(_drState.work_notes || '')}</textarea>
-        </div>
-        <div class="dr-field-full">
-          <div class="dr-label">Blockers or flags</div>
-          <textarea class="dr-textarea" id="dr-blockers" placeholder="Anything blocking completion or needing follow-up…" oninput="drScheduleSave()">${escHtml(_drState.blockers || '')}</textarea>
-        </div>
-      </div>
+  // Closeout (left col bottom)
+  const closeoutHtml = `<div class="dr-section">
+    <div class="dr-section-hdr" onclick="drToggleSection(this)">
+      <span class="dr-section-icon">\U0001f4ce</span>
+      <span class="dr-section-title">Closeout</span>
+      <span class="dr-section-badge">${_drState.closeout_status === 'captured' ? 'Captured' : (_drState.closeout_status === 'in_progress' ? 'In Progress' : 'Open')}</span>
+      <span class="dr-section-chevron">\u25be</span>
     </div>
-  </div>`;
-
-  const closeoutHtml = `
-  <div class="dr-section">
-    <div class="dr-section-hdr">Closeout</div>
     <div class="dr-section-body">
-      <div class="dr-fields">
+      <div class="dr-closeout-grid">
         <div>
           <div class="dr-label">Delivery date</div>
           <input class="dr-textarea" id="dr-delivery-date" type="date" value="${escHtml(_drState.delivery_date || '')}" oninput="drScheduleSave()">
@@ -16752,73 +16817,121 @@ function drRender() {
         <div>
           <div class="dr-label">Closeout status</div>
           <select class="dr-closeout-sel" id="dr-closeout-status" onchange="drScheduleSave()">
-            <option value="open"${(_drState.closeout_status||'open')==='open'?' selected':''}>Open — delivery in progress</option>
-            <option value="in_progress"${_drState.closeout_status==='in_progress'?' selected':''}>In progress — wrapping up</option>
-            <option value="captured"${_drState.closeout_status==='captured'?' selected':''}>Captured — closeout notes on file</option>
+            <option value="open"${(_drState.closeout_status||'open')==='open'?' selected':''}>Open \u2014 in progress</option>
+            <option value="in_progress"${_drState.closeout_status==='in_progress'?' selected':''}>Wrapping up</option>
+            <option value="captured"${_drState.closeout_status==='captured'?' selected':''}>Captured \u2014 on file</option>
           </select>
         </div>
         <div>
           <div class="dr-label">Owner acknowledgment</div>
           <select class="dr-closeout-sel" id="dr-owner-ack" onchange="drScheduleSave()">
-            <option value="pending"${(_drState.owner_ack_status||'pending')==='pending'?' selected':''}>Pending — not yet confirmed</option>
-            <option value="acknowledged"${_drState.owner_ack_status==='acknowledged'?' selected':''}>Acknowledged — owner confirmed</option>
+            <option value="pending"${(_drState.owner_ack_status||'pending')==='pending'?' selected':''}>Pending</option>
+            <option value="acknowledged"${_drState.owner_ack_status==='acknowledged'?' selected':''}>Acknowledged</option>
           </select>
         </div>
-        <div class="dr-field-full">
+        <div class="dr-closeout-full">
           <div class="dr-label">Closeout notes</div>
-          <textarea class="dr-textarea" id="dr-closeout-notes" placeholder="What was delivered, what was handed off, what's on file…" oninput="drScheduleSave()">${escHtml(_drState.closeout_notes || '')}</textarea>
+          <textarea class="dr-textarea" id="dr-closeout-notes" placeholder="What was delivered, handed off, on file\u2026" oninput="drScheduleSave()">${escHtml(_drState.closeout_notes || '')}</textarea>
         </div>
-        <div class="dr-field-full">
-          <div class="dr-label">Post-closeout notes</div>
-          <textarea class="dr-textarea" id="dr-post-closeout-notes" style="min-height:52px" placeholder="Issues after closeout, follow-up items, lessons learned…" oninput="drScheduleSave()">${escHtml(_drState.post_closeout_notes || '')}</textarea>
-        </div>
-        <div class="dr-field-full">
+        <div class="dr-closeout-full">
           <div class="dr-label">Remaining recommendations / next steps</div>
-          <textarea class="dr-textarea" id="dr-remaining-recommendations" style="min-height:52px" placeholder="Owner-facing next steps, exclusions, or follow-up recommendations…" oninput="drScheduleSave()">${escHtml(_drState.remaining_recommendations || '')}</textarea>
+          <textarea class="dr-textarea" id="dr-remaining-recommendations" style="min-height:48px" placeholder="Owner-facing next steps or follow-up recommendations\u2026" oninput="drScheduleSave()">${escHtml(_drState.remaining_recommendations || '')}</textarea>
+        </div>
+        <div class="dr-closeout-full">
+          <div class="dr-label">Post-closeout notes</div>
+          <textarea class="dr-textarea" id="dr-post-closeout-notes" style="min-height:48px" placeholder="Issues after closeout, lessons learned\u2026" oninput="drScheduleSave()">${escHtml(_drState.post_closeout_notes || '')}</textarea>
         </div>
       </div>
     </div>
   </div>`;
 
-  const closeoutPacketHtml = `
-  <div class="dr-section">
-    <div class="dr-section-hdr">Owner Closeout Packet
+  // Closeout packet (left col bottom)
+  const closeoutPacketHtml = `<div class="dr-section">
+    <div class="dr-section-hdr" onclick="drToggleSection(this)">
+      <span class="dr-section-icon">\U0001f4e4</span>
+      <span class="dr-section-title">Owner Closeout Packet</span>
       <div class="dr-section-actions">
-        <button class="dr-run-btn" onclick="drRefreshCloseoutSummary()">Refresh</button>
-        <button class="dr-run-btn" onclick="drCopyCloseoutSummary()">Copy</button>
+        <button class="dr-run-btn" onclick="event.stopPropagation();drRefreshCloseoutSummary()">Refresh</button>
+        <button class="dr-run-btn" onclick="event.stopPropagation();drCopyCloseoutSummary()">Copy</button>
       </div>
+      <span class="dr-section-chevron">\u25be</span>
     </div>
     <div class="dr-section-body">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Copy-ready owner closeout. This does not send, sign, invoice, or promote the offer.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Copy-ready owner closeout. Does not send, sign, invoice, or promote.</div>
       <pre class="dr-summary-pre" id="dr-closeout-summary">${escHtml(_drCloseoutSummaryText(offerKey))}</pre>
     </div>
   </div>`;
 
-  const verifHtml = `
-  <div class="dr-section">
-    <div class="dr-section-hdr">Verification Readiness</div>
-    <div class="dr-section-body">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Verification requires: one real client-bound run → checklist complete → proof captured → closeout on file → no blockers → operator manual review. No offer moves to verification automatically.</div>
-      <div class="dr-fields">
-        <div>
-          <div class="dr-label">Manual review state</div>
-          <select class="dr-closeout-sel" id="dr-verification-review-status" onchange="drScheduleSave()">
-            <option value="not_ready"${(_drState.verification_review_status||'not_ready')==='not_ready'?' selected':''}>Not ready for review</option>
-            <option value="ready_for_manual_review"${_drState.verification_review_status==='ready_for_manual_review'?' selected':''}>Ready for manual review</option>
-            <option value="reviewed_insufficient"${_drState.verification_review_status==='reviewed_insufficient'?' selected':''}>Reviewed, evidence insufficient</option>
-            <option value="reviewed_complete"${_drState.verification_review_status==='reviewed_complete'?' selected':''}>Reviewed, evidence complete</option>
-          </select>
-        </div>
-        <div class="dr-field-full">
-          <div class="dr-label">Manual review notes</div>
-          <textarea class="dr-textarea" id="dr-verification-review-notes" style="min-height:52px" placeholder="What evidence was reviewed, what is missing, or why it is complete…" oninput="drScheduleSave()">${escHtml(_drState.verification_review_notes || '')}</textarea>
-        </div>
+  // RIGHT COLUMN: Proof rail card
+  const beforeHasCls = (_drState.before_proof_link || '').trim() ? ' has-content' : '';
+  const afterHasCls  = (_drState.after_proof_link  || '').trim() ? ' has-content' : '';
+  const notesHasCls  = (_drState.work_notes  || '').trim() ? ' has-content' : '';
+  const blockerHasCls = (_drState.blockers || '').trim() ? ' dr-rail-blockers' : '';
+
+  const proofRailHtml = `<div class="dr-rail-card">
+    <div class="dr-rail-hdr"><span class="dr-rail-hdr-icon">\U0001f4f8</span> Proof &amp; Artifacts</div>
+    <div class="dr-rail-body">
+      <div>
+        <div class="dr-rail-label">Before-state proof</div>
+        <input class="dr-rail-input${beforeHasCls}" id="dr-before-proof" type="text" placeholder="Screenshot path or URL\u2026" value="${escHtml(_drState.before_proof_link || '')}" oninput="drScheduleSave()">
       </div>
-      ${_drVerifRail(offerKey)}
+      <div>
+        <div class="dr-rail-label">After-state proof</div>
+        <input class="dr-rail-input${afterHasCls}" id="dr-after-proof" type="text" placeholder="Screenshot path or URL\u2026" value="${escHtml(_drState.after_proof_link || '')}" oninput="drScheduleSave()">
+      </div>
+      <div>
+        <div class="dr-rail-label">Artifact refs</div>
+        <textarea class="dr-rail-textarea" id="dr-artifact-refs" placeholder="Kit files, handoff doc, email thread\u2026" oninput="drScheduleSave()">${escHtml(_drState.artifact_refs || '')}</textarea>
+      </div>
+      <div>
+        <div class="dr-rail-label">Work notes</div>
+        <textarea class="dr-rail-textarea${notesHasCls}" id="dr-work-notes" placeholder="What you did, found, what needs follow-up\u2026" oninput="drScheduleSave()">${escHtml(_drState.work_notes || '')}</textarea>
+      </div>
+      <div>
+        <div class="dr-rail-label">Blockers / flags</div>
+        <textarea class="dr-rail-textarea${blockerHasCls}" id="dr-blockers" placeholder="Anything blocking completion\u2026" oninput="drScheduleSave()">${escHtml(_drState.blockers || '')}</textarea>
+      </div>
     </div>
   </div>`;
 
-  body.innerHTML = sectionsHtml + proofHtml + closeoutHtml + closeoutPacketHtml + verifHtml;
+  // RIGHT COLUMN: Readiness + verification card
+  const verifRailHtml = `<div class="dr-rail-card">
+    <div class="dr-rail-hdr"><span class="dr-rail-hdr-icon">\u2714\ufe0f</span> Readiness</div>
+    <div class="dr-rail-body">
+      ${_drReadinessStripHtml(offerKey)}
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+        <div class="dr-rail-label">Manual review state</div>
+        <select class="dr-closeout-sel" id="dr-verification-review-status" onchange="drScheduleSave()">
+          <option value="not_ready"${(_drState.verification_review_status||'not_ready')==='not_ready'?' selected':''}>Not ready for review</option>
+          <option value="ready_for_manual_review"${_drState.verification_review_status==='ready_for_manual_review'?' selected':''}>Ready for manual review</option>
+          <option value="reviewed_insufficient"${_drState.verification_review_status==='reviewed_insufficient'?' selected':''}>Reviewed \u2014 insufficient</option>
+          <option value="reviewed_complete"${_drState.verification_review_status==='reviewed_complete'?' selected':''}>Reviewed \u2014 complete</option>
+        </select>
+      </div>
+      <div>
+        <div class="dr-rail-label" style="margin-top:8px">Review notes</div>
+        <textarea class="dr-rail-textarea" id="dr-verification-review-notes" style="min-height:52px" placeholder="Evidence reviewed, missing, or why complete\u2026" oninput="drScheduleSave()">${escHtml(_drState.verification_review_notes || '')}</textarea>
+      </div>
+    </div>
+  </div>`;
+
+  body.innerHTML = `${progressHtml}
+  <div class="dr-console">
+    <div class="dr-checklist-col">
+      ${sectionsHtml}
+      ${closeoutHtml}
+      ${closeoutPacketHtml}
+    </div>
+    <div class="dr-proof-col">
+      ${proofRailHtml}
+      ${verifRailHtml}
+    </div>
+  </div>`;
+}
+
+function drToggleSection(hdrEl) {
+  const section = hdrEl.closest('.dr-section');
+  if (section) section.classList.toggle('collapsed');
 }
 
 function drToggleCheck(sectionId, itemKey) {
@@ -17279,9 +17392,9 @@ function drOpenReviewRunFromButton(btn) {
 <div class="page" id="page-delivery-run">
 <div class="dr-wrap">
   <div class="dr-hdr">
-    <div>
+    <div class="dr-hdr-left">
+      <div class="dr-hdr-kicker">Execution Console</div>
       <h2>📋 Delivery Run</h2>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px">Operator execution checklist — select a client and offer, work through the checklist, capture proof, and record closeout.</div>
     </div>
     <div class="dr-hdr-actions">
       <div class="dr-hdr-selectors">
@@ -17292,23 +17405,23 @@ function drOpenReviewRunFromButton(btn) {
           <option value="">— Select offer —</option>
         </select>
       </div>
-      <button class="btn btn-ghost" onclick="drSave()" id="dr-save-btn">Save</button>
+      <button class="btn btn-primary" onclick="drSave()" id="dr-save-btn">Save</button>
     </div>
   </div>
 
   <!-- Run context chip -->
-  <div class="dr-context" id="dr-context"></div>
-
-  <!-- Progress -->
-  <div class="dr-progress-row" id="dr-progress-row" style="display:none">
-    <div class="dr-progress-bar"><div class="dr-progress-fill" id="dr-progress-fill" style="width:0%"></div></div>
-    <div class="dr-progress-label" id="dr-progress-label">0 / 0</div>
-    <div class="dr-save-status" id="dr-save-status"></div>
+  <div class="dr-context" id="dr-context" style="display:none">
+    <div class="dr-context-dot"></div>
+    <div class="dr-context-text" id="dr-context-text"></div>
   </div>
 
-  <!-- Checklist body -->
+  <!-- Checklist body (progress + 2-pane console rendered by drRender) -->
   <div id="dr-body">
-    <div class="dr-empty">Select a client and offer above to open the delivery checklist.</div>
+    <div class="dr-empty">
+      <div class="dr-empty-icon">📋</div>
+      <div class="dr-empty-title">Select a client and offer to open the run</div>
+      <div class="dr-empty-sub">Choose a client and offer above. The checklist and proof rail will open automatically.</div>
+    </div>
   </div>
 </div>
 </div>
