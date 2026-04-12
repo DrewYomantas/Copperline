@@ -1361,49 +1361,395 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .qlf-badge-replied{background:rgba(62,207,114,.2);color:var(--green);font-weight:700}
 .qlf-empty{padding:32px 16px;text-align:center;color:var(--dim);font-size:13px}
 .qlf-match{color:var(--copper);font-weight:700}
-/* ── Pass 86: Delivery Board ─────────────────────────────────────────────── */
-.da-wrap{max-width:1200px;margin:0 auto;padding:28px}
-.da-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
-.da-hdr h2{font-size:16px;font-weight:600}
-.da-hdr-sub{font-size:11px;color:var(--muted);margin-top:2px;max-width:680px;line-height:1.6}
+/* ══════════════════════════════════════════════════════════════════════════
+   COPPERLINE — CONSULT WORKBENCH VISUAL SYSTEM
+   Command-game / field-dossier art direction
+   Inspired by early-00s strategy/tycoon command surfaces
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Front-aware palette tokens (Midwest default) ────────────────────────── */
+:root {
+  --front-accent:      #c8884a;   /* copper / brass */
+  --front-accent-dim:  rgba(200,136,74,.18);
+  --front-accent-hi:   #e8a96a;
+  --front-topo:        #0e1218;   /* map table dark ground */
+  --front-parchment:   #141920;   /* dossier surface */
+  --front-inset:       #0c1016;   /* inset tray / command bar */
+  --front-grid:        rgba(200,136,74,.06);  /* subtle topo grid */
+  --front-border:      rgba(200,136,74,.22);
+  --front-border-dim:  rgba(255,255,255,.07);
+  /* severity states */
+  --sev-none:   #f56565; --sev-none-bg:   rgba(245,101,101,.10);
+  --sev-weak:   #f5a623; --sev-weak-bg:   rgba(245,166,35,.10);
+  --sev-okay:   #4f8ef7; --sev-okay-bg:   rgba(79,142,247,.09);
+  --sev-good:   #3ecf72; --sev-good-bg:   rgba(62,207,114,.09);
+  --sev-stale:  #b08040; --sev-stale-bg:  rgba(176,128,64,.10);
+}
+
+/* ── Consult Workbench shell ─────────────────────────────────────────────── */
+.da-wrap { max-width:1260px; margin:0 auto; padding:0 0 48px; }
+
+/* ── Command strip — top dossier bar ─────────────────────────────────────── */
+.da-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:10px 24px; flex-wrap:wrap;
+  background:var(--front-inset);
+  border-bottom:1px solid var(--front-border);
+  box-shadow:0 1px 0 rgba(0,0,0,.5), inset 0 -1px 0 rgba(200,136,74,.08);
+  position:sticky; top:48px; z-index:100;
+}
+.da-hdr-left { display:flex; flex-direction:column; gap:2px; }
+.da-hdr h2 {
+  font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--front-accent); line-height:1;
+}
+.da-hdr-sub { font-size:11px; color:rgba(200,136,74,.55); line-height:1; }
+.da-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.da-status {
+  font-size:10px; color:var(--muted); line-height:1.5;
+  font-family:var(--mono); letter-spacing:.04em;
+}
+
+/* ── Main dossier board: left body + right rail ───────────────────────────── */
+.da-board {
+  display:grid;
+  grid-template-columns: minmax(0,1fr) 248px;
+  gap:0;
+  align-items:start;
+  min-height:100vh;
+}
+.da-board-body {
+  padding:20px 20px 40px;
+  border-right:1px solid var(--front-border-dim);
+  /* subtle topo grid pattern */
+  background:
+    linear-gradient(var(--front-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--front-grid) 1px, transparent 1px),
+    var(--front-topo);
+  background-size:28px 28px, 28px 28px;
+}
+.da-board-rail {
+  padding:16px 14px;
+  background:var(--front-parchment);
+  position:sticky; top:90px;
+  max-height:calc(100vh - 100px);
+  overflow-y:auto;
+  display:flex; flex-direction:column; gap:12px;
+}
+
+/* ── Stage progress strip ────────────────────────────────────────────────── */
+.da-stage-strip {
+  display:flex; gap:0; margin-bottom:18px;
+  border:1px solid var(--front-border-dim);
+  border-radius:4px; overflow:hidden;
+  background:var(--front-inset);
+}
+.da-stage-node {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  gap:5px; padding:6px 4px;
+  font-size:9px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--muted); cursor:pointer;
+  border-right:1px solid var(--front-border-dim);
+  transition:background .13s, color .13s;
+}
+.da-stage-node:last-child { border-right:none; }
+.da-stage-node:hover { background:rgba(200,136,74,.07); color:var(--text); }
+.da-stage-node.active {
+  background:rgba(200,136,74,.14);
+  color:var(--front-accent);
+  box-shadow:inset 0 -2px 0 var(--front-accent);
+}
+.da-stage-node .da-sn { font-family:var(--mono); font-size:8px; opacity:.6; margin-right:2px; }
+
+/* ── Dossier section blocks ───────────────────────────────────────────────── */
+.da-section {
+  margin-bottom:14px;
+  border:1px solid var(--front-border-dim);
+  border-radius:3px;
+  background:rgba(255,255,255,.025);
+  overflow:hidden;
+}
+.da-section-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 12px;
+  background:rgba(0,0,0,.25);
+  border-bottom:1px solid var(--front-border-dim);
+  gap:8px;
+}
+.da-section-kicker {
+  font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--front-accent); opacity:.8; flex-shrink:0;
+}
+.da-section-title {
+  font-size:11px; font-weight:600; color:var(--text); letter-spacing:.01em;
+}
+.da-section-body { padding:12px; }
+.da-section-meta { font-size:10px; color:var(--muted); line-height:1.5; margin-left:auto; }
+
+/* ── Owner plate fields ───────────────────────────────────────────────────── */
+.da-owner-grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.da-field { display:flex; flex-direction:column; gap:3px; }
+.da-mini {
+  font-size:9px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.09em; color:var(--muted); line-height:1;
+}
+.da-urgency-row { display:flex; gap:5px; margin-top:2px; flex-wrap:wrap; }
+.da-urgency-chip {
+  padding:4px 10px; border-radius:2px;
+  font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  border:1px solid var(--front-border-dim);
+  background:rgba(255,255,255,.035); color:var(--muted);
+  cursor:pointer; transition:all .12s;
+}
+.da-urgency-chip.active { border-color:var(--front-accent); background:var(--front-accent-dim); color:var(--front-accent-hi); }
+
+/* ── Presence parcel grid ─────────────────────────────────────────────────── */
+.da-parcels {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+.da-parcel {
+  border:1px solid var(--front-border-dim);
+  border-radius:3px;
+  background:rgba(0,0,0,.2);
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color .12s, background .12s;
+  position:relative;
+}
+.da-parcel:hover { border-color:rgba(200,136,74,.35); background:rgba(200,136,74,.04); }
+.da-parcel-cap {
+  padding:5px 8px 4px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(0,0,0,.18);
+  border-bottom:1px solid var(--front-border-dim);
+}
+.da-parcel-label {
+  font-size:8px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted);
+}
+.da-parcel-sev {
+  width:7px; height:7px; border-radius:1px; flex-shrink:0;
+  background:var(--muted);
+}
+.da-parcel-body { padding:6px 8px 7px; }
+.da-parcel-state {
+  font-size:10px; font-weight:600; color:var(--text); line-height:1.2;
+}
+.da-parcel-note {
+  font-size:9px; color:var(--muted); line-height:1.35; margin-top:3px;
+  display:none;
+}
+.da-parcel:hover .da-parcel-note, .da-parcel.expanded .da-parcel-note { display:block; }
+/* severity tinting */
+.da-parcel[data-sev="none"] { border-color:rgba(245,101,101,.3); }
+.da-parcel[data-sev="none"] .da-parcel-sev { background:var(--sev-none); box-shadow:0 0 6px var(--sev-none); }
+.da-parcel[data-sev="none"] .da-parcel-state { color:var(--sev-none); }
+.da-parcel[data-sev="weak"] { border-color:rgba(245,166,35,.28); }
+.da-parcel[data-sev="weak"] .da-parcel-sev { background:var(--sev-weak); box-shadow:0 0 6px var(--sev-weak); }
+.da-parcel[data-sev="weak"] .da-parcel-state { color:var(--sev-weak); }
+.da-parcel[data-sev="stale"] { border-color:rgba(176,128,64,.28); }
+.da-parcel[data-sev="stale"] .da-parcel-sev { background:var(--sev-stale); }
+.da-parcel[data-sev="stale"] .da-parcel-state { color:var(--sev-stale); }
+.da-parcel[data-sev="okay"] .da-parcel-sev { background:var(--sev-okay); }
+.da-parcel[data-sev="okay"] .da-parcel-state { color:var(--sev-okay); }
+.da-parcel[data-sev="good"] .da-parcel-sev { background:var(--sev-good); }
+.da-parcel[data-sev="good"] .da-parcel-state { color:var(--sev-good); }
+
+/* parcel state selector dropdown */
+.da-parcel-sel {
+  width:100%; font-size:9px; padding:3px 5px;
+  background:rgba(0,0,0,.35); border:1px solid var(--front-border-dim);
+  border-radius:2px; color:var(--text); font-family:var(--sans);
+  cursor:pointer; margin-top:4px; display:none; outline:none;
+}
+.da-parcel.expanded .da-parcel-sel { display:block; }
+
+/* ── Need signal chips ────────────────────────────────────────────────────── */
+.da-need-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.da-need-chip {
+  padding:4px 9px; border-radius:2px;
+  font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+  border:1px solid var(--front-border-dim);
+  background:rgba(255,255,255,.03); color:var(--muted);
+  cursor:pointer; transition:all .12s; user-select:none;
+}
+.da-need-chip:hover { border-color:rgba(200,136,74,.35); color:var(--text); }
+.da-need-chip.active {
+  border-color:var(--front-accent);
+  background:var(--front-accent-dim);
+  color:var(--front-accent-hi);
+}
+.da-need-chip.pain { border-color:rgba(245,101,101,.3); }
+.da-need-chip.pain.active {
+  border-color:rgba(245,101,101,.6);
+  background:rgba(245,101,101,.12);
+  color:#f56565;
+}
+
+/* ── Field notes inset ────────────────────────────────────────────────────── */
+.da-notebook {
+  background:rgba(0,0,0,.22);
+  border:1px solid var(--front-border-dim);
+  border-left:2px solid rgba(200,136,74,.35);
+  border-radius:2px;
+  padding:8px 10px;
+  position:relative;
+}
+.da-notebook textarea {
+  width:100%; background:transparent; border:none; outline:none; resize:vertical;
+  color:var(--text); font-family:var(--sans); font-size:12px; line-height:1.65;
+  min-height:80px; placeholder-color:var(--dim);
+}
+.da-notebook textarea::placeholder { color:var(--dim); font-style:italic; }
+.da-note-starters { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+.da-note-starter {
+  font-size:9px; color:var(--muted); padding:2px 7px;
+  border:1px solid var(--front-border-dim); border-radius:2px;
+  cursor:pointer; transition:color .12s;
+}
+.da-note-starter:hover { color:var(--front-accent); border-color:rgba(200,136,74,.3); }
+
+/* ── Collapse detail block ────────────────────────────────────────────────── */
+.da-detail-block {
+  margin-top:10px;
+  border:1px solid var(--front-border-dim);
+  border-radius:3px;
+  background:rgba(0,0,0,.15);
+}
+.da-detail-block summary {
+  font-size:10px; font-weight:600; color:var(--muted);
+  cursor:pointer; padding:6px 10px; user-select:none;
+  list-style:none; display:flex; align-items:center; gap:6px;
+}
+.da-detail-block summary::-webkit-details-marker { display:none; }
+.da-detail-block summary::before { content:"▸"; font-size:8px; transition:transform .13s; flex-shrink:0; }
+.da-detail-block[open] summary::before { transform:rotate(90deg); }
+.da-detail-block summary:hover { color:var(--text); }
+.da-detail-block > :not(summary) { padding:0 10px 10px; }
+
+/* ── Step nav ─────────────────────────────────────────────────────────────── */
+.da-step-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:16px; padding-top:12px;
+  border-top:1px solid var(--front-border-dim);
+  gap:8px;
+}
+.da-step-nav-left, .da-step-nav-right { display:flex; gap:6px; }
+
+/* ── Step panel visibility ───────────────────────────────────────────────── */
+.da-step-panel { display:none; }
+.da-step-panel.active { display:block; }
+
+/* ── Right rail: briefing packet ─────────────────────────────────────────── */
+.da-rail-section { display:flex; flex-direction:column; gap:4px; }
+.da-rail-kicker {
+  font-size:8px; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--front-accent); opacity:.7;
+}
+.da-rail-label {
+  font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:1px;
+}
+.da-rail-val {
+  font-size:11px; color:var(--text); line-height:1.45;
+}
+.da-rail-val.mono { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--front-accent-hi); }
+.da-rail-val.muted { color:var(--muted); font-size:10px; line-height:1.5; }
+.da-rail-val.italic { font-style:italic; color:var(--muted); font-size:10px; }
+.da-rail-divider { border:none; border-top:1px solid var(--front-border-dim); margin:8px 0; }
+.da-rail-card {
+  border:1px solid var(--front-border-dim);
+  border-radius:3px;
+  background:rgba(0,0,0,.25);
+  padding:10px 11px;
+}
+.da-rail-card.accent {
+  border-color:rgba(200,136,74,.32);
+  background:rgba(200,136,74,.06);
+}
+.da-rail-title {
+  font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--front-accent); margin-bottom:8px; display:flex; align-items:center; gap:6px;
+}
+.da-rail-title::after {
+  content:''; flex:1; height:1px; background:rgba(200,136,74,.2);
+}
+.da-rail-chip {
+  display:inline-block; font-size:8px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; padding:2px 6px; border-radius:1px; margin-top:2px;
+}
+.da-rail-chip.ok { background:rgba(62,207,114,.12); color:var(--green); }
+.da-rail-chip.wait { background:rgba(245,166,35,.12); color:var(--amber); }
+.da-rail-chip.block { background:rgba(245,101,101,.12); color:var(--red); }
+.da-rail-action-primary {
+  width:100%; padding:8px 12px; border-radius:2px; border:none; cursor:pointer;
+  font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase;
+  background:linear-gradient(135deg,var(--front-accent),#b87030);
+  color:#0e0a06; transition:all .15s;
+  box-shadow:0 2px 10px rgba(200,136,74,.3);
+}
+.da-rail-action-primary:hover { box-shadow:0 4px 18px rgba(200,136,74,.45); }
+.da-rail-action-primary:disabled { opacity:.35; cursor:not-allowed; box-shadow:none; }
+.da-rail-secondary { display:flex; gap:5px; flex-wrap:wrap; }
+.da-rail-secondary .btn { font-size:10px; padding:5px 10px; }
+
+/* ── Ops compartment ─────────────────────────────────────────────────────── */
+.da-ops-block { margin-top:16px; }
+.da-ops-toggle {
+  display:flex; align-items:center; gap:7px; padding:6px 12px;
+  font-size:9px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--muted); cursor:pointer; user-select:none;
+  border:1px solid var(--front-border-dim); border-radius:3px;
+  background:rgba(0,0,0,.2); transition:color .12s;
+  list-style:none;
+}
+.da-ops-toggle::-webkit-details-marker { display:none; }
+.da-ops-toggle::before { content:"▸"; font-size:8px; transition:transform .13s; }
+details.da-ops-block[open] .da-ops-toggle::before { transform:rotate(90deg); }
+.da-ops-toggle:hover { color:var(--text); }
+.da-ops-content { padding:12px 0 0; display:flex; flex-direction:column; gap:14px; }
+
+/* ── Form elements inside DA ─────────────────────────────────────────────── */
+.da-wrap .form-input, .da-wrap .form-select, .da-wrap .form-textarea {
+  background:rgba(0,0,0,.3);
+  border-color:var(--front-border-dim);
+  color:var(--text);
+  font-size:12px;
+}
+.da-wrap .form-input:focus, .da-wrap .form-select:focus, .da-wrap .form-textarea:focus {
+  border-color:rgba(200,136,74,.45);
+  box-shadow:0 0 0 2px rgba(200,136,74,.1);
+}
+
+/* ── Legacy IDs still used by daRender() ─────────────────────────────────── */
 .da-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start}
-.da-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px}
-.da-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-.da-card-title{font-size:13px;font-weight:600}
-.da-card-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
 .da-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .da-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.da-mini{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
-.da-stack-box{border:1px solid rgba(79,142,247,.24);background:rgba(79,142,247,.08);border-radius:var(--rs);padding:12px}
-.da-stack-line{font-size:12px;font-weight:600;color:var(--text);line-height:1.5}
-.da-stack-meta{margin-top:5px;font-size:11px;color:var(--muted);line-height:1.5}
 .da-answer-grid{display:grid;gap:10px}
 .da-answer-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:start}
 .da-answer-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .da-answer-copy{font-size:12px;color:var(--text);line-height:1.6}
 .da-answer-copy strong{font-weight:700}
 .da-answer-subtle{font-size:11px;color:var(--muted);line-height:1.6}
-.da-checklist{display:flex;flex-direction:column;gap:8px}
-.da-check{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text)}
-.da-check input{margin-top:2px}
-.da-check small{display:block;color:var(--muted);font-size:10px;line-height:1.4;margin-top:2px}
+.da-stack-box{border:1px solid rgba(79,142,247,.24);background:rgba(79,142,247,.08);border-radius:var(--rs);padding:12px}
 .da-pill-row{display:flex;gap:6px;flex-wrap:wrap}
 .da-pill{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
 .da-pill.active{color:var(--blue);border-color:rgba(79,142,247,.28);background:var(--blue-glow)}
-.da-actions{display:flex;gap:8px;flex-wrap:wrap}
-.da-status{font-size:11px;color:var(--muted);line-height:1.5}
 .da-note{min-height:78px}
-.da-touch{display:flex;flex-direction:column;gap:8px}
 .da-price-range{font-size:18px;font-family:var(--mono);font-weight:700;color:var(--text);line-height:1.2}
 .da-price-help{font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px}
-.da-list-box{padding:10px 12px;border-radius:var(--rs);background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text);line-height:1.6;min-height:76px}
+.da-list-box{padding:10px 12px;border-radius:var(--rs);background:rgba(0,0,0,.25);border:1px solid var(--front-border-dim);font-size:11px;color:var(--text);line-height:1.6;min-height:60px}
 .da-list-box ul{margin:0;padding-left:18px}
 .da-list-box li{margin:0 0 4px}
-.da-primary-wrap{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.da-primary-btn{width:100%;justify-content:center;font-size:13px;padding:10px 14px}
-.da-secondary-row{display:flex;gap:8px;flex-wrap:wrap}
 .da-gates{display:grid;gap:8px;margin-top:12px}
-.da-gate{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2)}
+.da-gate{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--front-border-dim);border-radius:2px;background:rgba(0,0,0,.2)}
 .da-gate-copy{min-width:0}
 .da-gate-title{font-size:11px;font-weight:600;color:var(--text)}
 .da-gate-detail{font-size:10px;color:var(--muted);line-height:1.5;margin-top:2px}
@@ -1413,11 +1759,35 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .da-gate-status.block{color:var(--red)}
 .da-gate-inline{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
 .da-gate-inline input{margin-top:0}
-.da-blocker{margin-top:10px;padding:9px 10px;border-radius:var(--rs);background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);font-size:11px;color:var(--muted);line-height:1.6}
+.da-blocker{margin-top:10px;padding:9px 10px;border-radius:2px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.18);font-size:11px;color:var(--muted);line-height:1.6}
+.da-primary-wrap{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.da-primary-btn{width:100%;justify-content:center;font-size:12px;padding:9px 14px}
+.da-secondary-row{display:flex;gap:6px;flex-wrap:wrap}
+.da-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.da-status{font-size:10px;color:var(--muted);line-height:1.5;font-family:var(--mono);letter-spacing:.04em}
+.da-hdr-sub{font-size:11px;color:rgba(200,136,74,.5);line-height:1}
+.da-card{background:rgba(255,255,255,.025);border:1px solid var(--front-border-dim);border-radius:3px;padding:14px;margin-bottom:12px}
+.da-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.da-card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--front-accent)}
+.da-card-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
+.da-checklist{display:flex;flex-direction:column;gap:6px}
+.da-check{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text)}
+.da-check input{margin-top:3px;accent-color:var(--front-accent)}
+.da-check small{display:block;color:var(--muted);font-size:10px;line-height:1.4;margin-top:2px}
+.da-touch{display:flex;flex-direction:column;gap:8px}
+.da-hdr h2{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--front-accent);line-height:1}
+.da-summary-panel{display:none}
 @media(max-width:920px){
-  .da-grid{grid-template-columns:1fr}
+  .da-board{grid-template-columns:1fr}
+  .da-board-body{border-right:none;border-bottom:1px solid var(--front-border-dim)}
+  .da-board-rail{position:static;max-height:none}
+  .da-parcels{grid-template-columns:repeat(2,1fr)}
   .da-grid-2,.da-grid-3{grid-template-columns:1fr}
   .da-answer-row{grid-template-columns:1fr}
+  .da-owner-grid{grid-template-columns:1fr}
+}
+@media(max-width:580px){
+  .da-parcels{grid-template-columns:1fr 1fr}
 }
 /* ── Deploy Activation Wizard (Pass 190) ─────────────────────────────────── */
 .da-wizard{display:flex;gap:16px;align-items:flex-start}
@@ -1428,35 +1798,6 @@ tbody tr.row-scheduled td:first-child{border-left:2px solid var(--amber)}
 .da-step-nav-left,.da-step-nav-right{display:flex;gap:8px}
 .da-progress{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .da-progress-step{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--muted);cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s}
-.da-progress-step:hover{border-color:var(--border-hi);color:var(--text)}
-.da-progress-step.active{border-color:rgba(79,142,247,.5);background:rgba(79,142,247,.1);color:var(--blue)}
-.da-progress-step .da-ps-n{font-family:var(--mono);font-size:9px;opacity:.7}
-.da-summary-panel{width:220px;flex-shrink:0;position:sticky;top:16px;display:flex;flex-direction:column;gap:10px}
-.da-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
-.da-summary-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
-.da-summary-row{margin-bottom:6px}
-.da-summary-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
-.da-summary-val{font-size:11px;color:var(--text);line-height:1.5}
-.da-summary-val.blocked{color:var(--red)}
-.da-summary-val.eligible{color:var(--green)}
-.da-summary-chip{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:8px;margin-top:2px}
-.da-summary-chip.ok{background:rgba(62,207,114,.12);color:var(--green)}
-.da-summary-chip.wait{background:rgba(245,166,35,.12);color:var(--amber)}
-.da-summary-chip.block{background:rgba(239,68,68,.12);color:var(--red)}
-@media(max-width:700px){
-  .da-wizard{flex-direction:column}
-  .da-summary-panel{width:100%;position:static}
-}
-/* ── Fast-Capture additions ──────────────────────────────────────────────── */
-.da-mini{font-size:11px}
-.da-progress-step.active{border-color:rgba(79,142,247,.65);background:rgba(79,142,247,.16);color:var(--blue);font-weight:700}
-.da-detail-block{margin-top:12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2)}
-.da-detail-block summary{font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 12px;user-select:none;list-style:none;display:flex;align-items:center;gap:7px;border-radius:var(--rs)}
-.da-detail-block summary::-webkit-details-marker{display:none}
-.da-detail-block summary::before{content:"▸";font-size:9px;transition:transform .15s;flex-shrink:0}
-.da-detail-block[open] summary::before{transform:rotate(90deg)}
-.da-detail-block summary:hover{color:var(--text);background:var(--surface3)}
-.da-detail-block > :not(summary){padding:0 12px 12px}
 .db-wrap{max-width:1200px;margin:0 auto;padding:28px}
 .db-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
 .db-hdr h2{font-size:16px;font-weight:600}
@@ -10176,6 +10517,8 @@ function _daFillForm(state, meta = {}) {
   _poRefreshAcceptedOptionSelect();
 
   daRender();
+  // sync workbench UI state after filling
+  if (typeof _daSyncPainChipsFromState === 'function') _daSyncPainChipsFromState();
 }
 
 function daRender() {
@@ -10315,10 +10658,13 @@ function daGoToStep(n) {
     const panel = document.getElementById(`da-step-${i}`);
     if (panel) panel.classList.toggle('active', i === _daCurrentStep);
   }
-  const steps = document.querySelectorAll('#da-progress-bar .da-progress-step');
-  steps.forEach((el, idx) => el.classList.toggle('active', idx + 1 === _daCurrentStep));
-  const wizard = document.querySelector('.da-wizard-body');
-  if (wizard) wizard.scrollTop = 0;
+  // Update stage strip: Gather=1-2, Shape=3-4, Confirm=5-6
+  const stageIdx = _daCurrentStep <= 2 ? 1 : _daCurrentStep <= 4 ? 2 : 3;
+  document.querySelectorAll('.da-stage-node').forEach((el, idx) => {
+    el.classList.toggle('active', idx + 1 === stageIdx);
+  });
+  const body = document.querySelector('.da-board-body');
+  if (body) body.scrollTop = 0;
 }
 
 // ── Quick-Win Review ─────────────────────────────────────────────────────────
@@ -11057,6 +11403,118 @@ function daScheduleSave() {
   clearTimeout(_daRenderTimer);
   _daRenderTimer = setTimeout(() => daRender(), 120);
 }
+
+/* ── Consult Workbench UI helpers (parcel, urgency, need chips) ────────── */
+
+// Parcel state → severity mapping
+const _DA_SEV_MAP = {
+  good:'good', strong:'good', active:'good', 'set up':'good', 'running well':'good', consistent:'good',
+  okay:'okay', 'mostly consistent':'okay',
+  outdated:'stale', stale:'stale', 'old / untouched':'stale', partial:'stale',
+  weak:'weak', few:'weak', messy:'weak', 'mostly consistent':'okay', 'personal email only':'weak',
+  broken:'none','confusing / broken':'none', unclaimed:'none', 'very few':'none',
+  none:'none','no website':'none','none / not sure':'none','none / paused':'none','none / unclear':'none','manual only / weak':'none',
+};
+function _daSevFromVal(v){ return _DA_SEV_MAP[v.toLowerCase()] || ''; }
+function _daParcelStateLabel(v){ return v ? v.charAt(0).toUpperCase()+v.slice(1).replace(/-/g,' ') : '—'; }
+
+function _daParcelToggle(el){
+  const wasOpen = el.classList.contains('expanded');
+  // close all others
+  document.querySelectorAll('.da-parcel.expanded').forEach(p=>p.classList.remove('expanded'));
+  if (!wasOpen) el.classList.add('expanded');
+}
+
+function _daParcelChange(parcelKey, val){
+  const parcel = document.getElementById('parcel-'+parcelKey);
+  if (!parcel) return;
+  const sev = _daSevFromVal(val);
+  parcel.dataset.sev = sev;
+  parcel.querySelector('.da-parcel-state').textContent = _daParcelStateLabel(val);
+  // write into the tools field as structured notes for save compatibility
+  _daParcelSyncNotes();
+  daScheduleSave();
+}
+
+function _daParcelSyncNotes(){
+  const parcels = ['website','gbp','reviews','facebook','contact','followup','domain','ads','instagram'];
+  const lines = parcels.map(k=>{
+    const sel = document.getElementById('psel-'+k);
+    if (!sel || !sel.value) return null;
+    return k.charAt(0).toUpperCase()+k.slice(1)+': '+sel.value;
+  }).filter(Boolean);
+  const toolsField = document.getElementById('da-consult-tools');
+  if (toolsField && !toolsField._userEdited) {
+    toolsField.dataset.parcelSync = lines.join('\n');
+  }
+}
+
+// Restore parcel selects from saved tools field on load
+function _daRestoreParcels(){
+  const toolsField = document.getElementById('da-consult-tools');
+  if (!toolsField) return;
+  const raw = toolsField.dataset.parcelSync || toolsField.value || '';
+  raw.split('\n').forEach(line=>{
+    const m = line.match(/^(\w+):\s*(.+)$/i);
+    if (!m) return;
+    const key = m[1].toLowerCase(); const val = m[2].trim();
+    const sel = document.getElementById('psel-'+key);
+    if (sel){ sel.value=val; _daParcelChange(key,val); }
+  });
+}
+
+// Urgency chip sync
+function _daSetUrgency(val){
+  const sel = document.getElementById('da-consult-urgency');
+  if (sel){ sel.value = val; }
+  _daSyncUrgencyChips();
+  daScheduleSave();
+}
+function _daSyncUrgencyChips(){
+  const sel = document.getElementById('da-consult-urgency');
+  const val = sel ? sel.value : '';
+  document.querySelectorAll('#da-urgency-chips .da-urgency-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.val === val);
+  });
+}
+
+// Need chip toggle (visual only — signals feed into freeform notes context)
+function _daNeedToggle(el){
+  el.classList.toggle('active');
+}
+
+// Pain chip toggle — also syncs the hidden discovery checkboxes
+function _daPainToggle(chipEl, checkboxId){
+  chipEl.classList.toggle('active');
+  const cb = document.getElementById(checkboxId);
+  if (cb){ cb.checked = chipEl.classList.contains('active'); }
+  daScheduleSave();
+}
+
+// Note starters
+function _daNoteStarter(prefix){
+  const ta = document.getElementById('da-notes');
+  if (!ta) return;
+  const cur = ta.value;
+  ta.value = cur ? cur + '\n' + prefix : prefix;
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+
+// Sync pain chips from hidden checkboxes on load
+function _daSyncPainChipsFromState(){
+  document.querySelectorAll('[data-dis]').forEach(chip=>{
+    const cb = document.getElementById(chip.dataset.dis);
+    if (cb) chip.classList.toggle('active', !!cb.checked);
+  });
+  _daSyncUrgencyChips();
+  _daRestoreParcels();
+}
+
+// Hook into daRender to keep summary rail IDs updated
+// da-summary-client, da-summary-stack etc. are already targeted by daRender()
+// Stage strip active state — daGoToStep is not changed, just hook the visual
+const _daOrigGoToStep = typeof daGoToStep === 'function' ? daGoToStep : null;
 
 async function daSaveOnly() {
   clearTimeout(_daSaveTimer);
@@ -17508,752 +17966,856 @@ function drOpenReviewRunFromButton(btn) {
 <!-- ══════════════ PAGE: DEPLOY ACTIVATION ══════════════ -->
 <div class="page" id="page-deploy-activation">
 <div class="da-wrap">
+
+  <!-- ── Command Strip ─────────────────────────────────────────────────── -->
   <div class="da-hdr">
-    <div>
-      <h2>Deploy Activation</h2>
-      <div class="da-status" id="da-status" style="margin-top:6px">No client loaded yet.</div>
+    <div class="da-hdr-left">
+      <h2>Consult Workbench</h2>
+      <div class="da-status" id="da-status">No client loaded yet.</div>
     </div>
     <div class="da-actions">
       <button class="btn btn-ghost" onclick="loadDeliveryActivation()">&#8635; Refresh</button>
-      <button class="btn btn-ghost" onclick="daOpenBoard()">Open Board</button>
-      <button class="btn btn-ghost" onclick="daSaveOnly()">Save Record</button>
+      <button class="btn btn-ghost" onclick="daOpenBoard()">Board</button>
+      <button class="btn btn-ghost" onclick="daSaveOnly()">Save</button>
     </div>
   </div>
 
-  <div class="da-wizard">
-    <!-- ── Wizard Body ── -->
-    <div class="da-wizard-body">
+  <!-- ── Dossier Board ─────────────────────────────────────────────────── -->
+  <div class="da-board">
 
-      <!-- Progress Bar -->
-      <div class="da-progress" id="da-progress-bar">
-        <div class="da-progress-step active" onclick="daGoToStep(1)"><span class="da-ps-n">1</span> Owner</div>
-        <div class="da-progress-step" onclick="daGoToStep(2)"><span class="da-ps-n">2</span> Needs</div>
-        <div class="da-progress-step" onclick="daGoToStep(3)"><span class="da-ps-n">3</span> Package</div>
-        <div class="da-progress-step" onclick="daGoToStep(4)"><span class="da-ps-n">4</span> Confirm</div>
-        <div class="da-progress-step" onclick="daGoToStep(5)"><span class="da-ps-n">5</span> Deliver</div>
-        <div class="da-progress-step" onclick="daGoToStep(6)"><span class="da-ps-n">6</span> Next Move</div>
+    <!-- ════════════ LEFT: Main work surface ════════════ -->
+    <div class="da-board-body">
+
+      <!-- Stage strip -->
+      <div class="da-stage-strip" id="da-progress-bar">
+        <div class="da-stage-node active" onclick="daGoToStep(1)" id="da-stage-1"><span class="da-sn">I</span> Gather</div>
+        <div class="da-stage-node" onclick="daGoToStep(3)" id="da-stage-2"><span class="da-sn">II</span> Shape</div>
+        <div class="da-stage-node" onclick="daGoToStep(5)" id="da-stage-3"><span class="da-sn">III</span> Confirm</div>
       </div>
 
-      <!-- ── Step 1: Business Snapshot ── -->
+      <!-- ── GATHER: Steps 1 + 2 ─────────────────────────────────────── -->
       <div class="da-step-panel active" id="da-step-1">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 1 · Owner Snapshot</div>
-              <div class="da-card-sub">Name, phone, urgency. Everything else can wait.</div>
-            </div>
-            <span class="tag" id="da-key-tag">Unsaved</span>
-          </div>
 
-          <!-- Fast-capture fields: always visible -->
-          <div class="da-grid-2">
-            <div>
-              <label class="da-mini">Business Name</label>
-              <input class="form-input" id="da-business-name" type="text" placeholder="Rockford Pro Plumbing" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Contact Name</label>
-              <input class="form-input" id="da-contact-name" type="text" placeholder="Jordan" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Phone</label>
-              <input class="form-input" id="da-phone" type="text" placeholder="+18155550100" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Urgency</label>
-              <select class="form-select" id="da-consult-urgency" onchange="daScheduleSave()">
-                <option value="">Unset</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
+        <!-- Owner Plate -->
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Owner</span>
+            <span class="da-section-title">Who are you talking to</span>
+            <span class="tag" id="da-key-tag" style="margin-left:auto">Unsaved</span>
           </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Live Call Notes</label>
-            <textarea class="form-textarea da-note" id="da-notes" placeholder="Raw signal — objections, timing, budget, what they need fixed. Flesh out after the call." oninput="daScheduleSave()"></textarea>
-          </div>
-
-          <!-- Deferred: complete after call -->
-          <details class="da-detail-block">
-            <summary>Complete after call — email, category, website, online presence</summary>
-            <div class="da-grid-2" style="margin-top:10px">
-              <div>
-                <label class="da-mini">Email</label>
-                <input class="form-input" id="da-email" type="email" placeholder="owner@business.com" oninput="daScheduleSave()">
+          <div class="da-section-body">
+            <div class="da-owner-grid">
+              <div class="da-field">
+                <div class="da-mini">Business Name</div>
+                <input class="form-input" id="da-business-name" type="text" placeholder="Rockford Pro Plumbing" oninput="daScheduleSave()">
               </div>
-              <div>
-                <label class="da-mini">Category / Type</label>
-                <input class="form-input" id="da-category" type="text" placeholder="Plumbing / HVAC / Roofing" oninput="daScheduleSave()">
+              <div class="da-field">
+                <div class="da-mini">Contact Name</div>
+                <input class="form-input" id="da-contact-name" type="text" placeholder="Jordan" oninput="daScheduleSave()">
               </div>
-              <div class="da-grid-2-span">
-                <label class="da-mini">Website</label>
-                <input class="form-input" id="da-website" type="text" placeholder="https://example.com" oninput="daScheduleSave()">
+              <div class="da-field">
+                <div class="da-mini">Phone</div>
+                <input class="form-input" id="da-phone" type="text" placeholder="+18155550100" oninput="daScheduleSave()">
+              </div>
+              <div class="da-field">
+                <div class="da-mini">Urgency</div>
+                <div class="da-urgency-row" id="da-urgency-chips">
+                  <span class="da-urgency-chip" data-val="low" onclick="_daSetUrgency('low')">Low</span>
+                  <span class="da-urgency-chip" data-val="medium" onclick="_daSetUrgency('medium')">Medium</span>
+                  <span class="da-urgency-chip" data-val="high" onclick="_daSetUrgency('high')">High</span>
+                  <span class="da-urgency-chip" data-val="urgent" onclick="_daSetUrgency('urgent')">Urgent</span>
+                </div>
+                <!-- hidden select keeps existing persistence contract -->
+                <select class="form-select" id="da-consult-urgency" onchange="_daSyncUrgencyChips();daScheduleSave()" style="display:none">
+                  <option value="">Unset</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
               </div>
             </div>
-            <div class="da-grid-2" style="margin-top:10px">
-              <label class="da-check"><input type="checkbox" id="da-google" onchange="daScheduleSave()"><span>Has Google presence<small>Google Business Profile exists and feels current.</small></span></label>
-              <label class="da-check"><input type="checkbox" id="da-facebook" onchange="daScheduleSave()"><span>Has Facebook presence<small>Social presence exists and is usable.</small></span></label>
-            </div>
-          </details>
 
-        </section>
+            <!-- After-call details collapsed -->
+            <details class="da-detail-block" style="margin-top:10px">
+              <summary>After call — email, category, website, online presence</summary>
+              <div class="da-owner-grid" style="margin-top:8px">
+                <div class="da-field">
+                  <div class="da-mini">Email</div>
+                  <input class="form-input" id="da-email" type="email" placeholder="owner@business.com" oninput="daScheduleSave()">
+                </div>
+                <div class="da-field">
+                  <div class="da-mini">Category / Type</div>
+                  <input class="form-input" id="da-category" type="text" placeholder="Plumbing / HVAC / Roofing" oninput="daScheduleSave()">
+                </div>
+                <div class="da-field" style="grid-column:1/-1">
+                  <div class="da-mini">Website</div>
+                  <input class="form-input" id="da-website" type="text" placeholder="https://example.com" oninput="daScheduleSave()">
+                </div>
+              </div>
+              <div class="da-grid-2" style="margin-top:8px">
+                <label class="da-check"><input type="checkbox" id="da-google" onchange="daScheduleSave()"><span>Has Google Business Profile<small>GBP exists and looks current.</small></span></label>
+                <label class="da-check"><input type="checkbox" id="da-facebook" onchange="daScheduleSave()"><span>Has Facebook presence<small>Social presence exists and is usable.</small></span></label>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- What They Need -->
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Needs</span>
+            <span class="da-section-title">What they're dealing with</span>
+            <span class="da-section-meta" id="da-discovery-count">0 selected</span>
+          </div>
+          <div class="da-section-body">
+            <!-- Goal chips -->
+            <div class="da-mini" style="margin-bottom:6px">Goals / Outcomes</div>
+            <div class="da-need-chips">
+              <span class="da-need-chip" data-need="more-leads" onclick="_daNeedToggle(this)">More leads</span>
+              <span class="da-need-chip" data-need="better-trust" onclick="_daNeedToggle(this)">Better trust</span>
+              <span class="da-need-chip" data-need="cleaner-presence" onclick="_daNeedToggle(this)">Cleaner online presence</span>
+              <span class="da-need-chip" data-need="fix-wrong-info" onclick="_daNeedToggle(this)">Fix wrong info</span>
+              <span class="da-need-chip" data-need="better-website" onclick="_daNeedToggle(this)">Better website</span>
+              <span class="da-need-chip" data-need="better-google" onclick="_daNeedToggle(this)">Better Google presence</span>
+              <span class="da-need-chip" data-need="more-reviews" onclick="_daNeedToggle(this)">More reviews</span>
+              <span class="da-need-chip" data-need="easier-contact" onclick="_daNeedToggle(this)">Easier contact / booking</span>
+              <span class="da-need-chip" data-need="better-followup" onclick="_daNeedToggle(this)">Better follow-up</span>
+              <span class="da-need-chip" data-need="email-domain" onclick="_daNeedToggle(this)">Business email / domain</span>
+              <span class="da-need-chip" data-need="ads-cleanup" onclick="_daNeedToggle(this)">Ads cleanup</span>
+              <span class="da-need-chip" data-need="unsure" onclick="_daNeedToggle(this)">Unsure — needs guidance</span>
+            </div>
+            <!-- Pain chips -->
+            <div class="da-mini" style="margin-top:10px;margin-bottom:6px">What's hurting most</div>
+            <div class="da-need-chips">
+              <span class="da-need-chip pain" data-dis="da-missed-calls" onclick="_daPainToggle(this,'da-missed-calls')">Not getting calls</span>
+              <span class="da-need-chip pain" data-dis="da-weak-website" onclick="_daPainToggle(this,'da-weak-website')">Looks outdated</span>
+              <span class="da-need-chip pain" data-dis="da-weak-presence" onclick="_daPainToggle(this,'da-weak-presence')">Wrong info online</span>
+              <span class="da-need-chip pain" onclick="_daNeedToggle(this)">Traffic not converting</span>
+              <span class="da-need-chip pain" data-dis="da-weak-followup" onclick="_daPainToggle(this,'da-weak-followup')">Inconsistent follow-up</span>
+              <span class="da-need-chip pain" data-dis="da-no-flow" onclick="_daPainToggle(this,'da-no-flow')">No clear online presence</span>
+              <span class="da-need-chip pain" onclick="_daNeedToggle(this)">Spending with weak results</span>
+            </div>
+            <!-- hidden checkboxes for existing persistence -->
+            <div style="display:none">
+              <input type="checkbox" id="da-weak-website" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-weak-presence" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-no-flow" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-missed-calls" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-weak-followup" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-more-reviews" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-estimate-problem" onchange="daScheduleSave()">
+              <input type="checkbox" id="da-ongoing-support" onchange="daScheduleSave()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Presence Parcels -->
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Presence</span>
+            <span class="da-section-title">Current infrastructure — tap to assess</span>
+          </div>
+          <div class="da-section-body">
+            <div class="da-parcels">
+
+              <div class="da-parcel" id="parcel-website" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Website</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Customers often check the website before calling. Weak or missing = lost trust before contact.</div>
+                  <select class="da-parcel-sel" id="psel-website" onchange="_daParcelChange('website',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Good</option>
+                    <option value="okay">Okay</option>
+                    <option value="outdated">Outdated</option>
+                    <option value="weak">Weak</option>
+                    <option value="broken">Broken</option>
+                    <option value="none">No website</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-gbp" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Google Business</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Wrong hours or missing info can cost calls before the owner even knows. High-impact fix.</div>
+                  <select class="da-parcel-sel" id="psel-gbp" onchange="_daParcelChange('gbp',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Good</option>
+                    <option value="weak">Weak</option>
+                    <option value="wrong-info">Wrong info</option>
+                    <option value="unclaimed">Unclaimed</option>
+                    <option value="none">None / not sure</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-reviews" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Reviews</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Few reviews or old ones can make a solid business look untested. Easy trust signal to fix.</div>
+                  <select class="da-parcel-sel" id="psel-reviews" onchange="_daParcelChange('reviews',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Strong</option>
+                    <option value="okay">Okay</option>
+                    <option value="weak">Weak</option>
+                    <option value="few">Very few</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-facebook" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Facebook</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">A stale page can look like the business is inactive or closed. Low lift to fix.</div>
+                  <select class="da-parcel-sel" id="psel-facebook" onchange="_daParcelChange('facebook',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Active</option>
+                    <option value="stale">Stale</option>
+                    <option value="weak">Weak</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-contact" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Contact Flow</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">If it's not easy to contact them, leads drop before anyone answers. Core fix.</div>
+                  <select class="da-parcel-sel" id="psel-contact" onchange="_daParcelChange('contact',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Clear</option>
+                    <option value="okay">Okay</option>
+                    <option value="weak">Weak</option>
+                    <option value="broken">Confusing / broken</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-followup" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Follow-Up</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Inconsistent follow-up means good leads go cold. Usually a manual-only process that's worth fixing.</div>
+                  <select class="da-parcel-sel" id="psel-followup" onchange="_daParcelChange('followup',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Consistent</option>
+                    <option value="okay">Mostly consistent</option>
+                    <option value="weak">Inconsistent</option>
+                    <option value="none">Manual only / weak</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-domain" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Domain / Email</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">A personal email or no domain can undercut trust on estimates and invoices.</div>
+                  <select class="da-parcel-sel" id="psel-domain" onchange="_daParcelChange('domain',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Set up</option>
+                    <option value="okay">Partial</option>
+                    <option value="weak">Personal email only</option>
+                    <option value="none">None / unclear</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-ads" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Ads</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Ads before the basics are solid can waste spend quickly. Worth noting the state.</div>
+                  <select class="da-parcel-sel" id="psel-ads" onchange="_daParcelChange('ads',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Running well</option>
+                    <option value="stale">Old / untouched</option>
+                    <option value="weak">Messy</option>
+                    <option value="none">None / paused</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="da-parcel" id="parcel-instagram" data-sev="" onclick="_daParcelToggle(this)">
+                <div class="da-parcel-cap">
+                  <span class="da-parcel-label">Instagram</span>
+                  <span class="da-parcel-sev"></span>
+                </div>
+                <div class="da-parcel-body">
+                  <div class="da-parcel-state">—</div>
+                  <div class="da-parcel-note">Varies by trade. Worth a quick note if it's stale or missing for a visual trade.</div>
+                  <select class="da-parcel-sel" id="psel-instagram" onchange="_daParcelChange('instagram',this.value)" onclick="event.stopPropagation()">
+                    <option value="">— assess —</option>
+                    <option value="good">Active</option>
+                    <option value="stale">Stale</option>
+                    <option value="weak">Weak</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+              </div>
+
+            </div><!-- /da-parcels -->
+          </div>
+        </div>
+
+        <!-- Field Notes -->
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Notes</span>
+            <span class="da-section-title">Field notebook — one place</span>
+          </div>
+          <div class="da-section-body">
+            <div class="da-notebook">
+              <textarea id="da-notes" placeholder="Raw signal — what they said, what you noticed, what needs fixing. Flesh out after the call." oninput="daScheduleSave()"></textarea>
+            </div>
+            <div class="da-note-starters">
+              <span class="da-note-starter" onclick="_daNoteStarter('Owner said the main issue is ')">Owner said…</span>
+              <span class="da-note-starter" onclick="_daNoteStarter('Biggest trust gap noticed: ')">Trust gap</span>
+              <span class="da-note-starter" onclick="_daNoteStarter('Quick win spotted: ')">Quick win</span>
+              <span class="da-note-starter" onclick="_daNoteStarter('Likely blocker: ')">Blocker</span>
+              <span class="da-note-starter" onclick="_daNoteStarter('Good fit because: ')">Fit note</span>
+            </div>
+            <!-- After-call detail -->
+            <details class="da-detail-block" style="margin-top:10px">
+              <summary>After call — tools, preferences, transcript, constraints</summary>
+              <div class="da-field" style="margin-top:8px">
+                <div class="da-mini">Business Type</div>
+                <input class="form-input" id="da-consult-business-type" type="text" placeholder="Owner-operated plumbing shop" oninput="daScheduleSave()">
+              </div>
+              <div class="da-field" style="margin-top:8px">
+                <div class="da-mini">Current Tools / Accounts</div>
+                <textarea class="form-textarea" id="da-consult-tools" style="min-height:60px" placeholder="Website host, Google/Facebook status, phone system, CRM, forms…" oninput="daScheduleSave()"></textarea>
+              </div>
+              <div class="da-field" style="margin-top:8px">
+                <div class="da-mini">Owner Preferences</div>
+                <textarea class="form-textarea" id="da-consult-preferences" style="min-height:60px" placeholder="How they like updates, who gets leads, preferred channels…" oninput="daScheduleSave()"></textarea>
+              </div>
+              <div class="da-field" style="margin-top:8px">
+                <div class="da-mini">Transcript / Recording Summary</div>
+                <textarea class="form-textarea" id="da-consult-transcript" style="min-height:60px" placeholder="Short summary of the call or recording…" oninput="daScheduleSave()"></textarea>
+              </div>
+              <div class="da-field" style="margin-top:8px">
+                <div class="da-mini">Do Not Recommend</div>
+                <textarea class="form-textarea" id="da-consult-do-not-recommend" style="min-height:50px" placeholder="Any offer or module to exclude from the recommendation…" oninput="daScheduleSave()"></textarea>
+              </div>
+            </details>
+            <!-- freeform notes hidden field: keeps prior save contract -->
+            <textarea style="display:none" id="da-consult-freeform" oninput="daScheduleSave()"></textarea>
+          </div>
+        </div>
+
         <div class="da-step-nav">
           <div class="da-step-nav-left"></div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(2)">Next: What They Need &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(3)">Shape Package &#8594;</button>
           </div>
         </div>
+      </div><!-- /da-step-1 -->
+
+      <!-- ── Invisible step 2 panel (legacy nav compat) ─────────────── -->
+      <div class="da-step-panel" id="da-step-2" style="display:none">
+        <!-- Step 2 content merged into Step 1 Gather surface above -->
+        <!-- discovery count still updates via daRender() -->
       </div>
 
-      <!-- ── Step 2: Pain & Discovery ── -->
-      <div class="da-step-panel" id="da-step-2">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 2 · What They Need</div>
-              <div class="da-card-sub">Tag what the owner is dealing with. One notes field. Keep moving.</div>
-            </div>
-            <span class="tag" id="da-discovery-count">0 selected</span>
-          </div>
-
-          <!-- Pain chips: always visible, tap to capture live -->
-          <div class="da-checklist">
-            <label class="da-check"><input type="checkbox" id="da-weak-website" onchange="daScheduleSave()"><span>Poor or missing website<small>No site, dated site, or site does not help them get calls.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-weak-presence" onchange="daScheduleSave()"><span>Weak Google/Facebook presence<small>They are hard to find or do not look trustworthy online.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-no-flow" onchange="daScheduleSave()"><span>No clear contact flow<small>Leads are not clearly routed to the right person.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-missed-calls" onchange="daScheduleSave()"><span>Missed calls<small>They are losing calls before anyone can answer.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-weak-followup" onchange="daScheduleSave()"><span>Weak follow-up<small>Lead follow-through feels slow or inconsistent.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-more-reviews" onchange="daScheduleSave()"><span>Wants more reviews<small>They want more trust signals from customers.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-estimate-problem" onchange="daScheduleSave()"><span>Estimate / job-status communication problem<small>They need better update flow for quotes and job progress.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-ongoing-support" onchange="daScheduleSave()"><span>Wants ongoing support after refresh<small>They want a light owner workflow helper beyond the initial fix.</small></span></label>
-          </div>
-
-          <!-- Primary note dump: use this during the call -->
-          <div style="margin-top:12px">
-            <label class="da-mini">Live Call Notes</label>
-            <textarea class="form-textarea da-note" id="da-consult-freeform" placeholder="Raw consult notes — anything worth capturing now. Flesh out the rest after the call." oninput="daScheduleSave()"></textarea>
-          </div>
-
-          <!-- Deferred: complete after call -->
-          <details class="da-detail-block">
-            <summary>Complete after call — business type, tools, preferences, transcript, constraints</summary>
-            <div class="da-grid-2" style="margin-top:10px">
-              <div>
-                <label class="da-mini">Business Type</label>
-                <input class="form-input" id="da-consult-business-type" type="text" placeholder="Owner-operated plumbing shop" oninput="daScheduleSave()">
-              </div>
-            </div>
-            <div style="margin-top:10px">
-              <label class="da-mini">Current Tools / Accounts</label>
-              <textarea class="form-textarea da-note" id="da-consult-tools" placeholder="Current website host, Google/Facebook status, phone system, CRM, inbox, forms…" oninput="daScheduleSave()"></textarea>
-            </div>
-            <div style="margin-top:10px">
-              <label class="da-mini">Owner Preferences</label>
-              <textarea class="form-textarea da-note" id="da-consult-preferences" placeholder="How they like updates, who should get leads, preferred channels, support expectations…" oninput="daScheduleSave()"></textarea>
-            </div>
-            <div style="margin-top:10px">
-              <label class="da-mini">Transcript / Recording Summary</label>
-              <textarea class="form-textarea da-note" id="da-consult-transcript" placeholder="Short summary of the call or recording…" oninput="daScheduleSave()"></textarea>
-            </div>
-            <div style="margin-top:10px">
-              <label class="da-mini">Do Not Recommend</label>
-              <textarea class="form-textarea da-note" id="da-consult-do-not-recommend" placeholder="Any offer, module, channel, or tool you want the draft recommender to avoid…" oninput="daScheduleSave()"></textarea>
-            </div>
-          </details>
-
-          <div class="qw-section">
-            <div class="qw-section-hdr">
-              <div class="qw-section-title">Quick Wins</div>
-              <div class="qw-add-row">
-                <select class="qw-template-sel" id="qw-template-sel" onchange="if(this.value!==''){qwApplyTemplate(this.value);this.value=''}">
-                  <option value="">+ Template…</option>
-                </select>
-                <button class="btn btn-ghost" style="font-size:11px" onclick="qwAdd()">+ Add Win</button>
-              </div>
-            </div>
-            <div id="qw-list"><div style="font-size:11px;color:var(--muted);padding:6px 0">No quick wins captured yet. Use + Add Win or a template above.</div></div>
-          </div>
-        </section>
-        <div class="da-step-nav">
-          <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(1)">&#8592; Owner</button>
-          </div>
-          <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(3)">Next: Package &#8594;</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Step 3: Draft Recommendation ── -->
+      <!-- ── SHAPE: Step 3 ───────────────────────────────────────────── -->
       <div class="da-step-panel" id="da-step-3">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 3 · Recommended Package</div>
-              <div class="da-card-sub">Here's what fits based on what they told you. Adjust and confirm before moving on.</div>
-            </div>
-            <button class="btn btn-ghost" style="font-size:11px" onclick="daUseRecommendation()">Confirm Draft Stack</button>
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Package</span>
+            <span class="da-section-title">Draft recommendation</span>
+            <button class="btn btn-ghost" style="font-size:10px;margin-left:auto" onclick="daUseRecommendation()">Confirm Draft</button>
           </div>
-          <div class="da-stack-box">
+          <div class="da-section-body">
             <div class="da-answer-grid">
               <div class="da-answer-row">
-                <div class="da-answer-label">Recommended offer</div>
+                <div class="da-answer-label">Recommended</div>
                 <div class="da-answer-copy" id="da-rec-package">No recommendation yet.</div>
               </div>
               <div class="da-answer-row">
-                <div class="da-answer-label">What it includes</div>
-                <div class="da-answer-copy" id="da-rec-includes">Fill the snapshot and discovery fields to guide the recommendation.</div>
+                <div class="da-answer-label">Includes</div>
+                <div class="da-answer-copy" id="da-rec-includes">Fill Gather to guide the recommendation.</div>
               </div>
               <div class="da-answer-row">
-                <div class="da-answer-label">Suggested modules</div>
-                <div class="da-answer-copy" id="da-rec-modules">No specialty modules suggested right now.</div>
+                <div class="da-answer-label">Modules</div>
+                <div class="da-answer-copy" id="da-rec-modules">None suggested yet.</div>
               </div>
               <div class="da-answer-row">
-                <div class="da-answer-label">Build status</div>
-                <div class="da-answer-copy" id="da-rec-build-status">Planned</div>
+                <div class="da-answer-label">Why it fits</div>
+                <div class="da-answer-subtle" id="da-rec-reason">Tag needs and presence to see the fit.</div>
               </div>
               <div class="da-answer-row">
-                <div class="da-answer-label">Launch eligibility</div>
-                <div class="da-answer-copy" id="da-rec-launch-eligible">Blocked until hardened</div>
+                <div class="da-answer-label">Access needed</div>
+                <div class="da-answer-subtle" id="da-rec-access">Fill the consult to see access needs.</div>
               </div>
               <div class="da-answer-row">
-                <div class="da-answer-label">Why this fits</div>
-                <div class="da-answer-subtle" id="da-rec-reason">Fill the snapshot and discovery fields to guide the stack.</div>
-              </div>
-              <div class="da-answer-row">
-                <div class="da-answer-label">Likely access needed</div>
-                <div class="da-answer-subtle" id="da-rec-access">Fill the consult to see likely access needs.</div>
-              </div>
-              <div class="da-answer-row">
-                <div class="da-answer-label">Likely assets needed</div>
-                <div class="da-answer-subtle" id="da-rec-assets">Fill the consult to see likely asset needs.</div>
+                <div class="da-answer-label">Launch</div>
+                <div class="da-answer-subtle" id="da-rec-launch-eligible">Blocked until hardened</div>
               </div>
             </div>
-          </div>
-          <div style="margin-top:12px" class="da-grid-2">
-            <div>
-              <label class="da-mini">Core Offer</label>
-              <select class="form-select" id="da-core-offer" onchange="daScheduleSave()">
-                <option value="">Select core offer…</option>
-                <option value="presence_refresh">Presence Refresh</option>
-                <option value="starter_website">Starter Website</option>
-                <option value="lead_contact_setup">Lead &amp; Contact Setup</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-mini">Bundle</label>
-              <select class="form-select" id="da-bundle-key" onchange="daScheduleSave()">
-                <option value="">No bundle</option>
-                <option value="basic_cleanup">Basic Cleanup</option>
-                <option value="presence_website">Presence + Website</option>
-                <option value="full_starter_package">Full Starter Package</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <div class="da-mini">Specialty Modules</div>
-            <div class="da-pill-row">
-              <label class="da-pill"><input type="checkbox" id="da-module-missed_call_recovery" onchange="daScheduleSave()"> Missed Call Recovery</label>
-              <label class="da-pill"><input type="checkbox" id="da-module-follow_up_reminder_setup" onchange="daScheduleSave()"> Follow-Up &amp; Reminder Setup</label>
-              <label class="da-pill"><input type="checkbox" id="da-module-review_request_system" onchange="daScheduleSave()"> Review Request System</label>
-              <label class="da-pill"><input type="checkbox" id="da-module-estimate_job_status_communication" onchange="daScheduleSave()"> Estimate &amp; Job Status Communication</label>
-              <label class="da-pill"><input type="checkbox" id="da-module-client_approval_estimate_portal" onchange="daScheduleSave()"> Client Approval / Estimate Portal</label>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <div class="da-mini">Internal Only</div>
-            <div class="da-pill-row">
-              <label class="da-pill"><input type="checkbox" id="da-module-mobile_admin_workflow_helper" onchange="daScheduleSave()"> Mobile Admin / owner workflow helper</label>
-            </div>
-            <div class="da-answer-subtle" style="margin-top:6px">Internal operator helper only. This should not be sold as a public package.</div>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Offer Notes</label>
-            <textarea class="form-textarea da-note" id="da-offer-notes" placeholder="Reason for the recommendation, scope notes, objections, or special constraints…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div class="po-section">
-            <div class="po-section-hdr">
+
+            <div class="da-grid-2" style="margin-top:14px">
               <div>
-                <div class="po-section-title">Simple Options</div>
-                <div class="po-section-sub">Turn the quick wins into an editable recommendation, optional second path, and stretch note for manual follow-up.</div>
+                <div class="da-mini" style="margin-bottom:5px">Core Offer</div>
+                <select class="form-select" id="da-core-offer" onchange="daScheduleSave()">
+                  <option value="">Select core offer…</option>
+                  <option value="presence_refresh">Presence Refresh</option>
+                  <option value="starter_website">Starter Website</option>
+                  <option value="lead_contact_setup">Lead &amp; Contact Setup</option>
+                </select>
               </div>
-              <div class="po-actions">
-                <button class="btn btn-ghost" style="font-size:11px" onclick="poBuildFromRecommendation()">Build From Recommendation</button>
-                <button class="btn btn-ghost" style="font-size:11px" onclick="poAdd({label:'Optional Option',offer_keys:[],price_note:'',scope_note:'',recommended:false,assumptions:''})">+ Add Option</button>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Bundle</div>
+                <select class="form-select" id="da-bundle-key" onchange="daScheduleSave()">
+                  <option value="">No bundle</option>
+                  <option value="basic_cleanup">Basic Cleanup</option>
+                  <option value="presence_website">Presence + Website</option>
+                  <option value="full_starter_package">Full Starter Package</option>
+                </select>
               </div>
             </div>
-            <div id="po-list"><div class="po-empty">No simple options yet. Build from the current recommendation or add one manually.</div></div>
-            <div class="po-accept-box">
-              <div class="po-accept-hdr">
-                <div>
-                  <div class="po-accept-title">Accepted Option</div>
-                  <div class="po-accept-sub">Manual yes-path only. Mark the owner&apos;s chosen option, then create activation-ready scope when it should feed delivery.</div>
-                </div>
-                <div class="po-actions">
-                  <button class="btn btn-ghost" style="font-size:11px" onclick="poSetAcceptedStatus('client_leaning')">Mark Leaning</button>
-                  <button class="btn btn-ghost" style="font-size:11px" onclick="poSetAcceptedStatus('client_accepted')">Mark Accepted</button>
-                  <button class="btn btn-primary" style="font-size:11px" onclick="poCreateActivationScope()">Create Activation Scope</button>
-                </div>
+
+            <div style="margin-top:10px">
+              <div class="da-mini" style="margin-bottom:6px">Specialty Modules</div>
+              <div class="da-pill-row">
+                <label class="da-pill"><input type="checkbox" id="da-module-missed_call_recovery" onchange="daScheduleSave()"> Missed Call Recovery</label>
+                <label class="da-pill"><input type="checkbox" id="da-module-follow_up_reminder_setup" onchange="daScheduleSave()"> Follow-Up &amp; Reminder</label>
+                <label class="da-pill"><input type="checkbox" id="da-module-review_request_system" onchange="daScheduleSave()"> Review Request</label>
+                <label class="da-pill"><input type="checkbox" id="da-module-estimate_job_status_communication" onchange="daScheduleSave()"> Estimate &amp; Job Status</label>
+                <label class="da-pill"><input type="checkbox" id="da-module-client_approval_estimate_portal" onchange="daScheduleSave()"> Estimate Portal</label>
+                <label class="da-pill"><input type="checkbox" id="da-module-mobile_admin_workflow_helper" onchange="daScheduleSave()"> Mobile Admin Helper</label>
               </div>
-              <div class="po-accept-grid">
-                <div>
-                  <label class="qw-label">Selected option</label>
-                  <select class="qw-select" id="po-accepted-option-id" onchange="poAcceptedOptionChanged()">
-                    <option value="">No selected option</option>
+            </div>
+
+            <div style="margin-top:10px">
+              <div class="da-mini" style="margin-bottom:5px">Offer Notes</div>
+              <textarea class="form-textarea" id="da-offer-notes" style="min-height:60px" placeholder="Recommendation rationale, scope notes, constraints…" oninput="daScheduleSave()"></textarea>
+            </div>
+
+            <!-- Quick Wins -->
+            <div style="margin-top:14px;border-top:1px solid var(--front-border-dim);padding-top:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px">
+                <div class="da-mini">Quick Wins</div>
+                <div style="display:flex;gap:6px">
+                  <select class="form-select" id="qw-template-sel" style="font-size:10px;padding:4px 7px" onchange="if(this.value!==''){qwApplyTemplate(this.value);this.value=''}">
+                    <option value="">+ Template…</option>
                   </select>
-                </div>
-                <div>
-                  <label class="qw-label">Status</label>
-                  <select class="qw-select" id="po-accepted-status" onchange="daScheduleSave()">
-                    <option value="draft_only">Draft only</option>
-                    <option value="client_leaning">Client leaning</option>
-                    <option value="client_accepted">Client accepted</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="qw-label">Acceptance date</label>
-                  <input class="qw-input" id="po-accepted-date" type="date" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="qw-label">Selected option label</label>
-                  <input class="qw-input" id="po-accepted-label" type="text" placeholder="Recommended Option" oninput="daScheduleSave()">
+                  <button class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="qwAdd()">+ Add</button>
                 </div>
               </div>
-              <div class="qw-field-row">
-                <div class="qw-label">Acceptance note</div>
-                <textarea class="qw-input" id="po-accepted-note" rows="2" placeholder="What the owner said yes to, timing, or decision context…" oninput="daScheduleSave()"></textarea>
+              <div id="qw-list"><div style="font-size:11px;color:var(--muted);padding:4px 0">No quick wins yet.</div></div>
+            </div>
+
+            <!-- Simple Options -->
+            <div style="margin-top:14px;border-top:1px solid var(--front-border-dim);padding-top:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+                <div class="da-mini">Simple Options</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="poBuildFromRecommendation()">Build from Rec</button>
+                  <button class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="poAdd({label:'Option',offer_keys:[],price_note:'',scope_note:'',recommended:false,assumptions:''})">+ Add Option</button>
+                </div>
               </div>
-              <div class="qw-field-row">
-                <div class="qw-label">Accepted scope note</div>
-                <textarea class="qw-input" id="po-accepted-scope-note" rows="2" placeholder="Scope carried into activation…" oninput="daScheduleSave()"></textarea>
-              </div>
-              <div class="qw-field-row">
-                <div class="qw-label">Owner constraints / assumptions</div>
-                <textarea class="qw-input" id="po-accepted-assumptions" rows="2" placeholder="Access, timing, budget, exclusions, or assumptions to carry forward…" oninput="daScheduleSave()"></textarea>
+              <div id="po-list"><div style="font-size:11px;color:var(--muted);padding:4px 0">No options yet.</div></div>
+
+              <div style="margin-top:10px;padding:10px;border:1px solid var(--front-border-dim);border-radius:3px;background:rgba(0,0,0,.2)">
+                <div class="da-mini" style="margin-bottom:8px">Accepted Option</div>
+                <div class="da-grid-2" style="gap:8px">
+                  <div>
+                    <div class="da-mini" style="margin-bottom:4px">Selected option</div>
+                    <select class="form-select" id="po-accepted-option-id" onchange="poAcceptedOptionChanged()">
+                      <option value="">None</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="da-mini" style="margin-bottom:4px">Status</div>
+                    <select class="form-select" id="po-accepted-status" onchange="daScheduleSave()">
+                      <option value="draft_only">Draft only</option>
+                      <option value="client_leaning">Client leaning</option>
+                      <option value="client_accepted">Client accepted</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="da-mini" style="margin-bottom:4px">Acceptance date</div>
+                    <input class="form-input" id="po-accepted-date" type="date" oninput="daScheduleSave()">
+                  </div>
+                  <div>
+                    <div class="da-mini" style="margin-bottom:4px">Label</div>
+                    <input class="form-input" id="po-accepted-label" type="text" placeholder="Recommended Option" oninput="daScheduleSave()">
+                  </div>
+                </div>
+                <div style="margin-top:8px">
+                  <div class="da-mini" style="margin-bottom:4px">Acceptance note</div>
+                  <textarea class="form-textarea" id="po-accepted-note" rows="2" placeholder="What the owner said yes to…" oninput="daScheduleSave()"></textarea>
+                </div>
+                <div style="margin-top:6px">
+                  <div class="da-mini" style="margin-bottom:4px">Scope note</div>
+                  <textarea class="form-textarea" id="po-accepted-scope-note" rows="2" placeholder="Scope carried into activation…" oninput="daScheduleSave()"></textarea>
+                </div>
+                <div style="margin-top:6px">
+                  <div class="da-mini" style="margin-bottom:4px">Constraints / assumptions</div>
+                  <textarea class="form-textarea" id="po-accepted-assumptions" rows="2" placeholder="Access, timing, budget, exclusions…" oninput="daScheduleSave()"></textarea>
+                </div>
+                <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-ghost" style="font-size:10px" onclick="poSetAcceptedStatus('client_leaning')">Mark Leaning</button>
+                  <button class="btn btn-ghost" style="font-size:10px" onclick="poSetAcceptedStatus('client_accepted')">Mark Accepted</button>
+                  <button class="btn btn-primary" style="font-size:10px" onclick="poCreateActivationScope()">Create Activation Scope</button>
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+
         <div class="da-step-nav">
           <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(2)">&#8592; Needs</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(1)">&#8592; Gather</button>
           </div>
           <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(4)">Next: Confirm &#8594;</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(5)">Confirm &#8594;</button>
           </div>
+        </div>
+      </div><!-- /da-step-3 -->
+
+      <!-- ── Legacy step 4 compat ──────────────────────────────────────── -->
+      <div class="da-step-panel" id="da-step-4" style="display:none">
+        <!-- Merged into step 3 Shape surface -->
+        <div class="po-accepted-context" id="da-accepted-context-step4"></div>
+        <!-- hidden fields that daRender() still targets -->
+        <div style="display:none">
+          <div id="da-visibility-state"></div>
+          <div id="da-target-visibility-state"></div>
+          <div id="da-kit-key"></div>
+          <div id="da-ownership-mode"></div>
+          <div id="da-support-mode"></div>
+          <div id="da-truth-warning"></div>
+          <div id="da-current-truth-notes"></div>
+          <div id="da-missing-artifacts"></div>
+          <div id="da-missing-qa"></div>
+          <div id="da-missing-closeout"></div>
+          <div id="da-missing-rollback"></div>
+          <div id="da-next-hardening-step"></div>
         </div>
       </div>
 
-      <!-- ── Step 4: Confirm Stack ── -->
-      <div class="da-step-panel" id="da-step-4">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 4 · Confirm &amp; Accept</div>
-              <div class="da-card-sub">Owner has heard the package. Capture acceptance and any scope notes.</div>
-            </div>
-          </div>
-          <div class="po-accepted-context" id="da-accepted-context-step4"></div>
-
-          <!-- Acceptance fields — primary consult path -->
-          <div class="da-grid-2" style="margin-top:8px">
-            <div>
-              <label class="da-mini">Accepted Option</label>
-              <div class="da-answer-copy" id="da-confirm-accepted-label" style="min-height:24px;color:var(--text)">—</div>
-            </div>
-            <div>
-              <label class="da-mini">Stage</label>
-              <select class="form-select" id="da-stage" onchange="daScheduleSave()">
-                <option value="call_booked">Consultation Saved</option>
-                <option value="proposal_ready">Recommended Package Built</option>
-                <option value="won">Owner Accepted</option>
-                <option value="deployment_pending">Deploy Ready</option>
-                <option value="live">Live</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Scope / Acceptance Notes</label>
-            <textarea class="form-textarea da-note" id="da-scope-acceptance-notes" placeholder="What the owner agreed to, any verbal scope details, special requests…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div class="da-blocker" id="da-truth-warning" style="margin-top:12px">Ready: this stack has an active delivery kit behind it.</div>
-
-          <!-- Internal hardening detail — deferred -->
-          <details class="da-detail-block" style="margin-top:14px">
-            <summary>🔧 Internal Stack Detail <span style="font-size:10px;color:var(--muted);margin-left:6px">operator reference — not needed during the consult</span></summary>
-            <div style="padding-top:4px">
-              <div class="da-grid-2">
-                <div>
-                  <div class="da-mini">Offer Type / Build</div>
-                  <div class="da-answer-copy" id="da-visibility-state">Public · Planned</div>
-                </div>
-                <div>
-                  <div class="da-mini">Launch Eligibility</div>
-                  <div class="da-answer-subtle" id="da-target-visibility-state">Launch blocked</div>
-                </div>
-                <div>
-                  <div class="da-mini">Kit</div>
-                  <div class="da-answer-copy" id="da-kit-key">No kit selected</div>
-                </div>
-                <div>
-                  <div class="da-mini">Ownership</div>
-                  <div class="da-answer-copy" id="da-ownership-mode">Unset</div>
-                </div>
-                <div>
-                  <div class="da-mini">Support</div>
-                  <div class="da-answer-subtle" id="da-support-mode">Optional support by default.</div>
-                </div>
-              </div>
-              <div style="margin-top:12px">
-                <div class="da-mini">Current Truth Notes</div>
-                <div class="da-list-box" id="da-current-truth-notes"></div>
-              </div>
-              <div class="da-grid-2" style="margin-top:12px">
-                <div>
-                  <div class="da-mini">Missing Artifacts</div>
-                  <div class="da-list-box" id="da-missing-artifacts"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Missing QA</div>
-                  <div class="da-list-box" id="da-missing-qa"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Missing Closeout</div>
-                  <div class="da-list-box" id="da-missing-closeout"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Missing Rollback</div>
-                  <div class="da-list-box" id="da-missing-rollback"></div>
-                </div>
-              </div>
-              <div style="margin-top:12px">
-                <div class="da-mini">Next Hardening Step</div>
-                <div class="da-answer-subtle" id="da-next-hardening-step">No next hardening step yet.</div>
-              </div>
-            </div>
-          </details>
-        </section>
-        <div class="da-step-nav">
-          <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(3)">&#8592; Package</button>
-          </div>
-          <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(5)">Next: Deliver &#8594;</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Step 5: Activation Packet ── -->
+      <!-- ── CONFIRM: Step 5 ─────────────────────────────────────────── -->
       <div class="da-step-panel" id="da-step-5">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 5 · Delivery Prep</div>
-              <div class="da-card-sub">Track what still needs collecting before you can hand off and go live.</div>
-            </div>
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Confirm</span>
+            <span class="da-section-title">Activation packet &amp; readiness</span>
           </div>
-          <div class="po-accepted-context" id="da-accepted-context-step5"></div>
-
-          <!-- Primary delivery tracking — always visible -->
-          <div style="margin-top:8px">
-            <label class="da-mini">Next Step</label>
-            <input class="form-input" id="da-next-step" type="text" placeholder="Immediate operator next step" oninput="daScheduleSave()">
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Blockers</label>
-            <textarea class="form-textarea da-note" id="da-blockers" placeholder="One blocker per line…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div style="margin-top:10px">
-            <label class="da-mini">Artifact Links</label>
-            <textarea class="form-textarea da-note" id="da-artifact-links" placeholder="One link per line for docs, sheets, approval pages, or handoff assets…" oninput="daScheduleSave()"></textarea>
-          </div>
-          <div class="da-grid-3" style="margin-top:12px">
-            <label class="da-check"><input type="checkbox" id="da-assets-ready" onchange="daScheduleSave()"><span>Assets ready<small>All required assets are collected.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-qa-ready" onchange="daScheduleSave()"><span>QA ready<small>The QA path is checked and ready.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-rollback-ready" onchange="daScheduleSave()"><span>Rollback ready<small>Safe mode / rollback is documented where needed.</small></span></label>
-            <label class="da-check"><input type="checkbox" id="da-handoff-ready" onchange="daScheduleSave()"><span>Handoff ready<small>The client handoff packet is ready.</small></span></label>
-          </div>
-
-          <!-- Packet / admin detail — deferred -->
-          <details class="da-detail-block" style="margin-top:14px">
-            <summary>📦 Packet &amp; Admin Detail <span style="font-size:10px;color:var(--muted);margin-left:6px">post-acceptance tracking — open after owner commits</span></summary>
-            <div style="padding-top:4px">
-              <div class="da-grid-2">
-                <div>
-                  <label class="da-mini">Activation Packet Status</label>
-                  <select class="form-select" id="da-activation-packet-status" onchange="daScheduleSave()">
-                    <option value="draft">Draft</option>
-                    <option value="collecting">Collecting</option>
-                    <option value="ready_for_start">Ready for start</option>
-                    <option value="ready_for_qa">Ready for QA</option>
-                    <option value="ready_for_go_live">Ready for go-live</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="da-mini">Credential / Access Status</label>
-                  <input class="form-input" id="da-credential-status" type="text" placeholder="requested / partial / verified" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="da-mini">Handoff Status</label>
-                  <input class="form-input" id="da-handoff-status" type="text" placeholder="not ready / queued / delivered" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="da-mini">Closeout Status</label>
-                  <input class="form-input" id="da-closeout-status" type="text" placeholder="open / awaiting confirmation / closed" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="da-mini">Revision Round</label>
-                  <input class="form-input" id="da-revision-round" type="number" min="0" step="1" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="da-mini">Revision Status</label>
-                  <input class="form-input" id="da-revision-status" type="text" placeholder="not started / in review / complete" oninput="daScheduleSave()">
-                </div>
-                <div>
-                  <label class="da-mini">Change-Order Status</label>
-                  <select class="form-select" id="da-change-order-status" onchange="daScheduleSave()">
-                    <option value="in_scope">In scope</option>
-                    <option value="review_needed">Review needed</option>
-                    <option value="sent">Change order sent</option>
-                    <option value="approved">Change order approved</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="da-check"><input type="checkbox" id="da-change-order-needed" onchange="daScheduleSave()"><span>Change order needed<small>Use when the client asks for new deliverables, channels, or integrations outside the sold scope.</small></span></label>
-                </div>
+          <div class="da-section-body">
+            <div class="po-accepted-context" id="da-accepted-context-step5"></div>
+            <div class="da-grid-2">
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Packet Status</div>
+                <select class="form-select" id="da-activation-packet-status" onchange="daScheduleSave()">
+                  <option value="draft">Draft</option>
+                  <option value="collecting">Collecting</option>
+                  <option value="ready_for_start">Ready for start</option>
+                  <option value="ready_for_qa">Ready for QA</option>
+                  <option value="ready_for_go_live">Ready for go-live</option>
+                  <option value="delivered">Delivered</option>
+                </select>
               </div>
-              <div style="margin-top:10px">
-                <label class="da-mini">Change-Order Notes</label>
-                <textarea class="form-textarea da-note" id="da-change-order-notes" placeholder="What changed, what is out of scope, and what needs approval…" oninput="daScheduleSave()"></textarea>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Stage</div>
+                <select class="form-select" id="da-stage" onchange="daScheduleSave()">
+                  <option value="call_booked">Call booked</option>
+                  <option value="consult_done">Consult done</option>
+                  <option value="proposal_ready">Proposal ready</option>
+                  <option value="won">Won</option>
+                  <option value="deployment_pending">Deployment pending</option>
+                  <option value="live">Live</option>
+                </select>
               </div>
-              <div class="da-grid-2" style="margin-top:12px">
-                <div>
-                  <div class="da-mini">Activation Packet</div>
-                  <div class="da-list-box" id="da-activation-packet"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Definition of Done</div>
-                  <div class="da-list-box" id="da-definition-of-done"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Required Artifacts</div>
-                  <div class="da-list-box" id="da-required-artifacts"></div>
-                </div>
-                <div>
-                  <div class="da-mini">Required Access</div>
-                  <div class="da-list-box" id="da-required-access"></div>
-                </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Credential / Access</div>
+                <input class="form-input" id="da-credential-status" type="text" placeholder="requested / partial / verified" oninput="daScheduleSave()">
               </div>
-              <div style="margin-top:12px">
-                <div class="da-mini">Rollback / Safe Mode</div>
-                <div class="da-list-box" id="da-rollback-plan"></div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Handoff Status</div>
+                <input class="form-input" id="da-handoff-status" type="text" placeholder="not ready / queued / delivered" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Closeout Status</div>
+                <input class="form-input" id="da-closeout-status" type="text" placeholder="open / awaiting confirmation / closed" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Revision Round</div>
+                <input class="form-input" id="da-revision-round" type="number" min="0" step="1" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Revision Status</div>
+                <input class="form-input" id="da-revision-status" type="text" placeholder="not started / in review / complete" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Change-Order Status</div>
+                <select class="form-select" id="da-change-order-status" onchange="daScheduleSave()">
+                  <option value="in_scope">In scope</option>
+                  <option value="review_needed">Review needed</option>
+                  <option value="sent">Change order sent</option>
+                  <option value="approved">Change order approved</option>
+                </select>
               </div>
             </div>
-          </details>
-        </section>
-        <div class="da-step-nav">
-          <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(4)">&#8592; Confirm</button>
-          </div>
-          <div class="da-step-nav-right">
-            <button class="btn btn-ghost" onclick="daGoToStep(6)">Next: Next Move &#8594;</button>
+            <div style="margin-top:10px">
+              <label class="da-check"><input type="checkbox" id="da-change-order-needed" onchange="daScheduleSave()"><span>Change order needed<small>Client asked for new deliverables outside sold scope.</small></span></label>
+            </div>
+            <div style="margin-top:8px">
+              <div class="da-mini" style="margin-bottom:5px">Change-Order Notes</div>
+              <textarea class="form-textarea" id="da-change-order-notes" style="min-height:52px" placeholder="What changed, what's out of scope, what needs approval…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div style="margin-top:10px">
+              <div class="da-mini" style="margin-bottom:5px">Next Step</div>
+              <input class="form-input" id="da-next-step" type="text" placeholder="Immediate operator next step" oninput="daScheduleSave()">
+            </div>
+            <div style="margin-top:8px">
+              <div class="da-mini" style="margin-bottom:5px">Blockers</div>
+              <textarea class="form-textarea" id="da-blockers" style="min-height:52px" placeholder="One blocker per line…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div style="margin-top:8px">
+              <div class="da-mini" style="margin-bottom:5px">Artifact Links</div>
+              <textarea class="form-textarea" id="da-artifact-links" style="min-height:52px" placeholder="One link per line for docs, sheets, handoff assets…" oninput="daScheduleSave()"></textarea>
+            </div>
+            <div class="da-grid-3" style="margin-top:12px">
+              <label class="da-check"><input type="checkbox" id="da-assets-ready" onchange="daScheduleSave()"><span>Assets ready<small>All required assets collected.</small></span></label>
+              <label class="da-check"><input type="checkbox" id="da-access-collected" onchange="daScheduleSave()"><span>Access collected<small>Vendor access verified.</small></span></label>
+              <label class="da-check"><input type="checkbox" id="da-qa-ready" onchange="daScheduleSave()"><span>QA ready<small>QA path is checked.</small></span></label>
+              <label class="da-check"><input type="checkbox" id="da-rollback-ready" onchange="daScheduleSave()"><span>Rollback ready<small>Safe mode documented.</small></span></label>
+              <label class="da-check"><input type="checkbox" id="da-handoff-ready" onchange="daScheduleSave()"><span>Handoff ready<small>Client packet ready.</small></span></label>
+            </div>
+            <div class="da-grid-2" style="margin-top:12px">
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Activation Packet</div>
+                <div class="da-list-box" id="da-activation-packet"></div>
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Definition of Done</div>
+                <div class="da-list-box" id="da-definition-of-done"></div>
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Required Artifacts</div>
+                <div class="da-list-box" id="da-required-artifacts"></div>
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Required Access</div>
+                <div class="da-list-box" id="da-required-access"></div>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="da-mini" style="margin-bottom:5px">Rollback / Safe Mode</div>
+              <div class="da-list-box" id="da-rollback-plan"></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- ── Step 6: Action ── -->
+        <div class="da-step-nav">
+          <div class="da-step-nav-left">
+            <button class="btn btn-ghost" onclick="daGoToStep(3)">&#8592; Shape</button>
+          </div>
+          <div class="da-step-nav-right">
+            <button class="btn btn-ghost" onclick="daGoToStep(6)">Next Move &#8594;</button>
+          </div>
+        </div>
+      </div><!-- /da-step-5 -->
+
+      <!-- ── Step 6: Next Move ──────────────────────────────────────── -->
       <div class="da-step-panel" id="da-step-6">
-        <section class="da-card">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Step 6 · Next Move</div>
-              <div class="da-card-sub">Price safely, capture approvals, and only launch when the stack is actually ready.</div>
-            </div>
-            <span class="tag" id="da-price-badge">Recommendation only</span>
+        <div class="da-section">
+          <div class="da-section-hdr">
+            <span class="da-section-kicker">Action</span>
+            <span class="da-section-title">Price, approve, and move</span>
+            <span class="tag" id="da-price-badge" style="margin-left:auto">Recommendation only</span>
           </div>
-          <div class="po-accepted-context" id="da-accepted-context-step6"></div>
-          <div>
-            <div class="da-mini">Suggested price guidance</div>
-            <div class="da-price-range" id="da-price-range">Recommendation only</div>
-            <div class="da-price-help" id="da-price-help">The range tightens or widens based on how mixed the scope sounds on the call.</div>
-          </div>
-          <div class="da-grid-2" style="margin-top:12px">
+          <div class="da-section-body">
+            <div class="po-accepted-context" id="da-accepted-context-step6"></div>
             <div>
-              <label class="da-mini">Pricing Mode</label>
-              <select class="form-select" id="da-pricing-mode" onchange="daScheduleSave()">
-                <option value="live_quote">Live quote</option>
-                <option value="formal_estimate">Formal estimate</option>
-              </select>
+              <div class="da-mini" style="margin-bottom:4px">Suggested price</div>
+              <div class="da-price-range" id="da-price-range">Recommendation only</div>
+              <div class="da-price-help" id="da-price-help">Range tightens as scope becomes clearer.</div>
             </div>
-            <div>
-              <label class="da-mini">Quoted Amount Override</label>
-              <input class="form-input" id="da-price" type="text" placeholder="Optional exact quote if you want to state it live" oninput="daScheduleSave()">
+            <div class="da-grid-2" style="margin-top:12px">
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Pricing Mode</div>
+                <select class="form-select" id="da-pricing-mode" onchange="daScheduleSave()">
+                  <option value="live_quote">Live quote</option>
+                  <option value="formal_estimate">Formal estimate</option>
+                </select>
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Quoted Amount Override</div>
+                <input class="form-input" id="da-price" type="text" placeholder="Optional exact quote" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Monthly Support</div>
+                <select class="form-select" id="da-monthly-support" onchange="daScheduleSave()">
+                  <option value="">Decide later</option>
+                  <option value="true">Yes, include</option>
+                  <option value="false">No, skip</option>
+                </select>
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Monthly Fee</div>
+                <input class="form-input" id="da-monthly-fee" type="text" placeholder="e.g. $150/mo" oninput="daScheduleSave()">
+              </div>
             </div>
-            <div>
-              <label class="da-mini">Monthly Support</label>
-              <select class="form-select" id="da-monthly-support" onchange="daScheduleSave()">
-                <option value="">Decide later</option>
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
+            <div class="da-grid-2" style="margin-top:10px">
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Agreement Status</div>
+                <input class="form-input" id="da-agreement-status" type="text" placeholder="needs_agreement / sent / signed" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Invoice Status</div>
+                <input class="form-input" id="da-invoice-status" type="text" placeholder="not_sent / sent / paid" oninput="daScheduleSave()">
+              </div>
+              <div>
+                <div class="da-mini" style="margin-bottom:5px">Deposit Status</div>
+                <input class="form-input" id="da-deposit-status" type="text" placeholder="not_requested / requested / received" oninput="daScheduleSave()">
+              </div>
             </div>
-            <div>
-              <label class="da-mini">Monthly Fee</label>
-              <input class="form-input" id="da-monthly-fee" type="text" placeholder="$0 or leave blank" oninput="daScheduleSave()">
-            </div>
-            <div>
-              <label class="da-mini">Agreement Status</label>
-              <select class="form-select" id="da-agreement-status" onchange="daScheduleSave()">
-                <option value="">Unset</option>
-                <option value="needs_agreement">Needs agreement</option>
-                <option value="sent">Agreement sent</option>
-                <option value="signed">Signed</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-mini">Invoice Status</label>
-              <select class="form-select" id="da-invoice-status" onchange="daScheduleSave()">
-                <option value="">Unset</option>
-                <option value="not_invoiced">Not invoiced</option>
-                <option value="sent">Invoice sent</option>
-                <option value="paid">Paid</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-mini">Deposit Status</label>
-              <select class="form-select" id="da-deposit-status" onchange="daScheduleSave()">
-                <option value="">Unset</option>
-                <option value="pending">Pending</option>
-                <option value="requested">Requested</option>
-                <option value="received">Received</option>
-              </select>
-            </div>
-            <div>
-              <label class="da-mini">Stage</label>
-              <select class="form-select" id="da-stage" onchange="daScheduleSave()">
-                <option value="call_booked">Consultation Saved</option>
-                <option value="proposal_ready">Draft Recommendation</option>
-                <option value="won">Activation Packet Prefilled</option>
-                <option value="deployment_pending">Deploy Ready</option>
-                <option value="live">Live</option>
-              </select>
-            </div>
-          </div>
-          <div class="da-gate-inline" id="da-gate-inline">
-            <input type="checkbox" id="da-access-collected" onchange="daScheduleSave()">
-            <label for="da-access-collected">Access already collected</label>
-          </div>
-          <div style="margin-top:12px">
-            <div class="da-mini">Activation Gates</div>
+
             <div class="da-gates" id="da-gates"></div>
             <div class="da-blocker" id="da-launch-blockers">Launch path is clear once the client is approved.</div>
-          </div>
-          <div class="da-primary-wrap">
-            <button class="btn btn-primary da-primary-btn" id="da-primary-cta" onclick="daRunPrimaryAction()">Save Consultation</button>
-            <div class="da-secondary-row">
-              <button class="btn btn-ghost" onclick="daAction('follow_up')">Mark follow-up needed</button>
-              <button class="btn btn-ghost" onclick="daAction('estimate')">Create estimate</button>
-              <button class="btn btn-ghost" onclick="daAction('convert')">Convert to client</button>
-              <button class="btn btn-ghost" id="da-deploy-btn" onclick="daAction('deploy')">Launch deployment</button>
-              <button class="btn btn-ghost" onclick="daAction('access')">Request access</button>
-              <button class="btn btn-ghost" onclick="daAction('agreement')">Mark agreement pending</button>
-              <button class="btn btn-ghost" onclick="daAction('billing')">Mark invoice / deposit pending</button>
-              <button class="btn btn-ghost" onclick="poCreateActivationScope()">Use accepted scope</button>
-              <button class="btn btn-ghost" onclick="poOpenAcceptedDeliveryRun()">Open accepted run</button>
+
+            <!-- Primary action — one obvious CTA -->
+            <div class="da-primary-wrap">
+              <button class="btn btn-primary da-primary-btn" id="da-primary-cta" onclick="daRunPrimaryAction()">Save Consult</button>
+              <div class="da-secondary-row">
+                <button class="btn btn-ghost" onclick="daAction('follow_up')">Mark follow-up needed</button>
+                <button class="btn btn-ghost" onclick="daAction('estimate')">Create estimate</button>
+                <button class="btn btn-ghost" onclick="daAction('convert')">Convert to activation</button>
+                <button class="btn btn-success" id="da-deploy-btn" onclick="daAction('deploy')" disabled>Deploy</button>
+              </div>
+              <div class="da-save-note" id="da-save-note" style="font-size:10px;color:var(--muted);margin-top:4px"></div>
             </div>
           </div>
-          <div style="margin-top:10px" class="da-status" id="da-save-note">Save the call, then use the action buttons to move it into delivery.</div>
-        </section>
-        <section class="da-card" style="margin-top:12px">
-          <div class="da-card-hdr">
-            <div>
-              <div class="da-card-title">Consultation Leave-Behind</div>
-              <div class="da-card-sub">Copy-ready summary of quick wins and recommended next steps for the client.</div>
-            </div>
-            <div class="lb-actions">
-              <button class="btn btn-ghost" style="font-size:11px" id="qw-lb-toggle-btn" onclick="qwToggleLeaveBehind()">📄 Preview Leave-Behind</button>
-              <button class="btn btn-ghost" style="font-size:11px" id="qw-lb-copy-btn" onclick="qwCopyLeaveBehind()">📋 Copy</button>
-            </div>
-          </div>
-          <pre class="lb-pre" id="qw-lb-pre"></pre>
-          <div style="font-size:10px;color:var(--muted);margin-top:6px">Pulls from: business name (Step 1), quick wins (Step 2), recommendation + simple options (Step 3), and quoted price (this step). Fill those steps first for the best output.</div>
-        </section>
+        </div>
+
         <div class="da-step-nav">
           <div class="da-step-nav-left">
-            <button class="btn btn-ghost" onclick="daGoToStep(5)">&#8592; Packet</button>
+            <button class="btn btn-ghost" onclick="daGoToStep(5)">&#8592; Confirm</button>
           </div>
           <div class="da-step-nav-right"></div>
         </div>
-      </div>
+      </div><!-- /da-step-6 -->
 
-    </div><!-- /da-wizard-body -->
+    </div><!-- /da-board-body -->
 
-    <!-- ── Package Builder Rail ── -->
-    <div class="da-summary-panel" id="da-summary-panel">
+    <!-- ════════════ RIGHT: Briefing Packet Rail ════════════ -->
+    <div class="da-board-rail" id="da-summary-panel">
 
-      <!-- Live package being built -->
-      <div class="da-summary-card" style="border-color:rgba(200,136,74,.28);background:linear-gradient(180deg,rgba(200,136,74,.07),rgba(200,136,74,.02))">
-        <div class="da-summary-title" style="color:var(--copper);letter-spacing:.09em">📦 Package Building</div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Client</div>
-          <div class="da-summary-val" id="da-summary-client" style="font-weight:600">—</div>
-        </div>
-        <div class="da-summary-row" style="margin-top:8px">
-          <div class="da-summary-label">Recommended</div>
-          <div class="da-summary-val" id="da-summary-stack" style="font-weight:700;color:var(--text);line-height:1.3">Fill needs to build</div>
-        </div>
-        <div class="da-summary-row" style="margin-top:6px">
-          <div class="da-summary-label">What's included</div>
-          <div class="da-summary-val" id="da-summary-includes" style="font-size:11px;color:var(--muted);line-height:1.5">—</div>
-        </div>
-        <div class="da-summary-row" style="margin-top:6px">
-          <div class="da-summary-label">Why it fits</div>
-          <div class="da-summary-val" id="da-summary-reason" style="font-size:11px;color:var(--muted);line-height:1.5;font-style:italic">Tag needs on Step 2 to see the fit.</div>
-        </div>
-        <div class="da-summary-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <div class="da-summary-label">Price range</div>
-          <div class="da-summary-val" id="da-summary-price" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)">—</div>
-        </div>
-        <div class="da-summary-row" style="margin-top:6px">
-          <div class="da-summary-label">Likely access</div>
-          <div class="da-summary-val" id="da-summary-access" style="font-size:11px;color:var(--muted);line-height:1.5">—</div>
-        </div>
-      </div>
+      <div class="da-rail-card accent">
+        <div class="da-rail-title">Package Building</div>
 
-      <!-- Consult status -->
-      <div class="da-summary-card" style="margin-top:0">
-        <div class="da-summary-title">Consult Status</div>
-        <div class="da-summary-row">
-          <div class="da-summary-label">Urgency</div>
-          <div class="da-summary-val" id="da-summary-urgency">—</div>
+        <div class="da-rail-section" style="margin-bottom:8px">
+          <div class="da-rail-label">Client</div>
+          <div class="da-rail-val" id="da-summary-client" style="font-weight:600">—</div>
         </div>
-        <div class="da-summary-row" style="margin-top:4px">
-          <div class="da-summary-label">Launch</div>
-          <div class="da-summary-val" id="da-summary-launch"><span class="da-summary-chip wait">Not set</span></div>
+
+        <div class="da-rail-section" style="margin-bottom:8px">
+          <div class="da-rail-label">Recommended Now</div>
+          <div class="da-rail-val" id="da-summary-stack" style="font-weight:700;line-height:1.3">Fill needs to build</div>
         </div>
-        <div class="da-summary-row" style="margin-top:8px">
-          <div class="da-summary-label">Next best action</div>
-          <div class="da-summary-val" id="da-summary-next-step" style="font-size:11px;line-height:1.45;color:var(--text)">—</div>
+
+        <div class="da-rail-section" style="margin-bottom:8px">
+          <div class="da-rail-label">What's Included</div>
+          <div class="da-rail-val muted" id="da-summary-includes">—</div>
         </div>
-        <div class="da-summary-row" style="margin-top:6px">
-          <div class="da-summary-label">Blockers</div>
-          <div class="da-summary-val" id="da-summary-blockers" style="font-size:11px;color:var(--amber)">—</div>
+
+        <div class="da-rail-section" style="margin-bottom:8px">
+          <div class="da-rail-label">Why It Fits</div>
+          <div class="da-rail-val italic" id="da-summary-reason">Tag needs on Gather to see fit.</div>
         </div>
-        <div class="da-summary-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <div class="da-summary-label">Record</div>
-          <div class="da-summary-val" id="da-summary-key" style="font-family:var(--mono);font-size:10px">Unsaved</div>
+
+        <hr class="da-rail-divider">
+
+        <div class="da-rail-section" style="margin-bottom:8px">
+          <div class="da-rail-label">Price Band</div>
+          <div class="da-rail-val mono" id="da-summary-price">—</div>
         </div>
-        <div class="da-summary-row" style="margin-top:3px">
-          <div class="da-summary-val" id="da-summary-save-status" style="font-size:10px;color:var(--muted)"></div>
+
+        <div class="da-rail-section">
+          <div class="da-rail-label">Access Likely Needed</div>
+          <div class="da-rail-val muted" id="da-summary-access">—</div>
         </div>
       </div>
 
-    </div><!-- /da-summary-panel -->
+      <div class="da-rail-card">
+        <div class="da-rail-title">Consult Status</div>
 
-  </div><!-- /da-wizard -->
+        <div class="da-rail-section" style="margin-bottom:6px">
+          <div class="da-rail-label">Urgency</div>
+          <div class="da-rail-val" id="da-summary-urgency">—</div>
+        </div>
+
+        <div class="da-rail-section" style="margin-bottom:6px">
+          <div class="da-rail-label">Launch</div>
+          <div class="da-rail-val" id="da-summary-launch"><span class="da-rail-chip wait">Not set</span></div>
+        </div>
+
+        <hr class="da-rail-divider">
+
+        <div class="da-rail-section" style="margin-bottom:6px">
+          <div class="da-rail-label">Next Best Move</div>
+          <div class="da-rail-val" id="da-summary-next-step" style="line-height:1.45;font-size:11px">—</div>
+        </div>
+
+        <div class="da-rail-section" style="margin-bottom:6px">
+          <div class="da-rail-label">Blockers</div>
+          <div class="da-rail-val" id="da-summary-blockers" style="font-size:10px;color:var(--amber)">—</div>
+        </div>
+
+        <hr class="da-rail-divider">
+
+        <div class="da-rail-section" style="margin-bottom:3px">
+          <div class="da-rail-label">Record</div>
+          <div class="da-rail-val" id="da-summary-key" style="font-family:var(--mono);font-size:10px">Unsaved</div>
+        </div>
+        <div class="da-rail-val" id="da-summary-save-status" style="font-size:10px;color:var(--muted)"></div>
+      </div>
+
+      <!-- Rec details hidden but rendered by daRender() -->
+      <div style="display:none">
+        <div id="da-rec-build-status"></div>
+        <div id="da-rec-assets"></div>
+      </div>
+
+    </div><!-- /da-board-rail -->
+
+  </div><!-- /da-board -->
+
 </div>
 </div>
 
