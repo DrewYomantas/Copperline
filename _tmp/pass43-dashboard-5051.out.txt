@@ -1,2 +1,0 @@
- * Serving Flask app 'dashboard_server'
- * Debug mode: off

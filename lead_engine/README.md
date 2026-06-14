@@ -1,83 +1,42 @@
-# Copperline — Operations Hub
+# Copperline Core
 
-## Start the dashboard
+`lead_engine/` contains the live Copperline pipeline and dashboard.
 
-Double-click **`Launch Dashboard.bat`** in the root folder.  
-Opens automatically at http://localhost:5000
+## Primary Files
 
-That's the only launcher you need. Everything runs from the dashboard.
+- `dashboard_static/index.html`: main frontend shell
+- `dashboard_server.py`: Flask routes and queue API
+- `send/email_sender_agent.py`: shared send-readiness and validation truth
+- `send/mail_config.py`: centralized Google Workspace SMTP identity and live-send gate
+- `send/mail_config.py`: centralized Google Workspace SMTP sender identity and live-send gate
+- `run_lead_engine.py`: main protected pipeline entrypoint
+- `queue/pending_emails.csv`: live queue data
 
----
+## Working Rule
 
-## Daily workflow
+Most operator-facing UI work lands in `dashboard_static/index.html`. Most queue truth work lands in `dashboard_server.py` and `send/email_sender_agent.py`. Treat changes across those files as production-impacting until verified live.
 
-1. **Discover leads** — pick industry + city, click ⚡ Discover + Draft  
-   Finds businesses via Google Places, scrapes emails & social links, drafts outreach. One click.
+## High-Risk Areas
 
-2. **Review & approve** — click any row to open the review panel  
-   Edit subject/body if needed, click ✓ Approve on the ones you're happy with.
+- send eligibility
+- approval truth
+- scheduling truth
+- suppression and dedupe
+- draft validation
 
-3. **Send** — click ▶ Send Approved  
-   Only approved rows with a real email get sent.
+## Outbound Mail
 
-4. **Follow up** — check the 🔁 Follow-Up tab for overdue leads  
-   Reply tracking runs automatically every 5 minutes.
+- Current path: Google Workspace SMTP through `drewyomantas@copperlineops.com`
+- Required env vars are listed in the repo root `.env.example`
+- Live sends are blocked unless `COPPERLINE_LIVE_SEND_ENABLED=true`
+- Safe verification path: run `python lead_engine/send/email_sender_agent.py --dry-run --queue lead_engine/queue/pending_emails.csv`
 
----
+## Mail Setup
 
-## Tabs
+Outbound mail sends through Google Workspace SMTP as `Drew @ Copperline <drewyomantas@copperlineops.com>`. Keep `COPPERLINE_LIVE_SEND_ENABLED=false` for local dry-run checks; set it to `true` only on the production operator machine after the Workspace account, app password, and DNS authentication are verified.
 
-| Tab | What it does |
-|---|---|
-| ⚡ Outreach | Main queue — default shows Active (unsent, non-terminal) leads sorted by Opp Score |
-| 🔁 Follow-Up | Leads due for follow-up, grouped by urgency |
-| 📲 Social | Leads without email — reach via Facebook, Instagram, or contact form |
-| ⚡ Sprint | One lead at a time — fast outreach mode |
-| 💬 Conversations | Leads that have replied — manage the conversation |
-| 🗺 Territory | City × Industry coverage map |
-| 📞 Clients | Missed Call Text-Back clients |
-| 🔍 Searches | History of every Discover run |
+## Related Docs
 
----
-
-## Folder layout
-
-```
-lead_engine/
-  dashboard_server.py      ← Flask backend, all API routes
-  dashboard_static/        ← Frontend (single index.html)
-  run_lead_engine.py       ← Pipeline: discover → scan → score → draft
-  city_planner.py          ← Territory tracking
-  discovery/               ← Google Places discovery agent
-  intelligence/            ← Website scanner, lead insight generator
-  scoring/                 ← Opportunity scoring (0-100)
-  outreach/                ← Email + social DM draft generation
-  send/                    ← Approved email sender
-  queue/pending_emails.csv ← Main data store (109 leads)
-  data/prospects.csv       ← Source prospects
-  logs/                    ← Server + reply logs
-  _archive/                ← Old scripts no longer needed
-```
-
----
-
-## Environment variables (`.env` in root)
-
-```
-GOOGLE_PLACES_API_KEY=...   # Google Places API — required for Discover
-GMAIL_SENDER=...            # Gmail address to send from
-GMAIL_APP_PASSWORD=...      # Gmail App Password (not your account password)
-ANTHROPIC_API_KEY=...       # Claude AI — used for email drafts
-```
-
----
-
-## Useful one-off scripts
-
-```bash
-# Preview which drafts are stale (before regenerating)
-python lead_engine/reset_stale_queue.py --dry-run
-
-# Apply stale reset (removes old drafts so they re-draft on next run)
-python lead_engine/reset_stale_queue.py
-```
+- `../docs/README.md`
+- `../docs/PROJECT_STATE.md`
+- `../docs/PROTECTED_SYSTEMS.md`

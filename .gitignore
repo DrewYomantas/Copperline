@@ -119,6 +119,13 @@ dist
 # Firebase cache directory
 .firebase/
 
+# Local UI/debug artifacts
+.playwright-mcp/
+_tmp/
+test-results/
+*.pyc
+**/__pycache__/
+
 # TernJS port file
 .tern-port
 

@@ -895,13 +895,123 @@
         "detail": "",
         "business_name": "Tosa Plumbing LLC",
         "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-02T02:56:10Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-02T03:32:00Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-03T01:03:42Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-03T01:03:58Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-03T01:04:19Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-03T01:04:26Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-03T01:04:34Z",
+        "operator": "operator",
+        "detail": "2026-04-03T09:08:00",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-03T01:04:35Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T02:33:16Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:05:00",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T16:49:02Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
+      },
+      {
+        "type": "event",
+        "event_type": "unapproved",
+        "label": "Approval removed",
+        "ts": "2026-04-06T16:49:22Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Tosa Plumbing LLC",
+        "city": "Menomonee Falls"
       }
     ],
     "business_name": "Tosa Plumbing LLC",
     "city": "Menomonee Falls",
     "website": "http://www.tosaplumbing.com",
     "phone": "2629931219",
-    "last_updated": "2026-03-21T21:45:26Z",
+    "last_updated": "2026-04-06T16:49:22Z",
     "obs_history": [
       {
         "ts": "2026-03-21T04:42:00Z",
@@ -1464,13 +1574,63 @@
         "detail": "2026-03-21T09:34:00",
         "business_name": "Square One Heating & Cooling LLC",
         "city": "Union Grove"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:27:39Z",
+        "operator": "operator",
+        "detail": "2026-04-06T07:04:00",
+        "business_name": "Square One Heating & Cooling, LLC",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:45Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Square One Heating & Cooling, LLC",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T13:11:59Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Square One Heating & Cooling, LLC",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "unapproved",
+        "label": "Approval removed",
+        "ts": "2026-04-06T16:49:23Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Square One Heating & Cooling, LLC",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:50Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and emergency service.",
+        "business_name": "Square One Heating & Cooling, LLC",
+        "city": "Burlington"
       }
     ],
-    "business_name": "Square One Heating & Cooling LLC",
-    "city": "Union Grove",
+    "business_name": "Square One Heating & Cooling, LLC",
+    "city": "Burlington",
     "website": "http://www.squareonehvac.com",
-    "phone": "2628782228",
-    "last_updated": "2026-03-21T04:59:42Z"
+    "phone": "2627637000",
+    "last_updated": "2026-04-07T04:35:50Z"
   },
   "web:centraldoorsolutions.com": {
     "key": "web:centraldoorsolutions.com",
@@ -1885,13 +2045,23 @@
         "detail": "2026-03-21T08:24:00",
         "business_name": "Roto-Rooter Plumbing, Drain, & Water Damage Cleanup Service",
         "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:19:33Z",
+        "operator": "operator",
+        "detail": "2026-04-04T07:15:00",
+        "business_name": "Roto-Rooter",
+        "city": "Dubuque"
       }
     ],
-    "business_name": "Roto-Rooter Plumbing, Drain, & Water Damage Cleanup Service",
-    "city": "Rockford",
-    "website": "https://www.rotorooter.com/rockfordil",
-    "phone": "8153395444",
-    "last_updated": "2026-03-21T04:59:46Z"
+    "business_name": "Roto-Rooter",
+    "city": "Dubuque",
+    "website": "http://www.rotorooter.com",
+    "phone": "5635521828",
+    "last_updated": "2026-04-04T03:19:33Z"
   },
   "web:asapplumbingnow.com": {
     "key": "web:asapplumbingnow.com",
@@ -2645,13 +2815,23 @@
         "detail": "2026-03-21T09:03:00",
         "business_name": "Kurt's Lube Express & Service Center",
         "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:51:59Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about brake work and emergency service.",
+        "business_name": "Kurt's Auto & Truck Center, Inc",
+        "city": "Rockford"
       }
     ],
-    "business_name": "Kurt's Lube Express & Service Center",
+    "business_name": "Kurt's Auto & Truck Center, Inc",
     "city": "Rockford",
-    "website": "http://www.kurtsauto.com",
-    "phone": "8153951900",
-    "last_updated": "2026-03-21T04:59:55Z"
+    "website": "https://www.kurtsauto.com",
+    "phone": "8159627110",
+    "last_updated": "2026-04-07T04:51:59Z"
   },
   "web:sscgeneralcontractorsllc.com": {
     "key": "web:sscgeneralcontractorsllc.com",
@@ -3315,13 +3495,23 @@
         "detail": "",
         "business_name": "Action Towing",
         "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:47Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Action Towing",
+        "city": "Loves Park"
       }
     ],
     "business_name": "Action Towing",
     "city": "Loves Park",
     "website": "http://actiontowingrockford.com",
     "phone": "8159649222",
-    "last_updated": "2026-03-21T21:45:28Z"
+    "last_updated": "2026-04-06T13:10:47Z"
   },
   "web:collinswellpumpservices.com": {
     "key": "web:collinswellpumpservices.com",
@@ -3435,13 +3625,33 @@
         "detail": "",
         "business_name": "JMD Plumbing",
         "city": "Bangor"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:25:20Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:04:00",
+        "business_name": "JMD Plumbing",
+        "city": "Bangor"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:28:35Z",
+        "operator": "operator",
+        "detail": "2026-04-06T08:15:00",
+        "business_name": "JMD Plumbing",
+        "city": "Bangor"
       }
     ],
     "business_name": "JMD Plumbing",
     "city": "Bangor",
     "website": "http://jmdplumbing.me",
     "phone": "2077355218",
-    "last_updated": "2026-03-21T21:45:30Z"
+    "last_updated": "2026-04-06T04:28:35Z"
   },
   "web:osborneservices.com": {
     "key": "web:osborneservices.com",
@@ -3465,13 +3675,51 @@
         "detail": "",
         "business_name": "Osborne's Plumbing-Heating Inc",
         "city": "Bucksport"
+      },
+      {
+        "type": "event",
+        "event_type": "observation_added",
+        "label": "Observation saved",
+        "ts": "2026-04-03T03:03:22Z",
+        "operator": "operator",
+        "detail": "site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Osborne\u2019s Plumbing & Heating Inc.",
+        "city": "Ellsworth"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:32Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Osborne's Plumbing-Heating Inc",
+        "city": "Bucksport"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:47Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Osborne's Plumbing-Heating Inc",
+        "city": "Bucksport"
       }
     ],
     "business_name": "Osborne's Plumbing-Heating Inc",
     "city": "Bucksport",
     "website": "https://www.osborneservices.com",
     "phone": "2074696225",
-    "last_updated": "2026-03-21T21:45:30Z"
+    "last_updated": "2026-04-06T13:10:47Z",
+    "obs_history": [
+      {
+        "ts": "2026-04-03T03:03:22Z",
+        "prior": "",
+        "text": "site is pretty explicit about water heater work and emergency service."
+      }
+    ],
+    "current_observation": "site is pretty explicit about water heater work and emergency service."
   },
   "web:mrrooter.com": {
     "key": "web:mrrooter.com",
@@ -3805,13 +4053,23 @@
         "detail": "",
         "business_name": "Peepodge garage inc.",
         "city": "Caledonia"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:47:02Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Peepodge garage inc.",
+        "city": "Caledonia"
       }
     ],
     "business_name": "Peepodge garage inc.",
     "city": "Caledonia",
     "website": "http://www.go4ppg.com",
     "phone": "8157084843",
-    "last_updated": "2026-03-21T21:45:32Z"
+    "last_updated": "2026-04-07T04:47:02Z"
   },
   "web:xltowingchicago.com": {
     "key": "web:xltowingchicago.com",
@@ -3865,13 +4123,94 @@
         "detail": "",
         "business_name": "Secure Locks Car Locksmith Chicago",
         "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-05T20:46:05Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-05T20:46:18Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:16:01Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:16:29Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:16:40Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:16:47Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T00:16:52Z",
+        "operator": "operator",
+        "detail": "2026-04-06T08:37:00",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago"
+      },
+      {
+        "state": "contacted",
+        "ts": "2026-04-06T00:19:18Z",
+        "operator": "operator",
+        "note": "contact logged via panel: channel=email",
+        "business_name": "Secure Locks | Locksmith Chicago",
+        "city": "Chicago",
+        "website": "https://securelocks.net/buena-park-locksmith-60613",
+        "phone": "7738235111"
       }
     ],
-    "business_name": "Secure Locks Car Locksmith Chicago",
+    "business_name": "Secure Locks | Locksmith Chicago",
     "city": "Chicago",
-    "website": "https://securelocks.net/midway-airport-chicago-locksmith",
-    "phone": "3125844883",
-    "last_updated": "2026-03-21T21:45:33Z"
+    "website": "https://securelocks.net/buena-park-locksmith-60613",
+    "phone": "7738235111",
+    "last_updated": "2026-04-06T00:19:18Z",
+    "current_state": "contacted"
   },
   "web:martensplumbing.com": {
     "key": "web:martensplumbing.com",
@@ -4375,13 +4714,34 @@
         "detail": "",
         "business_name": "Benjamin Franklin Plumbing",
         "city": "Mt Pleasant"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:24:22Z",
+        "operator": "operator",
+        "detail": "2026-04-04T07:24:00",
+        "business_name": "Benjamin Franklin Plumbing of Eastern Iowa",
+        "city": "Cedar Rapids"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Benjamin Franklin Plumbing of Eastern Iowa",
+        "city": "Cedar Rapids",
+        "website": "https://www.benjaminfranklinplumbing.com/eastern-iowa",
+        "phone": "3197278091"
       }
     ],
-    "business_name": "Benjamin Franklin Plumbing",
-    "city": "Mt Pleasant",
-    "website": "https://www.benjaminfranklinplumbing.com/southeastern-wisconsin",
-    "phone": "2625365019",
-    "last_updated": "2026-03-21T21:45:39Z"
+    "business_name": "Benjamin Franklin Plumbing of Eastern Iowa",
+    "city": "Cedar Rapids",
+    "website": "https://www.benjaminfranklinplumbing.com/eastern-iowa",
+    "phone": "3197278091",
+    "last_updated": "2026-04-06T00:22:05Z",
+    "current_state": "deleted_intentionally"
   },
   "web:windycityrooter.com": {
     "key": "web:windycityrooter.com",
@@ -4915,13 +5275,23 @@
         "detail": "",
         "business_name": "Callen Construction, Inc.",
         "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:47:22Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about financing.",
+        "business_name": "Callen Construction, Inc.",
+        "city": "Muskego"
       }
     ],
     "business_name": "Callen Construction, Inc.",
     "city": "Muskego",
     "website": "http://www.callenconstruction.com",
     "phone": "4145295509",
-    "last_updated": "2026-03-21T21:45:46Z"
+    "last_updated": "2026-04-07T04:47:22Z"
   },
   "web:airsolutionshc.com": {
     "key": "web:airsolutionshc.com",
@@ -5545,13 +5915,33 @@
         "detail": "",
         "business_name": "Vanguard General Contracting",
         "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:38Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work.",
+        "business_name": "Vanguard General Contracting",
+        "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:50Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Vanguard General Contracting",
+        "city": "Loves Park"
       }
     ],
     "business_name": "Vanguard General Contracting",
     "city": "Loves Park",
     "website": "https://www.vanguard-gc.com",
     "phone": "8153296746",
-    "last_updated": "2026-03-21T21:45:54Z"
+    "last_updated": "2026-04-06T13:10:50Z"
   },
   "web:claexteriors.com": {
     "key": "web:claexteriors.com",
@@ -6655,13 +7045,33 @@
         "detail": "",
         "business_name": "United Flooring Distributors",
         "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:38Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "United Flooring Distributors",
+        "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:51Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "United Flooring Distributors",
+        "city": "Loves Park"
       }
     ],
     "business_name": "United Flooring Distributors",
     "city": "Loves Park",
     "website": "http://unitedflooring.biz",
     "phone": "8156548383",
-    "last_updated": "2026-03-21T21:46:08Z"
+    "last_updated": "2026-04-06T13:10:51Z"
   },
   "web:bensonstone.com": {
     "key": "web:bensonstone.com",
@@ -7405,13 +7815,44 @@
         "detail": "",
         "business_name": "Autocare of Roscoe",
         "city": "Roscoe"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:20:20Z",
+        "operator": "operator",
+        "detail": "obs=looks like Facebook is doing most of the visible contact lifting here right now.",
+        "business_name": "Butitta Auto \u2013 Rockford on Alpine Rd.",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:20:49Z",
+        "operator": "operator",
+        "detail": "obs=looks like Facebook is doing most of the visible contact lifting here right now.",
+        "business_name": "Butitta Auto \u2013 Rockford on Alpine Rd.",
+        "city": "Rockford"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Butitta Auto \u2013 Rockford on Alpine Rd.",
+        "city": "Rockford",
+        "website": "https://greatwater360autocare.com/stores/butitta-auto-rockford-alpine",
+        "phone": "8153970444"
       }
     ],
-    "business_name": "Autocare of Roscoe",
-    "city": "Roscoe",
-    "website": "https://greatwater360autocare.com/stores/autocare-of-roscoe",
-    "phone": "8156334407",
-    "last_updated": "2026-03-21T21:46:15Z"
+    "business_name": "Butitta Auto \u2013 Rockford on Alpine Rd.",
+    "city": "Rockford",
+    "website": "https://greatwater360autocare.com/stores/butitta-auto-rockford-alpine",
+    "phone": "8153970444",
+    "last_updated": "2026-04-06T00:22:05Z",
+    "current_state": "deleted_intentionally"
   },
   "web:pointepestcontrol.net": {
     "key": "web:pointepestcontrol.net",
@@ -7435,13 +7876,24 @@
         "detail": "",
         "business_name": "Pointe Pest Control",
         "city": "St. Charles"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Pointe Pest Control - Schaumburg",
+        "city": "Schaumburg",
+        "website": "https://www.pointepestcontrol.net/schaumburg-il/pest-control",
+        "phone": "6309844297"
       }
     ],
-    "business_name": "Pointe Pest Control",
-    "city": "St. Charles",
-    "website": "http://www.pointepestcontrol.net",
-    "phone": "6307915710",
-    "last_updated": "2026-03-21T21:46:15Z"
+    "business_name": "Pointe Pest Control - Schaumburg",
+    "city": "Schaumburg",
+    "website": "https://www.pointepestcontrol.net/schaumburg-il/pest-control",
+    "phone": "6309844297",
+    "last_updated": "2026-04-06T00:22:05Z",
+    "current_state": "deleted_intentionally"
   },
   "ph:2629096654": {
     "key": "ph:2629096654",
@@ -8515,13 +8967,24 @@
         "detail": "",
         "business_name": "Dee's Plumbing & Construction,Inc.",
         "city": "Loves Park"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Dee's Plumbing & Construction",
+        "city": "Loves Park",
+        "website": "",
+        "phone": "8156364626"
       }
     ],
-    "business_name": "Dee's Plumbing & Construction,Inc.",
+    "business_name": "Dee's Plumbing & Construction",
     "city": "Loves Park",
     "website": "",
     "phone": "8156364626",
-    "last_updated": "2026-03-21T21:46:24Z"
+    "last_updated": "2026-04-06T00:22:05Z",
+    "current_state": "deleted_intentionally"
   },
   "ph:2174331149": {
     "key": "ph:2174331149",
@@ -8792,5 +9255,4577 @@
     "website": "http://www.buildwithunited.com",
     "phone": "8014855533",
     "last_updated": "2026-03-21T21:46:26Z"
+  },
+  "web:angelsconcretewi.com": {
+    "key": "web:angelsconcretewi.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "observation_added",
+        "label": "Observation saved",
+        "ts": "2026-04-02T03:01:43Z",
+        "operator": "operator",
+        "detail": "looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Angels Concrete",
+        "city": "Janesville"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-02T03:03:51Z",
+        "operator": "operator",
+        "detail": "2026-04-02T09:24:00",
+        "business_name": "Angels Concrete",
+        "city": "Janesville"
+      }
+    ],
+    "business_name": "Angels Concrete",
+    "city": "Janesville",
+    "website": "http://angelsconcretewi.com",
+    "phone": "6084364595",
+    "last_updated": "2026-04-02T03:03:51Z",
+    "obs_history": [
+      {
+        "ts": "2026-04-02T03:01:43Z",
+        "prior": "",
+        "text": "looks like the site mainly leans on the email address as the way in right now."
+      }
+    ],
+    "current_observation": "looks like the site mainly leans on the email address as the way in right now."
+  },
+  "web:dalmaray.com": {
+    "key": "web:dalmaray.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "unapproved",
+        "label": "Approval removed",
+        "ts": "2026-04-02T03:08:59Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Dalmaray Precast Concrete",
+        "city": "Janesville"
+      }
+    ],
+    "business_name": "Dalmaray Precast Concrete",
+    "city": "Janesville",
+    "website": "https://dalmaray.com",
+    "phone": "6087526507",
+    "last_updated": "2026-04-02T03:08:59Z"
+  },
+  "web:dpconcreteandlandscaping.com": {
+    "key": "web:dpconcreteandlandscaping.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-02T03:19:02Z",
+        "operator": "operator",
+        "detail": "2026-04-02T08:46:00",
+        "business_name": "DP Concrete & Landscaping, Inc.",
+        "city": "Albany"
+      }
+    ],
+    "business_name": "DP Concrete & Landscaping, Inc.",
+    "city": "Albany",
+    "website": "https://dpconcreteandlandscaping.com",
+    "phone": "6088623156",
+    "last_updated": "2026-04-02T03:19:02Z"
+  },
+  "web:tellefsonconcretewi.com": {
+    "key": "web:tellefsonconcretewi.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-02T03:20:20Z",
+        "operator": "operator",
+        "detail": "2026-04-02T08:05:00",
+        "business_name": "Tellefson Concrete & Excavation",
+        "city": "Edgerton"
+      }
+    ],
+    "business_name": "Tellefson Concrete & Excavation",
+    "city": "Edgerton",
+    "website": "https://tellefsonconcretewi.com",
+    "phone": "6088842137",
+    "last_updated": "2026-04-02T03:20:20Z"
+  },
+  "web:royal-const.com": {
+    "key": "web:royal-const.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-02T03:21:10Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "Royal Concrete Construction, Llc",
+        "city": "Madison"
+      }
+    ],
+    "business_name": "Royal Concrete Construction, Llc",
+    "city": "Madison",
+    "website": "http://www.royal-const.com",
+    "phone": "6082109438",
+    "last_updated": "2026-04-02T03:21:10Z"
+  },
+  "web:koenigconcretewi.com": {
+    "key": "web:koenigconcretewi.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-02T03:21:30Z",
+        "operator": "operator",
+        "detail": "2026-04-02T08:00:00",
+        "business_name": "Koenig Concrete, Corp.",
+        "city": "Jefferson"
+      }
+    ],
+    "business_name": "Koenig Concrete, Corp.",
+    "city": "Jefferson",
+    "website": "https://koenigconcretewi.com",
+    "phone": "9206744130",
+    "last_updated": "2026-04-02T03:21:30Z"
+  },
+  "web:southernwc.com": {
+    "key": "web:southernwc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-02T03:23:01Z",
+        "operator": "operator",
+        "detail": "2026-04-02T08:53:00",
+        "business_name": "Southern Wisconsin Concrete",
+        "city": "Oregon"
+      }
+    ],
+    "business_name": "Southern Wisconsin Concrete",
+    "city": "Oregon",
+    "website": "https://www.southernwc.com",
+    "phone": "6082957471",
+    "last_updated": "2026-04-02T03:23:01Z"
+  },
+  "web:larsplumbing.com": {
+    "key": "web:larsplumbing.com",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-02T03:29:46Z",
+        "operator": "operator",
+        "note": "contact logged via panel: channel=email",
+        "business_name": "Lars Plumbing",
+        "city": "Rockford",
+        "website": "https://www.larsplumbing.com/contact-us",
+        "phone": "8153788686"
+      }
+    ],
+    "current_state": "contacted",
+    "last_updated": "2026-04-02T03:29:46Z",
+    "business_name": "Lars Plumbing",
+    "city": "Rockford",
+    "website": "https://www.larsplumbing.com/contact-us",
+    "phone": "8153788686"
+  },
+  "web:affordablelocksmithmilwaukee.com": {
+    "key": "web:affordablelocksmithmilwaukee.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:16:47Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work.",
+        "business_name": "Affordable Locksmith",
+        "city": "New Berlin"
+      },
+      {
+        "state": "contacted",
+        "ts": "2026-04-04T03:20:47Z",
+        "operator": "operator",
+        "note": "contact logged via panel: channel=email",
+        "business_name": "Affordable Locksmith",
+        "city": "New Berlin",
+        "website": "https://affordablelocksmithmilwaukee.com",
+        "phone": "4145434321"
+      }
+    ],
+    "business_name": "Affordable Locksmith",
+    "city": "New Berlin",
+    "website": "https://affordablelocksmithmilwaukee.com",
+    "phone": "4145434321",
+    "last_updated": "2026-04-04T03:20:47Z",
+    "current_state": "contacted"
+  },
+  "web:themooseelectric.com": {
+    "key": "web:themooseelectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:17:02Z",
+        "operator": "operator",
+        "detail": "2026-04-04T09:38:00",
+        "business_name": "Moose Electric",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Moose Electric",
+    "city": "Rockford",
+    "website": "https://www.themooseelectric.com",
+    "phone": "8158712558",
+    "last_updated": "2026-04-04T03:17:02Z"
+  },
+  "web:engleplumbing.com": {
+    "key": "web:engleplumbing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:17:49Z",
+        "operator": "operator",
+        "detail": "2026-04-04T09:23:00",
+        "business_name": "Engle Plumbing, LLC",
+        "city": "Galena"
+      }
+    ],
+    "business_name": "Engle Plumbing, LLC",
+    "city": "Galena",
+    "website": "http://engleplumbing.com",
+    "phone": "8158583824",
+    "last_updated": "2026-04-09T21:27:39Z",
+    "delivery_profile": {
+      "core_offer": "lead_contact_setup",
+      "bundle_key": "full_starter_package",
+      "selected_modules": [
+        "follow_up_reminder_setup",
+        "mobile_admin_workflow_helper"
+      ],
+      "price": "1250",
+      "agreement_status": "needs_agreement",
+      "invoice_status": "not_invoiced",
+      "offer_notes": "Existing lead aligned to Deploy Activation v1.",
+      "updated_at": "2026-04-09T21:27:39Z",
+      "updated_by": "operator",
+      "stage": "live",
+      "readiness": {
+        "intake_complete": true,
+        "vendor_access_collected": true,
+        "live": true,
+        "testing_pending": true,
+        "routing_logic_defined": true,
+        "copy_approved": true
+      },
+      "snapshot": {
+        "business_name": "Engle Plumbing, LLC",
+        "contact_name": "",
+        "phone": "8158583824",
+        "email": "joe@engleplumbing.com",
+        "category": "plumbing",
+        "website": "http://engleplumbing.com",
+        "google_presence": true,
+        "facebook_presence": true,
+        "notes": "site is pretty explicit about water heater work and emergency service."
+      },
+      "discovery": {
+        "poor_or_missing_website": false,
+        "weak_google_facebook_presence": false,
+        "no_clear_contact_flow": false,
+        "missed_calls": false,
+        "weak_follow_up": true,
+        "wants_more_reviews": false,
+        "estimate_or_job_status_problem": false,
+        "wants_ongoing_support": true
+      },
+      "pricing_mode": "formal_estimate",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "deposit_status": "pending",
+      "activation_tasks": [
+        "Map the intake flow",
+        "Set follow-up reminders",
+        "Route new leads to the owner",
+        "Confirm the full starter stack is ready for handoff",
+        "Set follow-up timing and reminders",
+        "Confirm the mobile admin workflow"
+      ]
+    }
+  },
+  "web:jaegerplumbing.com": {
+    "key": "web:jaegerplumbing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:18:34Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:29:00",
+        "business_name": "Jaeger Plumbing & Pump Inc",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "Jaeger Plumbing & Pump Inc",
+    "city": "Dubuque",
+    "website": "https://www.jaegerplumbing.com",
+    "phone": "5635836677",
+    "last_updated": "2026-04-04T03:18:34Z"
+  },
+  "web:eliteplumbinggalena.com": {
+    "key": "web:eliteplumbinggalena.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:19:06Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Elite Plumbing Service",
+        "city": "Galena"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:27Z",
+        "operator": "operator",
+        "detail": "2026-04-04T09:36:00",
+        "business_name": "Elite Plumbing Service",
+        "city": "Galena"
+      }
+    ],
+    "business_name": "Elite Plumbing Service",
+    "city": "Galena",
+    "website": "https://www.eliteplumbinggalena.com",
+    "phone": "8157779026",
+    "last_updated": "2026-04-04T03:23:27Z"
+  },
+  "web:mcdonaldsupplyriver.com": {
+    "key": "web:mcdonaldsupplyriver.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:19:09Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:41:00",
+        "business_name": "McDonald Supply - Dubuque",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "McDonald Supply - Dubuque",
+    "city": "Dubuque",
+    "website": "https://mcdonaldsupplyriver.com",
+    "phone": "5635825471",
+    "last_updated": "2026-04-04T03:19:09Z"
+  },
+  "web:bandkconcrete.com": {
+    "key": "web:bandkconcrete.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:21:23Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:44:00",
+        "business_name": "BNK Concrete LLC",
+        "city": "Loves Park"
+      }
+    ],
+    "business_name": "BNK Concrete LLC",
+    "city": "Loves Park",
+    "website": "http://bandkconcrete.com",
+    "phone": "8153787715",
+    "last_updated": "2026-04-04T03:21:23Z"
+  },
+  "web:jbcustomflooring.com": {
+    "key": "web:jbcustomflooring.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:21:23Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:46:00",
+        "business_name": "JB Custom Flooring Inc.",
+        "city": "41.8932,-88.2230"
+      }
+    ],
+    "business_name": "JB Custom Flooring Inc.",
+    "city": "41.8932,-88.2230",
+    "website": "http://www.jbcustomflooring.com",
+    "phone": "6304410222",
+    "last_updated": "2026-04-04T03:21:23Z"
+  },
+  "web:uthephe.com": {
+    "key": "web:uthephe.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:22:31Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Uthe Plumbing, Heating, & Electrical",
+        "city": "Hazel Green"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:28Z",
+        "operator": "operator",
+        "detail": "2026-04-04T09:00:00",
+        "business_name": "Uthe Plumbing, Heating, & Electrical",
+        "city": "Hazel Green"
+      }
+    ],
+    "business_name": "Uthe Plumbing, Heating, & Electrical",
+    "city": "Hazel Green",
+    "website": "http://www.uthephe.com",
+    "phone": "6088542265",
+    "last_updated": "2026-04-04T03:23:28Z"
+  },
+  "web:mitplumbing.com": {
+    "key": "web:mitplumbing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:28Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:33:00",
+        "business_name": "Mit Plumbing",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "Mit Plumbing",
+    "city": "Dubuque",
+    "website": "http://mitplumbing.com",
+    "phone": "5635830771",
+    "last_updated": "2026-04-04T03:23:28Z"
+  },
+  "web:crawfordnorth.com": {
+    "key": "web:crawfordnorth.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:28Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:24:00",
+        "business_name": "Crawford Company North",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "Crawford Company North",
+    "city": "Dubuque",
+    "website": "http://crawfordnorth.com",
+    "phone": "5635522117",
+    "last_updated": "2026-04-04T03:23:28Z"
+  },
+  "web:allseasonshc.com": {
+    "key": "web:allseasonshc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:28Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:05:00",
+        "business_name": "All Seasons Heating & Cooling",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "All Seasons Heating & Cooling",
+    "city": "Dubuque",
+    "website": "https://www.allseasonshc.com",
+    "phone": "5635828884",
+    "last_updated": "2026-04-04T03:23:28Z"
+  },
+  "web:yourwaterwellandpump.com": {
+    "key": "web:yourwaterwellandpump.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:28Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:50:00",
+        "business_name": "Apple Well & Pump Company",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "Apple Well & Pump Company",
+    "city": "Dubuque",
+    "website": "https://yourwaterwellandpump.com",
+    "phone": "5635568989",
+    "last_updated": "2026-04-04T03:23:28Z"
+  },
+  "web:aymcdonald.com": {
+    "key": "web:aymcdonald.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:29Z",
+        "operator": "operator",
+        "detail": "2026-04-04T08:35:00",
+        "business_name": "A.Y. McDonald Mfg. Co.",
+        "city": "Dubuque"
+      }
+    ],
+    "business_name": "A.Y. McDonald Mfg. Co.",
+    "city": "Dubuque",
+    "website": "http://www.aymcdonald.com",
+    "phone": "8002922737",
+    "last_updated": "2026-04-04T03:23:29Z"
+  },
+  "web:theconcretecompanyonline.com": {
+    "key": "web:theconcretecompanyonline.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:23:29Z",
+        "operator": "operator",
+        "detail": "2026-04-04T09:51:00",
+        "business_name": "The Concrete Company",
+        "city": "Madison"
+      }
+    ],
+    "business_name": "The Concrete Company",
+    "city": "Madison",
+    "website": "http://www.theconcretecompanyonline.com",
+    "phone": "6084108375",
+    "last_updated": "2026-04-04T03:23:29Z"
+  },
+  "web:kertelsplumbingandheatinginc.com": {
+    "key": "web:kertelsplumbingandheatinginc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:26:55Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and financing.",
+        "business_name": "Kertels Plumbing & Heating, Inc.",
+        "city": "Farley"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Kertels Plumbing & Heating, Inc.",
+        "city": "Farley",
+        "website": "https://kertelsplumbingandheatinginc.com",
+        "phone": "5637443754"
+      }
+    ],
+    "business_name": "Kertels Plumbing & Heating, Inc.",
+    "city": "Farley",
+    "website": "https://kertelsplumbingandheatinginc.com",
+    "phone": "5637443754",
+    "last_updated": "2026-04-06T00:22:05Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:minerplumbing.com": {
+    "key": "web:minerplumbing.com",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-04T03:27:36Z",
+        "operator": "operator",
+        "note": "manually marked contacted from panel",
+        "business_name": "Miner Plumbing Inc",
+        "city": "Dubuque",
+        "website": "http://www.minerplumbing.com",
+        "phone": "5635822940"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:28:23Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and free estimates.",
+        "business_name": "Miner Plumbing Inc",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:05Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Miner Plumbing Inc",
+        "city": "Dubuque",
+        "website": "http://www.minerplumbing.com",
+        "phone": "5635822940"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:05Z",
+    "business_name": "Miner Plumbing Inc",
+    "city": "Dubuque",
+    "website": "http://www.minerplumbing.com",
+    "phone": "5635822940"
+  },
+  "web:serviceone.com": {
+    "key": "web:serviceone.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:29:10Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "ServiceOne Heating, Cooling, Plumbing, and Electrical",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "ServiceOne Heating, Cooling, Plumbing, and Electrical",
+        "city": "Dubuque",
+        "website": "https://serviceone.com/dubuque",
+        "phone": "5635565577"
+      }
+    ],
+    "business_name": "ServiceOne Heating, Cooling, Plumbing, and Electrical",
+    "city": "Dubuque",
+    "website": "https://serviceone.com/dubuque",
+    "phone": "5635565577",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:eastiowamech.com": {
+    "key": "web:eastiowamech.com",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-04T03:30:36Z",
+        "operator": "operator",
+        "note": "manually marked contacted from panel",
+        "business_name": "East Iowa Mechanical",
+        "city": "Epworth",
+        "website": "http://eastiowamech.com",
+        "phone": "5638765573"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "East Iowa Mechanical",
+        "city": "Epworth",
+        "website": "http://eastiowamech.com",
+        "phone": "5638765573"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "business_name": "East Iowa Mechanical",
+    "city": "Epworth",
+    "website": "http://eastiowamech.com",
+    "phone": "5638765573"
+  },
+  "web:willenborgplumbing.com": {
+    "key": "web:willenborgplumbing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:30:51Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and free estimates.",
+        "business_name": "Willenborg Plumbing & Heating, Inc",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Willenborg Plumbing & Heating, Inc",
+        "city": "Dubuque",
+        "website": "https://willenborgplumbing.com",
+        "phone": "5635562134"
+      }
+    ],
+    "business_name": "Willenborg Plumbing & Heating, Inc",
+    "city": "Dubuque",
+    "website": "https://willenborgplumbing.com",
+    "phone": "5635562134",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:geodoneright.com": {
+    "key": "web:geodoneright.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:32:07Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and free estimates.",
+        "business_name": "Schuster Heating & Pump Co., Inc.",
+        "city": "Peosta"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Schuster Heating & Pump Co., Inc.",
+        "city": "Peosta",
+        "website": "http://www.geodoneright.com",
+        "phone": "5635822148"
+      }
+    ],
+    "business_name": "Schuster Heating & Pump Co., Inc.",
+    "city": "Peosta",
+    "website": "http://www.geodoneright.com",
+    "phone": "5635822148",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:birchheating.com": {
+    "key": "web:birchheating.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:32:18Z",
+        "operator": "operator",
+        "detail": "2026-04-04T07:10:00",
+        "business_name": "Birch Heating & Cooling",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Birch Heating & Cooling",
+        "city": "Dubuque",
+        "website": "https://birchheating.com",
+        "phone": "5635002087"
+      }
+    ],
+    "business_name": "Birch Heating & Cooling",
+    "city": "Dubuque",
+    "website": "https://birchheating.com",
+    "phone": "5635002087",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:pci-dbq.com": {
+    "key": "web:pci-dbq.com",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-04T03:34:05Z",
+        "operator": "operator",
+        "note": "manually marked contacted from panel",
+        "business_name": "Dubuque Plumbing & Heating",
+        "city": "Dubuque",
+        "website": "http://www.pci-dbq.com",
+        "phone": "5635577511"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Dubuque Plumbing & Heating",
+        "city": "Dubuque",
+        "website": "http://www.pci-dbq.com",
+        "phone": "5635577511"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "business_name": "Dubuque Plumbing & Heating",
+    "city": "Dubuque",
+    "website": "http://www.pci-dbq.com",
+    "phone": "5635577511"
+  },
+  "web:plumbsupply.com": {
+    "key": "web:plumbsupply.com",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-04T03:36:05Z",
+        "operator": "operator",
+        "note": "manually marked contacted from panel",
+        "business_name": "Plumb Supply Company",
+        "city": "Dubuque",
+        "website": "https://www.plumbsupply.com/location/dubuque-iowa",
+        "phone": "5635562827"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Plumb Supply Company",
+        "city": "Dubuque",
+        "website": "https://www.plumbsupply.com/location/dubuque-iowa",
+        "phone": "5635562827"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "business_name": "Plumb Supply Company",
+    "city": "Dubuque",
+    "website": "https://www.plumbsupply.com/location/dubuque-iowa",
+    "phone": "5635562827"
+  },
+  "web:elementhvacdubuque.com": {
+    "key": "web:elementhvacdubuque.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:36:06Z",
+        "operator": "operator",
+        "detail": "obs=looks like Instagram is doing most of the visible contact lifting here right now",
+        "business_name": "Element Heating & Cooling LLC",
+        "city": "Dubuque"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:36:37Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and free estimates.",
+        "business_name": "Element Heating & Cooling LLC",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:02Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Element Heating & Cooling LLC",
+        "city": "Dubuque",
+        "website": "https://elementhvacdubuque.com",
+        "phone": "5632390374"
+      }
+    ],
+    "business_name": "Element Heating & Cooling LLC",
+    "city": "Dubuque",
+    "website": "https://elementhvacdubuque.com",
+    "phone": "5632390374",
+    "last_updated": "2026-04-06T00:22:02Z",
+    "current_state": "deleted_intentionally"
+  },
+  "ph:5635431593": {
+    "key": "ph:5635431593",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:38:53Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Atencio Sonrise Plumbing",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-04T03:40:09Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Atencio Sonrise Plumbing",
+        "city": "Dubuque",
+        "website": "",
+        "phone": "5635431593"
+      }
+    ],
+    "business_name": "Atencio Sonrise Plumbing",
+    "city": "Dubuque",
+    "website": "",
+    "phone": "5635431593",
+    "last_updated": "2026-04-04T03:40:09Z",
+    "current_state": "deleted_intentionally"
+  },
+  "ph:5635429847": {
+    "key": "ph:5635429847",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:42:23Z",
+        "operator": "operator",
+        "detail": "obs=No website just started posting on Facebook heavily",
+        "business_name": "Horky's Plumbing",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Horky's Plumbing",
+        "city": "Dubuque",
+        "website": "",
+        "phone": "5635429847"
+      }
+    ],
+    "business_name": "Horky's Plumbing",
+    "city": "Dubuque",
+    "website": "",
+    "phone": "5635429847",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "current_state": "deleted_intentionally"
+  },
+  "ph:5635571145": {
+    "key": "ph:5635571145",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-04T03:43:54Z",
+        "operator": "operator",
+        "detail": "2026-04-04T07:21:00",
+        "business_name": "Schwartz Plumbing & Heating",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Schwartz Plumbing & Heating",
+        "city": "Dubuque",
+        "website": "",
+        "phone": "5635571145"
+      }
+    ],
+    "business_name": "Schwartz Plumbing & Heating",
+    "city": "Dubuque",
+    "website": "",
+    "phone": "5635571145",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "current_state": "deleted_intentionally"
+  },
+  "ph:5635849700": {
+    "key": "ph:5635849700",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-04T03:44:01Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Dalsing Master Plumbing",
+        "city": "Dubuque"
+      },
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Dalsing Master Plumbing",
+        "city": "Dubuque",
+        "website": "",
+        "phone": "5635849700"
+      }
+    ],
+    "business_name": "Dalsing Master Plumbing",
+    "city": "Dubuque",
+    "website": "",
+    "phone": "5635849700",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "current_state": "deleted_intentionally"
+  },
+  "web:heimsplumbingandelectric.com": {
+    "key": "web:heimsplumbingandelectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "observation_added",
+        "label": "Observation saved",
+        "ts": "2026-04-05T20:23:41Z",
+        "operator": "operator",
+        "detail": "site is pretty explicit about heat pump work and farley-area coverage.",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:16:52Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and farley-area coverage.",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:17:07Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and farley-area coverage.",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:17:27Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and farley-area coverage.",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T00:17:54Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and farley-area coverage.",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley"
+      },
+      {
+        "state": "contacted",
+        "ts": "2026-04-06T00:19:27Z",
+        "operator": "operator",
+        "note": "contact logged via panel: channel=email",
+        "business_name": "Heims Plumbing & Electric Inc.",
+        "city": "Farley",
+        "website": "https://heimsplumbingandelectric.com",
+        "phone": "5635998076"
+      }
+    ],
+    "business_name": "Heims Plumbing & Electric Inc.",
+    "city": "Farley",
+    "website": "https://heimsplumbingandelectric.com",
+    "phone": "5635998076",
+    "last_updated": "2026-04-06T00:19:27Z",
+    "obs_history": [
+      {
+        "ts": "2026-04-05T20:23:41Z",
+        "prior": "",
+        "text": "site is pretty explicit about heat pump work and farley-area coverage."
+      }
+    ],
+    "current_observation": "site is pretty explicit about heat pump work and farley-area coverage.",
+    "current_state": "contacted"
+  },
+  "ph:5635131002": {
+    "key": "ph:5635131002",
+    "history": [
+      {
+        "state": "contacted",
+        "ts": "2026-04-06T00:19:31Z",
+        "operator": "operator",
+        "note": "contact logged via panel: channel=email",
+        "business_name": "Gilly's Plumbing & Repair LLC",
+        "city": "Dubuque",
+        "website": "",
+        "phone": "5635131002"
+      }
+    ],
+    "current_state": "contacted",
+    "last_updated": "2026-04-06T00:19:31Z",
+    "business_name": "Gilly's Plumbing & Repair LLC",
+    "city": "Dubuque",
+    "website": "",
+    "phone": "5635131002"
+  },
+  "web:servpro.com": {
+    "key": "web:servpro.com",
+    "history": [
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:03Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "SERVPRO of Dubuque",
+        "city": "Dubuque",
+        "website": "https://www.servpro.com/locations/ia/servpro-of-dubuque",
+        "phone": "5635842242"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:03Z",
+    "business_name": "SERVPRO of Dubuque",
+    "city": "Dubuque",
+    "website": "https://www.servpro.com/locations/ia/servpro-of-dubuque",
+    "phone": "5635842242"
+  },
+  "web:topnotchgalena.com": {
+    "key": "web:topnotchgalena.com",
+    "history": [
+      {
+        "state": "deleted_intentionally",
+        "ts": "2026-04-06T00:22:04Z",
+        "operator": "operator",
+        "note": "deleted from queue by operator",
+        "business_name": "Top Notch Plumbing, Heating & Electrical Inc.",
+        "city": "Galena",
+        "website": "https://www.topnotchgalena.com",
+        "phone": "8157778595"
+      }
+    ],
+    "current_state": "deleted_intentionally",
+    "last_updated": "2026-04-06T00:22:04Z",
+    "business_name": "Top Notch Plumbing, Heating & Electrical Inc.",
+    "city": "Galena",
+    "website": "https://www.topnotchgalena.com",
+    "phone": "8157778595"
+  },
+  "web:pinkyelectric.com": {
+    "key": "web:pinkyelectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T02:33:20Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:07Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:45Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T03:20:46Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:51:00",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T04:33:28Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T04:34:50Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T05:04:09Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T05:05:46Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T05:05:47Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:20:54Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:22:22Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-07T04:23:05Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:25:36Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:25:41Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-07T04:25:47Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:25:59Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:51Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ev charger installs.",
+        "business_name": "Pinky Electric Inc",
+        "city": "Muskego"
+      }
+    ],
+    "business_name": "Pinky Electric Inc",
+    "city": "Muskego",
+    "website": "http://www.pinkyelectric.com",
+    "phone": "2626791380",
+    "last_updated": "2026-04-07T04:35:51Z"
+  },
+  "web:millerelectricent.com": {
+    "key": "web:millerelectricent.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:31Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:39Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:41Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:47Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:50Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:58Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:21:02Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:29:28Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:29:58Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:33:08Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:36:19Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:36:50Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:27:37Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work and free estimates.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:38:01Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work and free estimates.",
+        "business_name": "Miller Electrical Enterprises, Inc.",
+        "city": "Big Bend"
+      }
+    ],
+    "business_name": "Miller Electrical Enterprises, Inc.",
+    "city": "Big Bend",
+    "website": "http://www.millerelectricent.com",
+    "phone": "2626621900",
+    "last_updated": "2026-04-07T04:38:01Z"
+  },
+  "ph:8159698480": {
+    "key": "ph:8159698480",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T03:20:41Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Gonzalez Concrete & Construction",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:29Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Gonzalez Concrete & Construction",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Gonzalez Concrete & Construction",
+    "city": "Rockford",
+    "website": "",
+    "phone": "8159698480",
+    "last_updated": "2026-04-07T04:57:29Z"
+  },
+  "web:towtruckmilwaukee.com": {
+    "key": "web:towtruckmilwaukee.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:24:52Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:16:00",
+        "business_name": "Jet Towing & Roadside Service LLC",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:28:34Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:19:00",
+        "business_name": "Jet Towing & Roadside Service LLC",
+        "city": "Muskego"
+      }
+    ],
+    "business_name": "Jet Towing & Roadside Service LLC",
+    "city": "Muskego",
+    "website": "https://towtruckmilwaukee.com",
+    "phone": "2629551806",
+    "last_updated": "2026-04-06T04:28:34Z"
+  },
+  "web:gibbonselectric.net": {
+    "key": "web:gibbonselectric.net",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:25:07Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:20:00",
+        "business_name": "Gibbons Electric, Inc.",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:28:34Z",
+        "operator": "operator",
+        "detail": "2026-04-06T08:53:00",
+        "business_name": "Gibbons Electric, Inc.",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:25:14Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work.",
+        "business_name": "Gibbons Electric, Inc.",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:34:52Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work.",
+        "business_name": "Gibbons Electric, Inc.",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:36Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work.",
+        "business_name": "Gibbons Electric, Inc.",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Gibbons Electric, Inc.",
+    "city": "Rockford",
+    "website": "http://gibbonselectric.net",
+    "phone": "8153971711",
+    "last_updated": "2026-04-07T04:35:36Z"
+  },
+  "web:itsallgoodautorepair.com": {
+    "key": "web:itsallgoodautorepair.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:25:28Z",
+        "operator": "operator",
+        "detail": "2026-04-06T08:42:00",
+        "business_name": "Its All Good Auto Repair",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Its All Good Auto Repair",
+    "city": "Franklin",
+    "website": "https://itsallgoodautorepair.com",
+    "phone": "4144259906",
+    "last_updated": "2026-04-06T04:25:28Z"
+  },
+  "web:eandrheatingandcooling.com": {
+    "key": "web:eandrheatingandcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T04:34:50Z",
+        "operator": "operator",
+        "detail": "2026-04-06T09:30:00",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T04:34:51Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T05:00:12Z",
+        "operator": "operator",
+        "detail": "2026-04-07T07:12:00",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T05:00:15Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:09Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:45Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:26:15Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:49Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "E & R Heating and Cooling",
+        "city": "West Allis"
+      }
+    ],
+    "business_name": "E & R Heating and Cooling",
+    "city": "West Allis",
+    "website": "http://www.eandrheatingandcooling.com",
+    "phone": "4142025001",
+    "last_updated": "2026-04-07T04:37:49Z"
+  },
+  "web:absolutecomfortwi.com": {
+    "key": "web:absolutecomfortwi.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T04:53:48Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and financing.",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T04:54:27Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and financing.",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T05:02:38Z",
+        "operator": "operator",
+        "detail": "2026-04-07T07:56:00",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T05:02:41Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T05:05:54Z",
+        "operator": "operator",
+        "detail": "2026-04-07T09:22:00",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "unscheduled",
+        "label": "Unscheduled",
+        "ts": "2026-04-06T05:05:55Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:04Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and financing.",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:44Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:21:57Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and financing.",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:51Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and financing.",
+        "business_name": "Absolute Comfort HVAC LLC",
+        "city": "Waterford"
+      }
+    ],
+    "business_name": "Absolute Comfort HVAC LLC",
+    "city": "Waterford",
+    "website": "https://www.absolutecomfortwi.com",
+    "phone": "2626649284",
+    "last_updated": "2026-04-07T04:35:51Z"
+  },
+  "web:amazingtimlocksmith.net": {
+    "key": "web:amazingtimlocksmith.net",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T04:59:18Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Amazing Tim Locksmith",
+        "city": "Elm Grove"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:10Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Amazing Tim Locksmith",
+        "city": "Elm Grove"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:45Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Amazing Tim Locksmith",
+        "city": "Elm Grove"
+      }
+    ],
+    "business_name": "Amazing Tim Locksmith",
+    "city": "Elm Grove",
+    "website": "http://amazingtimlocksmith.net",
+    "phone": "2624427711",
+    "last_updated": "2026-04-06T13:10:45Z"
+  },
+  "web:wickautomotive.com": {
+    "key": "web:wickautomotive.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-06T05:01:36Z",
+        "operator": "operator",
+        "detail": "2026-04-07T09:00:00",
+        "business_name": "Wick Automotive",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:35Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about towing support.",
+        "business_name": "Wick Automotive",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:48Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Wick Automotive",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:52:09Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about towing support.",
+        "business_name": "Wick Automotive",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Wick Automotive",
+    "city": "Rockford",
+    "website": "http://wickautomotive.com",
+    "phone": "8152274289",
+    "last_updated": "2026-04-07T04:52:09Z"
+  },
+  "web:mttowingandrecovery.com": {
+    "key": "web:mttowingandrecovery.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:30Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "MT Towing & Recovery llc",
+        "city": "South Milwaukee"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:46Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "MT Towing & Recovery llc",
+        "city": "South Milwaukee"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:42:13Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "MT Towing & Recovery llc",
+        "city": "South Milwaukee"
+      }
+    ],
+    "business_name": "MT Towing & Recovery llc",
+    "city": "South Milwaukee",
+    "website": "http://mttowingandrecovery.com",
+    "phone": "4146986511",
+    "last_updated": "2026-04-07T04:42:13Z"
+  },
+  "web:bmipestcontrol.com": {
+    "key": "web:bmipestcontrol.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:33Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "BMI Pest Control Services",
+        "city": "Brookfield"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:47Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "BMI Pest Control Services",
+        "city": "Brookfield"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:49:31Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "BMI Pest Control Services",
+        "city": "Brookfield"
+      }
+    ],
+    "business_name": "BMI Pest Control Services",
+    "city": "Brookfield",
+    "website": "http://www.bmipestcontrol.com",
+    "phone": "2627812628",
+    "last_updated": "2026-04-07T04:49:31Z"
+  },
+  "web:vidmarroofing.com": {
+    "key": "web:vidmarroofing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:33Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and financing.",
+        "business_name": "Vidmar Roofing Inc",
+        "city": "New Berlin"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:48Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Vidmar Roofing Inc",
+        "city": "New Berlin"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:50:30Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and financing.",
+        "business_name": "Vidmar Roofing Inc",
+        "city": "New Berlin"
+      }
+    ],
+    "business_name": "Vidmar Roofing Inc",
+    "city": "New Berlin",
+    "website": "https://vidmarroofing.com",
+    "phone": "2629711500",
+    "last_updated": "2026-04-07T04:50:30Z"
+  },
+  "web:rockfroddeck.com": {
+    "key": "web:rockfroddeck.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:35Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about quote requests.",
+        "business_name": "Construction Specialties",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:49Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Construction Specialties",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:52:38Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about quote requests.",
+        "business_name": "Construction Specialties",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Construction Specialties",
+    "city": "Rockford",
+    "website": "http://rockfroddeck.com",
+    "phone": "8152187208",
+    "last_updated": "2026-04-07T04:52:38Z"
+  },
+  "web:topa1contracting.com": {
+    "key": "web:topa1contracting.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:36Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about financing.",
+        "business_name": "Top A1 Contracting",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:49Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Top A1 Contracting",
+        "city": "Rockford"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:53:14Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about financing.",
+        "business_name": "Top A1 Contracting",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Top A1 Contracting",
+    "city": "Rockford",
+    "website": "http://topa1contracting.com",
+    "phone": "8338672100",
+    "last_updated": "2026-04-07T04:53:14Z"
+  },
+  "web:blahnikconstruction.com": {
+    "key": "web:blahnikconstruction.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:37Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Blahnik Construction Company",
+        "city": "Cedar Rapids"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:50Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Blahnik Construction Company",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Blahnik Construction Company",
+    "city": "Cedar Rapids",
+    "website": "http://blahnikconstruction.com",
+    "phone": "3193647136",
+    "last_updated": "2026-04-06T13:10:50Z"
+  },
+  "web:reliafixservice.com": {
+    "key": "web:reliafixservice.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:40Z",
+        "operator": "operator",
+        "detail": "obs=looks like the site mainly leans on the email address as the way in right now.",
+        "business_name": "Reliafix Appliance & HVAC",
+        "city": "41.8932,-88.2230"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:51Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Reliafix Appliance & HVAC",
+        "city": "41.8932,-88.2230"
+      }
+    ],
+    "business_name": "Reliafix Appliance & HVAC",
+    "city": "41.8932,-88.2230",
+    "website": "https://reliafixservice.com",
+    "phone": "2242255909",
+    "last_updated": "2026-04-06T13:10:51Z"
+  },
+  "web:lcuproperties.com": {
+    "key": "web:lcuproperties.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-06T13:09:40Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about loves park-area coverage.",
+        "business_name": "LCU Properties Inc.",
+        "city": "Loves Park"
+      },
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:52Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "LCU Properties Inc.",
+        "city": "Loves Park"
+      }
+    ],
+    "business_name": "LCU Properties Inc.",
+    "city": "Loves Park",
+    "website": "http://lcuproperties.com",
+    "phone": "8152821234",
+    "last_updated": "2026-04-06T13:10:52Z"
+  },
+  "web:aj-towing.com": {
+    "key": "web:aj-towing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:46Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "AJ Towing",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "AJ Towing",
+    "city": "Milwaukee",
+    "website": "https://aj-towing.com",
+    "phone": "4146003080",
+    "last_updated": "2026-04-06T13:10:46Z"
+  },
+  "web:foursrs.com": {
+    "key": "web:foursrs.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:48Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "4 Seasons Roofing Service LLC",
+        "city": "Oak Creek"
+      }
+    ],
+    "business_name": "4 Seasons Roofing Service LLC",
+    "city": "Oak Creek",
+    "website": "http://foursrs.com",
+    "phone": "4148973470",
+    "last_updated": "2026-04-06T13:10:48Z"
+  },
+  "web:honestvehiclecare.wordpress.com": {
+    "key": "web:honestvehiclecare.wordpress.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:50Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "Honest Vehicle Care",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Honest Vehicle Care",
+    "city": "Rockford",
+    "website": "https://honestvehiclecare.wordpress.com",
+    "phone": "8157081830",
+    "last_updated": "2026-04-06T13:10:50Z"
+  },
+  "web:jmextremeclean.com": {
+    "key": "web:jmextremeclean.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "approved",
+        "label": "Approved",
+        "ts": "2026-04-06T13:10:51Z",
+        "operator": "operator",
+        "detail": "",
+        "business_name": "J&M Extreme Clean",
+        "city": "41.8932,-88.2230"
+      }
+    ],
+    "business_name": "J&M Extreme Clean",
+    "city": "41.8932,-88.2230",
+    "website": "https://jmextremeclean.com",
+    "phone": "8157033884",
+    "last_updated": "2026-04-06T13:10:51Z"
+  },
+  "web:oakcreekheatingandcooling.com": {
+    "key": "web:oakcreekheatingandcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:22:03Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Oak Creek Heating & Cooling LLC",
+        "city": "Oak Creek"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-07T04:26:24Z",
+        "operator": "operator",
+        "detail": "2026-04-07T08:39:00",
+        "business_name": "Oak Creek Heating & Cooling LLC",
+        "city": "Oak Creek"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:52Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Oak Creek Heating & Cooling LLC",
+        "city": "Oak Creek"
+      }
+    ],
+    "business_name": "Oak Creek Heating & Cooling LLC",
+    "city": "Oak Creek",
+    "website": "https://www.oakcreekheatingandcooling.com",
+    "phone": "4147646311",
+    "last_updated": "2026-04-07T04:35:52Z"
+  },
+  "web:urbanheatingandcooling.com": {
+    "key": "web:urbanheatingandcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:22:28Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Urban Heating & Cooling",
+        "city": "Franklin"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:26:34Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Urban Heating & Cooling",
+        "city": "Franklin"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-07T04:26:38Z",
+        "operator": "operator",
+        "detail": "2026-04-07T08:32:00",
+        "business_name": "Urban Heating & Cooling",
+        "city": "Franklin"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:35:53Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Urban Heating & Cooling",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Urban Heating & Cooling",
+    "city": "Franklin",
+    "website": "http://urbanheatingandcooling.com",
+    "phone": "4149156290",
+    "last_updated": "2026-04-07T04:35:53Z"
+  },
+  "web:kenoshaheatingandcooling.com": {
+    "key": "web:kenoshaheatingandcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:23:07Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Kenosha Heating & Cooling LLC",
+        "city": "Kenosha"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:26:52Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Kenosha Heating & Cooling LLC",
+        "city": "Kenosha"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-07T04:26:59Z",
+        "operator": "operator",
+        "detail": "2026-04-07T09:55:00",
+        "business_name": "Kenosha Heating & Cooling LLC",
+        "city": "Kenosha"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:36:21Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Kenosha Heating & Cooling LLC",
+        "city": "Kenosha"
+      }
+    ],
+    "business_name": "Kenosha Heating & Cooling LLC",
+    "city": "Kenosha",
+    "website": "http://kenoshaheatingandcooling.com",
+    "phone": "2626526900",
+    "last_updated": "2026-04-07T04:36:21Z"
+  },
+  "web:andrewsheatingcooling.com": {
+    "key": "web:andrewsheatingcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:23:16Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "Andrews Heating & Cooling, LLC",
+        "city": "Sturtevant"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:27:20Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "Andrews Heating & Cooling, LLC",
+        "city": "Sturtevant"
+      },
+      {
+        "type": "event",
+        "event_type": "scheduled",
+        "label": "Scheduled",
+        "ts": "2026-04-07T04:27:22Z",
+        "operator": "operator",
+        "detail": "2026-04-07T07:25:00",
+        "business_name": "Andrews Heating & Cooling, LLC",
+        "city": "Sturtevant"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:36:22Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "Andrews Heating & Cooling, LLC",
+        "city": "Sturtevant"
+      }
+    ],
+    "business_name": "Andrews Heating & Cooling, LLC",
+    "city": "Sturtevant",
+    "website": "https://www.andrewsheatingcooling.com/contact-us",
+    "phone": "2624566156",
+    "last_updated": "2026-04-07T04:36:22Z"
+  },
+  "web:midwesthvacpro.com": {
+    "key": "web:midwesthvacpro.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:23:44Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Midwest Heating & Cooling",
+        "city": "Mukwonago"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:36:36Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Midwest Heating & Cooling",
+        "city": "Mukwonago"
+      }
+    ],
+    "business_name": "Midwest Heating & Cooling",
+    "city": "Mukwonago",
+    "website": "http://www.midwesthvacpro.com",
+    "phone": "4142094668",
+    "last_updated": "2026-04-07T04:36:36Z"
+  },
+  "web:kamenzhvac.com": {
+    "key": "web:kamenzhvac.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:24:01Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and emergency service.",
+        "business_name": "Kamenz Heating and Cooling",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:36:49Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and emergency service.",
+        "business_name": "Kamenz Heating and Cooling",
+        "city": "Burlington"
+      }
+    ],
+    "business_name": "Kamenz Heating and Cooling",
+    "city": "Burlington",
+    "website": "http://www.kamenzhvac.com",
+    "phone": "4148817535",
+    "last_updated": "2026-04-07T04:36:49Z"
+  },
+  "web:nimmerheating.com": {
+    "key": "web:nimmerheating.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:24:51Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and emergency service.",
+        "business_name": "Nimmer Heating & Air Conditioning, Inc.",
+        "city": "Milwaukee"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:04Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about ductless mini-split work and emergency service.",
+        "business_name": "Nimmer Heating & Air Conditioning, Inc.",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "Nimmer Heating & Air Conditioning, Inc.",
+    "city": "Milwaukee",
+    "website": "http://nimmerheating.com",
+    "phone": "4145004445",
+    "last_updated": "2026-04-07T04:37:04Z"
+  },
+  "web:drsheatingcoolingllc.services": {
+    "key": "web:drsheatingcoolingllc.services",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:25:19Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Heating and Cooling Drs of West Allis, Milwaukee and New Berlin LLC",
+        "city": "Milwaukee"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:17Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Heating and Cooling Drs of West Allis, Milwaukee and New Berlin LLC",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "Heating and Cooling Drs of West Allis, Milwaukee and New Berlin LLC",
+    "city": "Milwaukee",
+    "website": "https://drsheatingcoolingllc.services/heating-and-cooling-drs-of-west-allis-milwaukee-and-new-berlin-llc",
+    "phone": "4144340990",
+    "last_updated": "2026-04-07T04:37:17Z"
+  },
+  "web:thirdcoast-hvac.com": {
+    "key": "web:thirdcoast-hvac.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:26:29Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Third Coast HVAC, AC & Furnace Repair",
+        "city": "Brookfield"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:50Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Third Coast HVAC, AC & Furnace Repair",
+        "city": "Brookfield"
+      }
+    ],
+    "business_name": "Third Coast HVAC, AC & Furnace Repair",
+    "city": "Brookfield",
+    "website": "https://thirdcoast-hvac.com",
+    "phone": "2622648626",
+    "last_updated": "2026-04-07T04:37:50Z"
+  },
+  "web:premiumheatingcooling.com": {
+    "key": "web:premiumheatingcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:26:38Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Premium Heating & Cooling",
+        "city": "New Berlin"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:52Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about heat pump work and emergency service.",
+        "business_name": "Premium Heating & Cooling",
+        "city": "New Berlin"
+      }
+    ],
+    "business_name": "Premium Heating & Cooling",
+    "city": "New Berlin",
+    "website": "http://premiumheatingcooling.com",
+    "phone": "4143974581",
+    "last_updated": "2026-04-07T04:37:52Z"
+  },
+  "web:brewcityelectric.com": {
+    "key": "web:brewcityelectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:27:17Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Brew City Electric, LLC",
+        "city": "Muskego"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:37:53Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Brew City Electric, LLC",
+        "city": "Muskego"
+      }
+    ],
+    "business_name": "Brew City Electric, LLC",
+    "city": "Muskego",
+    "website": "http://www.brewcityelectric.com",
+    "phone": "4146597059",
+    "last_updated": "2026-04-07T04:37:53Z"
+  },
+  "web:brightbuildselectric.com": {
+    "key": "web:brightbuildselectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:27:43Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work.",
+        "business_name": "Brightbuilds",
+        "city": "Franklin"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:38:02Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work.",
+        "business_name": "Brightbuilds",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Brightbuilds",
+    "city": "Franklin",
+    "website": "http://brightbuildselectric.com",
+    "phone": "4142387478",
+    "last_updated": "2026-04-07T04:38:02Z"
+  },
+  "web:doormasterco.com": {
+    "key": "web:doormasterco.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:28:10Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "DoorMaster Garage Door Co., L.L.C.",
+        "city": "Milwaukee"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:38:18Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "DoorMaster Garage Door Co., L.L.C.",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "DoorMaster Garage Door Co., L.L.C.",
+    "city": "Milwaukee",
+    "website": "https://doormasterco.com",
+    "phone": "4143271218",
+    "last_updated": "2026-04-07T04:38:18Z"
+  },
+  "nc:jmd|": {
+    "key": "nc:jmd|",
+    "history": [
+      {
+        "state": "hold",
+        "ts": "2026-04-07T04:28:19Z",
+        "operator": "operator",
+        "note": "held by operator from panel",
+        "business_name": "JMD Plumbing",
+        "city": "",
+        "website": "",
+        "phone": ""
+      }
+    ],
+    "current_state": "hold",
+    "last_updated": "2026-04-07T04:28:19Z",
+    "business_name": "JMD Plumbing",
+    "city": "",
+    "website": "",
+    "phone": ""
+  },
+  "web:key.me": {
+    "key": "web:key.me",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:29:08Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "KeyMe Locksmiths",
+        "city": "Burlington"
+      },
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:39:00Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "KeyMe Locksmiths",
+        "city": "Burlington"
+      }
+    ],
+    "business_name": "KeyMe Locksmiths",
+    "city": "Burlington",
+    "website": "https://key.me/kiosks/wisconsin/burlington/burlington/key-copy-burlington-wisconsin",
+    "phone": "2623834359",
+    "last_updated": "2026-04-07T04:39:00Z"
+  },
+  "web:keymagician.com": {
+    "key": "web:keymagician.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:39:46Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service.",
+        "business_name": "Key Magician Locksmiths, Inc.",
+        "city": "Cudahy"
+      }
+    ],
+    "business_name": "Key Magician Locksmiths, Inc.",
+    "city": "Cudahy",
+    "website": "https://www.keymagician.com",
+    "phone": "4144816606",
+    "last_updated": "2026-04-07T04:39:46Z"
+  },
+  "web:selectlee.com": {
+    "key": "web:selectlee.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:40:03Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Lee Mechanical",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Lee Mechanical",
+    "city": "Franklin",
+    "website": "https://www.selectlee.com",
+    "phone": "2626579490",
+    "last_updated": "2026-04-07T04:40:03Z"
+  },
+  "web:optimalplumbingwi.com": {
+    "key": "web:optimalplumbingwi.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:40:23Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and same-day service.",
+        "business_name": "Optimal Plumbing",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "Optimal Plumbing",
+    "city": "Milwaukee",
+    "website": "https://www.optimalplumbingwi.com",
+    "phone": "4143872332",
+    "last_updated": "2026-04-07T04:40:23Z"
+  },
+  "web:milestoneplumbinginc.com": {
+    "key": "web:milestoneplumbinginc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:40:47Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work.",
+        "business_name": "Milestone Plumbing, Inc.",
+        "city": "Wauwatosa"
+      }
+    ],
+    "business_name": "Milestone Plumbing, Inc.",
+    "city": "Wauwatosa",
+    "website": "http://www.milestoneplumbinginc.com",
+    "phone": "4149884565",
+    "last_updated": "2026-04-07T04:40:47Z"
+  },
+  "web:raystowinginc.com": {
+    "key": "web:raystowinginc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:40:54Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about towing support and emergency service.",
+        "business_name": "Ray's Towing, Inc.",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "Ray's Towing, Inc.",
+    "city": "Milwaukee",
+    "website": "http://www.raystowinginc.com",
+    "phone": "4144814600",
+    "last_updated": "2026-04-07T04:40:54Z"
+  },
+  "web:mketowingrecovery.com": {
+    "key": "web:mketowingrecovery.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:41:23Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "MKE TOWING & RECOVERY 24/7",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "MKE TOWING & RECOVERY 24/7",
+    "city": "Milwaukee",
+    "website": "https://www.mketowingrecovery.com",
+    "phone": "4143100311",
+    "last_updated": "2026-04-07T04:41:23Z"
+  },
+  "web:anmtowingllc.com": {
+    "key": "web:anmtowingllc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:41:30Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "ANM Towing LLC",
+        "city": "New Berlin"
+      }
+    ],
+    "business_name": "ANM Towing LLC",
+    "city": "New Berlin",
+    "website": "https://anmtowingllc.com",
+    "phone": "4147041273",
+    "last_updated": "2026-04-07T04:41:30Z"
+  },
+  "web:24hrtowingandrecovery.com": {
+    "key": "web:24hrtowingandrecovery.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:41:45Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "24 Hr Towing & Recovery",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "24 Hr Towing & Recovery",
+    "city": "Milwaukee",
+    "website": "https://24hrtowingandrecovery.com",
+    "phone": "4144341212",
+    "last_updated": "2026-04-07T04:41:45Z"
+  },
+  "web:towingnearmemke.com": {
+    "key": "web:towingnearmemke.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:42:10Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about rekey and lockout work and emergency service.",
+        "business_name": "Jay\u2019s Towing MKE LLC",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "Jay\u2019s Towing MKE LLC",
+    "city": "Milwaukee",
+    "website": "http://towingnearmemke.com",
+    "phone": "4146280071",
+    "last_updated": "2026-04-07T04:42:10Z"
+  },
+  "web:gates-electric.com": {
+    "key": "web:gates-electric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:43:06Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service and emergency service.",
+        "business_name": "Gates Electric",
+        "city": "Loves Park"
+      }
+    ],
+    "business_name": "Gates Electric",
+    "city": "Loves Park",
+    "website": "https://gates-electric.com",
+    "phone": "8155407759",
+    "last_updated": "2026-04-07T04:43:06Z"
+  },
+  "web:a-snaphvac.com": {
+    "key": "web:a-snaphvac.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:43:46Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "A-SNAP HEATING COOLING ELECTRIC, INC",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "A-SNAP HEATING COOLING ELECTRIC, INC",
+    "city": "Rockford",
+    "website": "https://www.a-snaphvac.com",
+    "phone": "8155199564",
+    "last_updated": "2026-04-07T04:43:46Z"
+  },
+  "web:carlsonheatingandcooling.com": {
+    "key": "web:carlsonheatingandcooling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:44:09Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "Carlson Heating & Cooling",
+        "city": "Machesney Park"
+      }
+    ],
+    "business_name": "Carlson Heating & Cooling",
+    "city": "Machesney Park",
+    "website": "http://www.carlsonheatingandcooling.com",
+    "phone": "8152430232",
+    "last_updated": "2026-04-07T04:44:09Z"
+  },
+  "web:callaboveall.com": {
+    "key": "web:callaboveall.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:44:15Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Above All Plumbing Service",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Above All Plumbing Service",
+    "city": "Cedar Rapids",
+    "website": "http://callaboveall.com",
+    "phone": "3195515185",
+    "last_updated": "2026-04-07T04:44:15Z"
+  },
+  "web:colonyheating.com": {
+    "key": "web:colonyheating.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:44:34Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Colony Plumbing, Heating & Air Conditioning",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Colony Plumbing, Heating & Air Conditioning",
+    "city": "Cedar Rapids",
+    "website": "https://colonyheating.com",
+    "phone": "3193644328",
+    "last_updated": "2026-04-07T04:44:34Z"
+  },
+  "web:cedarrapidsphc.com": {
+    "key": "web:cedarrapidsphc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:44:50Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and financing.",
+        "business_name": "Cedar Rapids Plumbing, Heating & Cooling",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Cedar Rapids Plumbing, Heating & Cooling",
+    "city": "Cedar Rapids",
+    "website": "https://cedarrapidsphc.com/service-areas/cedar-rapids-plumbing-heating-cooling",
+    "phone": "3198994381",
+    "last_updated": "2026-04-07T04:44:50Z"
+  },
+  "web:hannaplumbingheating.com": {
+    "key": "web:hannaplumbingheating.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:45:25Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about water heater work and emergency service.",
+        "business_name": "Hanna Plumbing & Heating, Inc.",
+        "city": "Marion"
+      }
+    ],
+    "business_name": "Hanna Plumbing & Heating, Inc.",
+    "city": "Marion",
+    "website": "http://www.hannaplumbingheating.com",
+    "phone": "3193772809",
+    "last_updated": "2026-04-07T04:45:25Z"
+  },
+  "web:wireoneelectric.com": {
+    "key": "web:wireoneelectric.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:46:22Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about panel upgrade work and emergency service.",
+        "business_name": "WIREONE Electric - Cedar Rapids",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "WIREONE Electric - Cedar Rapids",
+    "city": "Cedar Rapids",
+    "website": "https://www.wireoneelectric.com/areas/cedar-rapids-iowa-city-area",
+    "phone": "3193829191",
+    "last_updated": "2026-04-07T04:46:22Z"
+  },
+  "web:integrityconcretecoatings.com": {
+    "key": "web:integrityconcretecoatings.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:46:51Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Integrity Concrete Coatings",
+        "city": "Sycamore"
+      }
+    ],
+    "business_name": "Integrity Concrete Coatings",
+    "city": "Sycamore",
+    "website": "https://www.integrityconcretecoatings.com",
+    "phone": "8156051351",
+    "last_updated": "2026-04-07T04:46:51Z"
+  },
+  "web:blacklabel-building.com": {
+    "key": "web:blacklabel-building.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:47:55Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "Black Label Building",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Black Label Building",
+    "city": "Franklin",
+    "website": "http://blacklabel-building.com",
+    "phone": "4148823383",
+    "last_updated": "2026-04-07T04:47:55Z"
+  },
+  "web:gsigeneral.com": {
+    "key": "web:gsigeneral.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:48:13Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "GSI General Inc.",
+        "city": "Milwaukee"
+      }
+    ],
+    "business_name": "GSI General Inc.",
+    "city": "Milwaukee",
+    "website": "https://gsigeneral.com",
+    "phone": "4142644548",
+    "last_updated": "2026-04-07T04:48:13Z"
+  },
+  "web:orkin.com": {
+    "key": "web:orkin.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:49:24Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Orkin",
+        "city": "Mt Pleasant"
+      }
+    ],
+    "business_name": "Orkin",
+    "city": "Mt Pleasant",
+    "website": "https://www.orkin.com/locations/wisconsin-wi/mt-pleasant-pest-control/branch-644",
+    "phone": "2626724952",
+    "last_updated": "2026-04-07T04:49:24Z"
+  },
+  "web:ahimilwaukee.com": {
+    "key": "web:ahimilwaukee.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:49:42Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "Absolute Home Improvements Inc.",
+        "city": "Franklin"
+      }
+    ],
+    "business_name": "Absolute Home Improvements Inc.",
+    "city": "Franklin",
+    "website": "https://www.ahimilwaukee.com",
+    "phone": "2624466300",
+    "last_updated": "2026-04-07T04:49:42Z"
+  },
+  "web:zamzamroofing.com": {
+    "key": "web:zamzamroofing.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:50:15Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Zam Zam Roofing",
+        "city": "Oak Creek"
+      }
+    ],
+    "business_name": "Zam Zam Roofing",
+    "city": "Oak Creek",
+    "website": "http://www.zamzamroofing.com",
+    "phone": "4148524852",
+    "last_updated": "2026-04-07T04:50:15Z"
+  },
+  "web:ridgetopexteriors.com": {
+    "key": "web:ridgetopexteriors.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:50:20Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about emergency service.",
+        "business_name": "Ridge Top Exteriors",
+        "city": "Wauwatosa"
+      }
+    ],
+    "business_name": "Ridge Top Exteriors",
+    "city": "Wauwatosa",
+    "website": "https://www.ridgetopexteriors.com/locations/milwaukee-wi",
+    "phone": "4142449416",
+    "last_updated": "2026-04-07T04:50:20Z"
+  },
+  "web:fivestarsroofer.com": {
+    "key": "web:fivestarsroofer.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:51:18Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and free estimates.",
+        "business_name": "Five Stars Roofing",
+        "city": "Oak Creek"
+      }
+    ],
+    "business_name": "Five Stars Roofing",
+    "city": "Oak Creek",
+    "website": "https://fivestarsroofer.com/oak-creek-wi",
+    "phone": "4149282978",
+    "last_updated": "2026-04-07T04:51:18Z"
+  },
+  "web:allcitycontractingwis.com": {
+    "key": "web:allcitycontractingwis.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:51:23Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "All City Contracting LLC",
+        "city": "West Allis"
+      }
+    ],
+    "business_name": "All City Contracting LLC",
+    "city": "West Allis",
+    "website": "https://allcitycontractingwis.com",
+    "phone": "4143857003",
+    "last_updated": "2026-04-07T04:51:23Z"
+  },
+  "web:bovesauto.com": {
+    "key": "web:bovesauto.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:51:28Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about brake work and service scheduling.",
+        "business_name": "Bove's Auto Repair",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Bove's Auto Repair",
+    "city": "Rockford",
+    "website": "http://www.bovesauto.com",
+    "phone": "8159620412",
+    "last_updated": "2026-04-07T04:51:28Z"
+  },
+  "web:mikesonmadison.com": {
+    "key": "web:mikesonmadison.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:52:05Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about towing support and financing.",
+        "business_name": "Mike's Auto Service",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Mike's Auto Service",
+    "city": "Rockford",
+    "website": "https://www.mikesonmadison.com",
+    "phone": "8159635111",
+    "last_updated": "2026-04-07T04:52:05Z"
+  },
+  "web:bufalocontracting.com": {
+    "key": "web:bufalocontracting.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:52:19Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and emergency service.",
+        "business_name": "Bufalo Contracting",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Bufalo Contracting",
+    "city": "Rockford",
+    "website": "http://www.bufalocontracting.com",
+    "phone": "7793680256",
+    "last_updated": "2026-04-07T04:52:19Z"
+  },
+  "web:castleexteriors.net": {
+    "key": "web:castleexteriors.net",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:52:46Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and free estimates.",
+        "business_name": "Castle Contracting",
+        "city": "Machesney Park"
+      }
+    ],
+    "business_name": "Castle Contracting",
+    "city": "Machesney Park",
+    "website": "http://www.castleexteriors.net",
+    "phone": "8775124207",
+    "last_updated": "2026-04-07T04:52:46Z"
+  },
+  "web:dreamlineremodeling.com": {
+    "key": "web:dreamlineremodeling.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:54:00Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about service scheduling.",
+        "business_name": "Dream Line Remodeling",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Dream Line Remodeling",
+    "city": "Rockford",
+    "website": "https://www.dreamlineremodeling.com",
+    "phone": "8152623306",
+    "last_updated": "2026-04-07T04:54:00Z"
+  },
+  "web:mgm-kexteriors.com": {
+    "key": "web:mgm-kexteriors.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:54:15Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and rockford-area coverage.",
+        "business_name": "MGM-K Exteriors Inc",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "MGM-K Exteriors Inc",
+    "city": "Rockford",
+    "website": "https://mgm-kexteriors.com",
+    "phone": "8153190401",
+    "last_updated": "2026-04-07T04:54:15Z"
+  },
+  "web:nunezhomerenovation.com": {
+    "key": "web:nunezhomerenovation.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:54:41Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "Nunez Home\u2019s Renovation",
+        "city": "Loves Park"
+      }
+    ],
+    "business_name": "Nunez Home\u2019s Renovation",
+    "city": "Loves Park",
+    "website": "https://nunezhomerenovation.com",
+    "phone": "7793330832",
+    "last_updated": "2026-04-07T04:54:41Z"
+  },
+  "web:broncocontractinginc.com": {
+    "key": "web:broncocontractinginc.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:55:49Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about flat roofing work and emergency service.",
+        "business_name": "Bronco Contracting Inc",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Bronco Contracting Inc",
+    "city": "Rockford",
+    "website": "http://broncocontractinginc.com",
+    "phone": "7793356589",
+    "last_updated": "2026-04-07T04:55:49Z"
+  },
+  "web:rpmroofs.com": {
+    "key": "web:rpmroofs.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:55:53Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about free estimates.",
+        "business_name": "RPM Contracting LLC",
+        "city": "Machesney Park"
+      }
+    ],
+    "business_name": "RPM Contracting LLC",
+    "city": "Machesney Park",
+    "website": "https://www.rpmroofs.com",
+    "phone": "8777763981",
+    "last_updated": "2026-04-07T04:55:53Z"
+  },
+  "web:reviveautocareia.com": {
+    "key": "web:reviveautocareia.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:56:27Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about brake work and after-hours coverage.",
+        "business_name": "Revive Auto Care",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Revive Auto Care",
+    "city": "Cedar Rapids",
+    "website": "https://www.reviveautocareia.com",
+    "phone": "3192610999",
+    "last_updated": "2026-04-07T04:56:27Z"
+  },
+  "web:albertautoservice.com": {
+    "key": "web:albertautoservice.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:56:36Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about brake work and service scheduling.",
+        "business_name": "Albert Auto Service Inc",
+        "city": "Cedar Rapids"
+      }
+    ],
+    "business_name": "Albert Auto Service Inc",
+    "city": "Cedar Rapids",
+    "website": "https://www.albertautoservice.com",
+    "phone": "3192977391",
+    "last_updated": "2026-04-07T04:56:36Z"
+  },
+  "ph:8152344205": {
+    "key": "ph:8152344205",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:30Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Custom Concrete",
+        "city": "Byron"
+      }
+    ],
+    "business_name": "Custom Concrete",
+    "city": "Byron",
+    "website": "",
+    "phone": "8152344205",
+    "last_updated": "2026-04-07T04:57:30Z"
+  },
+  "web:jjconcrete.com": {
+    "key": "web:jjconcrete.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:34Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about financing.",
+        "business_name": "J&J Concrete & Construction",
+        "city": "Rochelle"
+      }
+    ],
+    "business_name": "J&J Concrete & Construction",
+    "city": "Rochelle",
+    "website": "http://www.jjconcrete.com",
+    "phone": "8155629769",
+    "last_updated": "2026-04-07T04:57:34Z"
+  },
+  "ph:8152391158": {
+    "key": "ph:8152391158",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:35Z",
+        "operator": "operator",
+        "detail": "obs=not seeing a website tied in here - the contact path looks pretty phone-only rig",
+        "business_name": "Diedrich Concrete Inc",
+        "city": "Pecatonica"
+      }
+    ],
+    "business_name": "Diedrich Concrete Inc",
+    "city": "Pecatonica",
+    "website": "",
+    "phone": "8152391158",
+    "last_updated": "2026-04-07T04:57:35Z"
+  },
+  "web:theconcretehero.com": {
+    "key": "web:theconcretehero.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:45Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about commercial service.",
+        "business_name": "Concrete Hero - Leveling & Coatings",
+        "city": "St. Charles"
+      }
+    ],
+    "business_name": "Concrete Hero - Leveling & Coatings",
+    "city": "St. Charles",
+    "website": "https://theconcretehero.com",
+    "phone": "6309402805",
+    "last_updated": "2026-04-07T04:57:45Z"
+  },
+  "web:haasconstructionil.com": {
+    "key": "web:haasconstructionil.com",
+    "history": [
+      {
+        "type": "event",
+        "event_type": "draft_regenerated",
+        "label": "Draft regenerated",
+        "ts": "2026-04-07T04:57:49Z",
+        "operator": "operator",
+        "detail": "obs=site is pretty explicit about service scheduling.",
+        "business_name": "Haas Construction",
+        "city": "Rockford"
+      }
+    ],
+    "business_name": "Haas Construction",
+    "city": "Rockford",
+    "website": "https://www.haasconstructionil.com",
+    "phone": "8159651885",
+    "last_updated": "2026-04-07T04:57:49Z"
+  },
+  "web:northsidefence.com": {
+    "key": "web:northsidefence.com",
+    "history": [],
+    "business_name": "Northside Fence & Deck",
+    "city": "",
+    "website": "northsidefence.com",
+    "phone": "+18155551234",
+    "delivery_profile": {
+      "snapshot": {
+        "business_name": "Northside Fence & Deck",
+        "contact_name": "Mia",
+        "phone": "+18155551234",
+        "email": "mia@northsidefence.com",
+        "category": "Fence / Deck",
+        "website": "northsidefence.com",
+        "google_presence": true,
+        "facebook_presence": true,
+        "notes": ""
+      },
+      "discovery": {
+        "poor_or_missing_website": true,
+        "weak_google_facebook_presence": true,
+        "no_clear_contact_flow": true,
+        "missed_calls": true,
+        "weak_follow_up": true,
+        "wants_more_reviews": true,
+        "estimate_or_job_status_problem": true,
+        "wants_ongoing_support": true
+      },
+      "core_offer": "starter_website",
+      "bundle_key": "presence_website",
+      "selected_modules": [
+        "missed_call_recovery",
+        "follow_up_reminder_setup",
+        "review_request_system",
+        "estimate_job_status_communication",
+        "mobile_admin_workflow_helper"
+      ],
+      "price": "2300",
+      "pricing_mode": "live_quote",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "agreement_status": "",
+      "invoice_status": "",
+      "deposit_status": "",
+      "offer_notes": "Multiple issues are showing up, so the full starter stack fits best.",
+      "stage": "deployment_pending",
+      "activation_tasks": [
+        "Draft the one-page site",
+        "Collect photos and service list",
+        "Connect the contact flow",
+        "Tie the site back to the business profiles",
+        "Set missed-call response and text-back",
+        "Set follow-up timing and reminders",
+        "Set review request trigger and copy",
+        "Set estimate / job status updates",
+        "Confirm the mobile admin workflow"
+      ],
+      "updated_at": "2026-04-09T21:28:53Z",
+      "updated_by": "operator",
+      "readiness": {
+        "copy_approved": false
+      }
+    },
+    "last_updated": "2026-04-09T21:28:53Z"
+  },
+  "web:prairiestoneroofing.com": {
+    "key": "web:prairiestoneroofing.com",
+    "history": [],
+    "business_name": "Prairie Stone Roofing",
+    "city": "",
+    "website": "prairiestoneroofing.com",
+    "phone": "+18155550144",
+    "delivery_profile": {
+      "snapshot": {
+        "business_name": "Prairie Stone Roofing",
+        "contact_name": "Evan",
+        "phone": "+18155550144",
+        "email": "evan@prairiestoneroofing.com",
+        "category": "Roofing",
+        "website": "prairiestoneroofing.com",
+        "google_presence": true,
+        "facebook_presence": false,
+        "notes": ""
+      },
+      "discovery": {
+        "poor_or_missing_website": false,
+        "weak_google_facebook_presence": true,
+        "no_clear_contact_flow": true,
+        "missed_calls": true,
+        "weak_follow_up": true,
+        "wants_more_reviews": false,
+        "estimate_or_job_status_problem": true,
+        "wants_ongoing_support": false
+      },
+      "core_offer": "lead_contact_setup",
+      "bundle_key": "full_starter_package",
+      "selected_modules": [
+        "missed_call_recovery",
+        "follow_up_reminder_setup",
+        "estimate_job_status_communication",
+        "mobile_admin_workflow_helper"
+      ],
+      "price": "",
+      "pricing_mode": "formal_estimate",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "agreement_status": "signed",
+      "invoice_status": "",
+      "deposit_status": "received",
+      "offer_notes": "Multiple issues are showing up, so the full starter stack fits best.",
+      "stage": "won",
+      "readiness": {
+        "vendor_access_collected": true
+      },
+      "activation_tasks": [
+        "Map the intake flow",
+        "Set follow-up reminders",
+        "Route new leads to the owner",
+        "Confirm the full starter stack is ready for handoff",
+        "Set missed-call response and text-back",
+        "Set follow-up timing and reminders",
+        "Set estimate / job status updates",
+        "Confirm the mobile admin workflow"
+      ],
+      "updated_at": "2026-04-09T21:40:00Z",
+      "updated_by": "operator"
+    },
+    "last_updated": "2026-04-09T21:40:00Z"
+  },
+  "nc:test plumbing co|": {
+    "key": "nc:test plumbing co|",
+    "history": [],
+    "business_name": "Test Plumbing Co",
+    "city": "",
+    "website": "",
+    "phone": "",
+    "delivery_profile": {
+      "snapshot": {
+        "business_name": "Test Plumbing Co",
+        "contact_name": "",
+        "phone": "",
+        "email": "",
+        "category": "",
+        "website": "",
+        "google_presence": false,
+        "facebook_presence": false,
+        "notes": ""
+      },
+      "discovery": {
+        "poor_or_missing_website": false,
+        "weak_google_facebook_presence": false,
+        "no_clear_contact_flow": false,
+        "missed_calls": false,
+        "weak_follow_up": false,
+        "wants_more_reviews": false,
+        "estimate_or_job_status_problem": false,
+        "wants_ongoing_support": false
+      },
+      "consult_builder": {
+        "freeform_notes": "",
+        "business_type": "",
+        "current_tools_accounts": "",
+        "owner_preferences": "",
+        "urgency": "",
+        "transcript_summary": "",
+        "do_not_recommend_notes": ""
+      },
+      "draft_recommendation": {
+        "core_offer": "starter_website",
+        "bundle_key": "presence_website",
+        "selected_modules": [],
+        "package_label": "Presence + Website",
+        "reason": "No site plus weak presence points to Presence + Website.",
+        "build_status": "planned",
+        "launch_eligible": false,
+        "likely_required_access": [
+          "Domain or hosting access",
+          "Contact destination details",
+          "Presence account access",
+          "Domain/hosting access"
+        ],
+        "likely_required_assets": [
+          "Logo or wordmark",
+          "Service list",
+          "Business summary",
+          "Photos",
+          "Primary CTA/contact details",
+          "Presence assets",
+          "Website content/assets"
+        ]
+      },
+      "core_offer": "starter_website",
+      "bundle_key": "presence_website",
+      "selected_modules": [],
+      "price": "",
+      "pricing_mode": "live_quote",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "agreement_status": "",
+      "invoice_status": "",
+      "deposit_status": "",
+      "offer_notes": "No site plus weak presence points to Presence + Website.",
+      "artifact_links": [],
+      "credential_status": "",
+      "handoff_status": "",
+      "closeout_status": "",
+      "revision_status": "",
+      "revision_round": 0,
+      "change_order_status": "in_scope",
+      "change_order_needed": false,
+      "change_order_notes": "",
+      "blockers": [],
+      "next_step": "",
+      "activation_packet_status": "draft",
+      "stage": "call_booked",
+      "readiness": {
+        "activation_packet_ready": false,
+        "assets_ready": false,
+        "vendor_access_collected": false,
+        "qa_ready": false,
+        "rollback_ready": false,
+        "handoff_ready": false
+      },
+      "visibility_state": "hidden",
+      "offer_type": "public",
+      "build_status": "planned",
+      "launch_eligible": false,
+      "ownership_mode": "hybrid",
+      "support_policy_key": "optional_support",
+      "kit_status": "hidden",
+      "prelaunch_mode": true,
+      "target_visibility_state": "ready",
+      "kit_key": "presence_website_v1",
+      "kit_version": "v1",
+      "current_truth_notes": [
+        "Real kit files now exist: content intake form, asset checklist, domain/hosting decision worksheet, publish checklist, and handoff closeout. Not yet proven in a live delivery.",
+        "Correct public package shape, but still composed from component kits that are not fully hardened yet."
+      ],
+      "target_truth_notes": [
+        "Ready once the kit has been used for one real client delivery, site published and live, and closeout confirmed.",
+        "Ready once both component kits are ready and the combined intake/go-live flow exists."
+      ],
+      "required_artifacts": [
+        "Logo or wordmark",
+        "Service list",
+        "Business summary",
+        "Photos",
+        "Primary CTA/contact details",
+        "Presence assets",
+        "Website content/assets"
+      ],
+      "access_requirements": [
+        "Domain or hosting access",
+        "Contact destination details",
+        "Presence account access",
+        "Domain/hosting access"
+      ],
+      "qa_checks": [
+        "Content review complete \u2014 no placeholder text",
+        "All links working",
+        "Mobile layout correct",
+        "Contact CTA tested end-to-end",
+        "DNS and HTTPS confirmed",
+        "Site loads at correct URL",
+        "Owner can access on phone",
+        "Presence checks passed",
+        "Website checks passed",
+        "Cross-channel consistency reviewed"
+      ],
+      "rollback_plan": [],
+      "definition_of_done": [
+        "Content intake form completed with owner",
+        "All required assets collected",
+        "Domain and hosting decisions confirmed",
+        "One-page site built to approved content",
+        "Mobile QA passed",
+        "Contact CTA tested and working",
+        "Publish checklist completed",
+        "Site live at correct URL",
+        "Handoff closeout issued",
+        "Presence complete",
+        "Website complete",
+        "Combined closeout delivered"
+      ],
+      "missing_artifacts": [
+        "Combined intake form",
+        "Combined go-live checklist"
+      ],
+      "missing_qa": [
+        "Cross-channel QA script"
+      ],
+      "missing_closeout": [
+        "Combined handoff summary"
+      ],
+      "missing_rollback": [],
+      "next_hardening_steps": [
+        "Use the kit on a real Starter Website delivery. Complete the publish checklist. Promote to verification once one site is live and cleanly handed off.",
+        "Wait on Presence Refresh and Starter Website hardening, then build the combined intake and go-live kit."
+      ],
+      "activation_packet_sections": [
+        "Client identity",
+        "Sold scope",
+        "Required access",
+        "Required assets",
+        "Decision approvals",
+        "Execution settings",
+        "Handoff checklist"
+      ],
+      "support_summary": "Fixed project with optional post-launch support.",
+      "activation_tasks": [
+        "Draft the one-page site",
+        "Collect photos and service list",
+        "Connect the contact flow",
+        "Tie the site back to the business profiles",
+        "Collect: Logo or wordmark",
+        "Collect: Service list",
+        "Collect: Business summary",
+        "Collect: Photos",
+        "Collect: Primary CTA/contact details",
+        "Collect: Presence assets",
+        "Collect: Website content/assets",
+        "Confirm access: Domain or hosting access",
+        "Confirm access: Contact destination details",
+        "Confirm access: Presence account access",
+        "Confirm access: Domain/hosting access"
+      ],
+      "updated_at": "2026-04-10T03:11:28Z",
+      "updated_by": "operator"
+    },
+    "last_updated": "2026-04-10T03:11:28Z"
+  },
+  "phone:18153193072": {
+    "key": "phone:18153193072",
+    "history": [],
+    "business_name": "",
+    "city": "",
+    "website": "",
+    "phone": "18153193072",
+    "delivery_profile": {
+      "snapshot": {
+        "business_name": "",
+        "contact_name": "Andrew Yomantas",
+        "phone": "18153193072",
+        "email": "drewyomantas@gmail.com",
+        "category": "landscape",
+        "website": "",
+        "google_presence": false,
+        "facebook_presence": true,
+        "notes": ""
+      },
+      "discovery": {
+        "poor_or_missing_website": true,
+        "weak_google_facebook_presence": true,
+        "no_clear_contact_flow": false,
+        "missed_calls": false,
+        "weak_follow_up": false,
+        "wants_more_reviews": true,
+        "estimate_or_job_status_problem": false,
+        "wants_ongoing_support": true
+      },
+      "consult_builder": {
+        "freeform_notes": "",
+        "business_type": "landscape",
+        "current_tools_accounts": "Facebookd",
+        "owner_preferences": "",
+        "urgency": "low",
+        "transcript_summary": "",
+        "do_not_recommend_notes": ""
+      },
+      "draft_recommendation": {
+        "core_offer": "lead_contact_setup",
+        "bundle_key": "full_starter_package",
+        "selected_modules": [
+          "review_request_system"
+        ],
+        "package_label": "Full Starter Package",
+        "reason": "Multiple issues are showing up, so the full starter stack fits best.",
+        "proposal_options": [],
+        "accepted_option_id": "",
+        "accepted_option_status": "draft_only",
+        "accepted_option_label": "",
+        "accepted_scope_note": "",
+        "accepted_assumptions": "",
+        "build_status": "planned",
+        "launch_eligible": false,
+        "likely_required_access": [
+          "Phone, email, or contact form routing access",
+          "Any messaging tool access being used",
+          "Presence account access",
+          "Domain/hosting access",
+          "Contact-routing access",
+          "Messaging or send path access",
+          "Review profile link"
+        ],
+        "likely_required_assets": [
+          "Preferred contact destinations",
+          "Notification preferences",
+          "Service categories or intake paths",
+          "Presence assets",
+          "Website content/assets",
+          "Routing and notification preferences",
+          "Review copy approval",
+          "Review link destination",
+          "Trigger rule choice"
+        ]
+      },
+      "core_offer": "starter_website",
+      "bundle_key": "presence_website",
+      "selected_modules": [],
+      "price": "",
+      "pricing_mode": "live_quote",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "agreement_status": "",
+      "invoice_status": "",
+      "deposit_status": "",
+      "offer_notes": "No site plus weak presence points to Presence + Website.",
+      "artifact_links": [],
+      "credential_status": "",
+      "handoff_status": "",
+      "closeout_status": "",
+      "revision_status": "",
+      "revision_round": 0,
+      "change_order_status": "in_scope",
+      "change_order_needed": false,
+      "change_order_notes": "",
+      "blockers": [],
+      "next_step": "",
+      "activation_packet_status": "draft",
+      "stage": "call_booked",
+      "readiness": {
+        "activation_packet_ready": false,
+        "assets_ready": false,
+        "vendor_access_collected": false,
+        "qa_ready": false,
+        "rollback_ready": false,
+        "handoff_ready": false
+      },
+      "visibility_state": "hidden",
+      "offer_type": "public",
+      "build_status": "planned",
+      "launch_eligible": false,
+      "ownership_mode": "hybrid",
+      "support_policy_key": "optional_support",
+      "kit_status": "hidden",
+      "prelaunch_mode": true,
+      "target_visibility_state": "ready",
+      "kit_key": "presence_website_v1",
+      "kit_version": "v1",
+      "current_truth_notes": [
+        "Real kit files now exist: content intake form, asset checklist, domain/hosting decision worksheet, publish checklist, and handoff closeout. Not yet proven in a live delivery.",
+        "Correct public package shape, but still composed from component kits that are not fully hardened yet."
+      ],
+      "target_truth_notes": [
+        "Ready once the kit has been used for one real client delivery, site published and live, and closeout confirmed.",
+        "Ready once both component kits are ready and the combined intake/go-live flow exists."
+      ],
+      "required_artifacts": [
+        "Logo or wordmark",
+        "Service list",
+        "Business summary",
+        "Photos",
+        "Primary CTA/contact details",
+        "Presence assets",
+        "Website content/assets"
+      ],
+      "access_requirements": [
+        "Domain or hosting access",
+        "Contact destination details",
+        "Presence account access",
+        "Domain/hosting access"
+      ],
+      "qa_checks": [
+        "Content review complete \u2014 no placeholder text",
+        "All links working",
+        "Mobile layout correct",
+        "Contact CTA tested end-to-end",
+        "DNS and HTTPS confirmed",
+        "Site loads at correct URL",
+        "Owner can access on phone",
+        "Presence checks passed",
+        "Website checks passed",
+        "Cross-channel consistency reviewed"
+      ],
+      "rollback_plan": [],
+      "definition_of_done": [
+        "Content intake form completed with owner",
+        "All required assets collected",
+        "Domain and hosting decisions confirmed",
+        "One-page site built to approved content",
+        "Mobile QA passed",
+        "Contact CTA tested and working",
+        "Publish checklist completed",
+        "Site live at correct URL",
+        "Handoff closeout issued",
+        "Presence complete",
+        "Website complete",
+        "Combined closeout delivered"
+      ],
+      "missing_artifacts": [
+        "Combined intake form",
+        "Combined go-live checklist"
+      ],
+      "missing_qa": [
+        "Cross-channel QA script"
+      ],
+      "missing_closeout": [
+        "Combined handoff summary"
+      ],
+      "missing_rollback": [],
+      "next_hardening_steps": [
+        "Use the kit on a real Starter Website delivery. Complete the publish checklist. Promote to verification once one site is live and cleanly handed off.",
+        "Wait on Presence Refresh and Starter Website hardening, then build the combined intake and go-live kit."
+      ],
+      "activation_packet_sections": [
+        "Client identity",
+        "Sold scope",
+        "Required access",
+        "Required assets",
+        "Decision approvals",
+        "Execution settings",
+        "Handoff checklist"
+      ],
+      "support_summary": "Fixed project with optional post-launch support.",
+      "activation_tasks": [
+        "Draft the one-page site",
+        "Collect photos and service list",
+        "Connect the contact flow",
+        "Tie the site back to the business profiles",
+        "Collect: Logo or wordmark",
+        "Collect: Service list",
+        "Collect: Business summary",
+        "Collect: Photos",
+        "Collect: Primary CTA/contact details",
+        "Collect: Presence assets",
+        "Collect: Website content/assets",
+        "Confirm access: Domain or hosting access",
+        "Confirm access: Contact destination details",
+        "Confirm access: Presence account access",
+        "Confirm access: Domain/hosting access"
+      ],
+      "updated_at": "2026-04-11T02:17:27Z",
+      "updated_by": "operator"
+    },
+    "last_updated": "2026-04-11T02:17:27Z"
+  },
+  "nc:jo|": {
+    "key": "nc:jo|",
+    "history": [],
+    "business_name": "Jo Schmo",
+    "city": "",
+    "website": "test.com",
+    "phone": "555555555",
+    "delivery_profile": {
+      "snapshot": {
+        "business_name": "Jo Schmo",
+        "contact_name": "Jordan",
+        "phone": "555555555",
+        "email": "test@gmail.com",
+        "category": "local business",
+        "website": "test.com",
+        "google_presence": true,
+        "facebook_presence": false,
+        "notes": "test test test"
+      },
+      "discovery": {
+        "poor_or_missing_website": true,
+        "weak_google_facebook_presence": true,
+        "no_clear_contact_flow": true,
+        "missed_calls": true,
+        "weak_follow_up": true,
+        "wants_more_reviews": true,
+        "estimate_or_job_status_problem": true,
+        "wants_ongoing_support": true
+      },
+      "consult_builder": {
+        "freeform_notes": "notes",
+        "business_type": "local bsuinss",
+        "current_tools_accounts": "",
+        "owner_preferences": "",
+        "urgency": "low",
+        "transcript_summary": "",
+        "do_not_recommend_notes": "",
+        "quick_wins": [
+          {
+            "id": "qw_1775929891532_192",
+            "category": "reviews",
+            "what_noticed": "Fewer than 10 Google reviews and no new reviews in 6+ months",
+            "why_matters": "Local search weights review count and recency \u2014 low count suppresses map-pack visibility",
+            "quick_win": "Set up a review request text that goes out automatically after a completed job",
+            "priority": "soon",
+            "offer_key": "review_request_system",
+            "is_easy_fix": false
+          },
+          {
+            "id": "qw_1775929914071_903",
+            "category": "presence",
+            "what_noticed": "Facebook page has no cover photo or profile photo is years old",
+            "why_matters": "First impression looks low-effort; customers may assume the business is inactive",
+            "quick_win": "Update profile photo to current logo; cover photo to a recent job photo",
+            "priority": "now",
+            "offer_key": "presence_refresh",
+            "is_easy_fix": true
+          }
+        ]
+      },
+      "draft_recommendation": {
+        "core_offer": "lead_contact_setup",
+        "bundle_key": "full_starter_package",
+        "selected_modules": [
+          "missed_call_recovery",
+          "follow_up_reminder_setup",
+          "review_request_system",
+          "estimate_job_status_communication"
+        ],
+        "package_label": "Full Starter Package",
+        "reason": "Multiple issues are showing up, so the full starter stack fits best.",
+        "proposal_options": [
+          {
+            "id": "po_1775929990710_75",
+            "label": "Recommended Option",
+            "offer_keys": [
+              "basic_cleanup",
+              "presence_refresh",
+              "review_request_system",
+              "estimate_job_status_communication"
+            ],
+            "price_note": "",
+            "scope_note": "Multiple issues are showing up, so the full starter stack fits best.",
+            "recommended": true,
+            "assumptions": "Use this as the main recommendation unless the owner wants a smaller first step."
+          },
+          {
+            "id": "po_1775929990710_878",
+            "label": "Smaller First Step",
+            "offer_keys": [
+              "presence_refresh"
+            ],
+            "price_note": "",
+            "scope_note": "A lighter starting point if the owner wants to solve the clearest pain first.",
+            "recommended": false,
+            "assumptions": ""
+          },
+          {
+            "id": "po_1775929990710_233",
+            "label": "Stretch / Bundle Option",
+            "offer_keys": [],
+            "price_note": "",
+            "scope_note": "Only fill this if the owner wants a broader bundle after the first recommendation.",
+            "recommended": false,
+            "assumptions": ""
+          }
+        ],
+        "accepted_option_id": "",
+        "accepted_option_status": "draft_only",
+        "accepted_option_label": "",
+        "accepted_scope_note": "",
+        "accepted_assumptions": "",
+        "build_status": "hardening",
+        "launch_eligible": false,
+        "likely_required_access": [
+          "Phone, email, or contact form routing access",
+          "Any messaging tool access being used",
+          "Presence account access",
+          "Domain/hosting access",
+          "Contact-routing access",
+          "Twilio number/config",
+          "Google Sheet or logging destination",
+          "Messaging or destination access",
+          "Messaging or send path access",
+          "Review profile link"
+        ],
+        "likely_required_assets": [
+          "Preferred contact destinations",
+          "Notification preferences",
+          "Service categories or intake paths",
+          "Presence assets",
+          "Website content/assets",
+          "Routing and notification preferences",
+          "Voice greeting copy",
+          "Auto-text copy",
+          "Owner notification destination",
+          "Reminder cadence choice",
+          "Template copy approval",
+          "Channel destination details",
+          "Review copy approval",
+          "Review link destination",
+          "Trigger rule choice",
+          "Status stages",
+          "Send destinations"
+        ]
+      },
+      "proposal_options": [
+        {
+          "id": "po_1775929990710_75",
+          "label": "Recommended Option",
+          "offer_keys": [
+            "basic_cleanup",
+            "presence_refresh",
+            "review_request_system",
+            "estimate_job_status_communication"
+          ],
+          "price_note": "",
+          "scope_note": "Multiple issues are showing up, so the full starter stack fits best.",
+          "recommended": true,
+          "assumptions": "Use this as the main recommendation unless the owner wants a smaller first step."
+        },
+        {
+          "id": "po_1775929990710_878",
+          "label": "Smaller First Step",
+          "offer_keys": [
+            "presence_refresh"
+          ],
+          "price_note": "",
+          "scope_note": "A lighter starting point if the owner wants to solve the clearest pain first.",
+          "recommended": false,
+          "assumptions": ""
+        },
+        {
+          "id": "po_1775929990710_233",
+          "label": "Stretch / Bundle Option",
+          "offer_keys": [],
+          "price_note": "",
+          "scope_note": "Only fill this if the owner wants a broader bundle after the first recommendation.",
+          "recommended": false,
+          "assumptions": ""
+        }
+      ],
+      "accepted_option_id": "",
+      "accepted_option_status": "draft_only",
+      "accepted_option_date": "",
+      "accepted_option_label": "",
+      "accepted_option_note": "",
+      "accepted_scope_note": "",
+      "accepted_assumptions": "",
+      "core_offer": "presence_refresh",
+      "bundle_key": "basic_cleanup",
+      "selected_modules": [
+        "review_request_system",
+        "estimate_job_status_communication",
+        "mobile_admin_workflow_helper"
+      ],
+      "price": "",
+      "pricing_mode": "live_quote",
+      "monthly_support": false,
+      "monthly_fee": "",
+      "agreement_status": "",
+      "invoice_status": "",
+      "deposit_status": "",
+      "offer_notes": "Multiple issues are showing up, so the full starter stack fits best.",
+      "artifact_links": [],
+      "credential_status": "",
+      "handoff_status": "",
+      "closeout_status": "",
+      "revision_status": "",
+      "revision_round": 0,
+      "change_order_status": "in_scope",
+      "change_order_needed": false,
+      "change_order_notes": "",
+      "blockers": [],
+      "next_step": "Use the kit on a real Lead & Contact Setup delivery. Complete the routing test script for all active channels. Promote to verification once one delivery is cleanly closed out.",
+      "activation_packet_status": "ready_for_start",
+      "stage": "call_booked",
+      "readiness": {
+        "activation_packet_ready": true,
+        "assets_ready": false,
+        "vendor_access_collected": false,
+        "qa_ready": false,
+        "rollback_ready": false,
+        "handoff_ready": false
+      },
+      "visibility_state": "internal",
+      "offer_type": "internal",
+      "build_status": "hardening",
+      "launch_eligible": false,
+      "ownership_mode": "client_owned",
+      "support_policy_key": "optional_support",
+      "kit_status": "internal",
+      "prelaunch_mode": true,
+      "target_visibility_state": "internal",
+      "kit_key": "basic_cleanup_v1",
+      "kit_version": "v1",
+      "current_truth_notes": [
+        "Real kit files now exist: asset request template, access checklist, cleanup checklist, QA checklist, and closeout snapshot template. Not yet proven in a live delivery.",
+        "Bundle-level operator docs now exist: scope matrix, activation checklist, and closeout template. Depends on Presence Refresh component kit. Neither the bundle nor the component is delivery-proven yet.",
+        "Real kit files now exist: review setup worksheet, review copy library, access checklist, QA checklist, and handoff closeout. Not yet proven in a live client delivery.",
+        "Real kit files now exist: status map worksheet, message template pack, access checklist, test sequence, and handoff closeout. Not yet proven in a live delivery.",
+        "Internal operator helper only. This is not a public sellable item."
+      ],
+      "target_truth_notes": [
+        "Ready once the kit has been used for one real client delivery and all checklist items are verified as repeatable.",
+        "Ready once Presence Refresh is delivery-proven and the bundle has been used for one real Basic Cleanup engagement.",
+        "Ready once the kit has been used for one real client delivery, test request completed, and closeout confirmed.",
+        "Ready once the kit has been used for one real client delivery, all status stages tested, and closeout confirmed.",
+        "Ready when the internal consult-to-deploy operator flow is stable on mobile."
+      ],
+      "required_artifacts": [
+        "Logo or brand reference",
+        "Current hours and service area",
+        "Service list",
+        "Business photos",
+        "Same base presence assets as Presence Refresh",
+        "Review copy approval",
+        "Review link destination",
+        "Trigger rule choice",
+        "Status stages",
+        "Template copy approval",
+        "Send destinations"
+      ],
+      "access_requirements": [
+        "Google Business Profile access",
+        "Facebook page access if used",
+        "Same access as Presence Refresh",
+        "Messaging or send path access",
+        "Review profile link"
+      ],
+      "qa_checks": [
+        "Profile details updated",
+        "Contact info matches everywhere",
+        "Photos and trust copy reviewed",
+        "Presence QA checklist passed",
+        "Before/after snapshot stored",
+        "Scope matrix completed within Basic Cleanup ceiling",
+        "Fast-win presence checks passed",
+        "Closeout snapshot stored",
+        "Review trigger defined and owner-reviewed",
+        "Copy approved before any send",
+        "Test request sent and confirmed delivered",
+        "Review link points to correct profile",
+        "Pause path documented and confirmed",
+        "Status map defines all active stages",
+        "All templates approved by owner before go-live",
+        "Each active stage tested \u2014 notification arrives at correct destination",
+        "Copy matches approved template",
+        "Safe-pause path documented and confirmed",
+        "Usable on phone",
+        "Supports consult-to-deploy workflow"
+      ],
+      "rollback_plan": [
+        "Pause review-send trigger",
+        "Disable review send path",
+        "Log rollback note",
+        "Pause estimate/job update trigger",
+        "Disable outgoing updates"
+      ],
+      "definition_of_done": [
+        "Assets received from client",
+        "Access confirmed on all in-scope platforms",
+        "Profiles audited and updated",
+        "Contact info consistent across platforms",
+        "Photos and copy refreshed",
+        "QA checklist passed",
+        "Closeout snapshot stored",
+        "Scope matrix completed and operator-reviewed",
+        "Presence fast wins complete within scope ceiling",
+        "Activation checklist completed",
+        "Closeout template filled and on file",
+        "Review setup worksheet completed with owner",
+        "Copy library approved by owner before go-live",
+        "Access to send path confirmed",
+        "Test review request completed",
+        "Review link verified at correct destination",
+        "Pause/disable path documented and confirmed",
+        "Handoff closeout issued",
+        "Status map worksheet completed and owner-reviewed",
+        "All active status stage templates approved by owner",
+        "Test sequence completed \u2014 all active stages pass",
+        "Owner knows how to trigger each notification",
+        "Safe-pause procedure documented",
+        "Usable on phone",
+        "Supports consult-to-deploy workflow",
+        "No client-facing promise added"
+      ],
+      "missing_artifacts": [
+        "Mobile-specific operator shortcuts"
+      ],
+      "missing_qa": [
+        "Phone-size interaction pass"
+      ],
+      "missing_closeout": [],
+      "missing_rollback": [],
+      "next_hardening_steps": [
+        "Use the kit on a real Presence Refresh delivery. Track any checklist gaps or missing steps. Promote to verification once one delivery is cleanly closed out.",
+        "Deliver one real Presence Refresh, then use the Basic Cleanup scope matrix to run a narrower version. Fill the closeout template for that delivery.",
+        "Use the kit on a real Review Request System delivery. Complete the QA checklist before sending to a real client. Promote to verification once one delivery is cleanly closed out.",
+        "Use the kit on a real delivery. Complete the test sequence for all active status stages. Promote to verification once one delivery is cleanly closed out.",
+        "Use the new internal consult flow to harden the operator-only mobile path."
+      ],
+      "activation_packet_sections": [
+        "Client identity",
+        "Sold scope",
+        "Required access",
+        "Required assets",
+        "Decision approvals",
+        "Execution settings",
+        "Handoff checklist"
+      ],
+      "support_summary": "One-time cleanup with optional support after delivery.",
+      "activation_tasks": [
+        "Refresh Google Business Profile",
+        "Refresh Facebook / local presence",
+        "Tighten photos, hours, and about copy",
+        "Trim the presence cleanup to the fast wins",
+        "Set review request trigger and copy",
+        "Set estimate / job status updates",
+        "Confirm the mobile admin workflow",
+        "Collect: Logo or brand reference",
+        "Collect: Current hours and service area",
+        "Collect: Service list",
+        "Collect: Business photos",
+        "Collect: Same base presence assets as Presence Refresh",
+        "Collect: Review copy approval",
+        "Collect: Review link destination",
+        "Collect: Trigger rule choice",
+        "Collect: Status stages",
+        "Collect: Template copy approval",
+        "Collect: Send destinations",
+        "Confirm access: Google Business Profile access",
+        "Confirm access: Facebook page access if used",
+        "Confirm access: Same access as Presence Refresh",
+        "Confirm access: Messaging or send path access",
+        "Confirm access: Review profile link"
+      ],
+      "updated_at": "2026-04-11T17:53:53Z",
+      "updated_by": "operator"
+    },
+    "last_updated": "2026-04-11T17:53:53Z"
   }
 }

@@ -18,13 +18,15 @@ Agents: prospecting → website scanning → opportunity scoring → AI draft ge
 - AI pipeline: 7 agents (details in lead_engine/)
 - Email delivery: configured via .env
 
-## Critical Files
+## Critical Files & Pipeline Structure
 | File/Folder | Notes |
 |---|---|
 | `.env` | **Never commit. Contains API keys and email credentials.** |
-| `lead_engine/` | Core pipeline — edit with caution |
+| `app.py` | Flask entrypoint (verify at root — may differ) |
+| `lead_engine/` | 7-agent pipeline — edit with caution. Agents run in sequence: prospecting → website scanning → opportunity scoring → AI draft → send scheduling → reply detection → suppression |
+| `lead_engine/suppression*` | Suppression list is critical — do not truncate, overwrite, or reset |
 | `automation-agency-office/` | Agency-facing UI and configuration |
-| `missed_call_service/` | Separate service |
+| `missed_call_service/` | Separate service — isolated from main pipeline |
 
 ## Commands
 ```bash
@@ -32,9 +34,12 @@ Agents: prospecting → website scanning → opportunity scoring → AI draft ge
 source .venv/bin/activate   # macOS/Linux
 .venv\Scripts\activate      # Windows
 
-# Then run Flask
-flask run
-# or check for a specific entrypoint in the project
+# Start the Flask app
+python app.py               # preferred if app.py exists at root
+flask run                   # fallback — check FLASK_APP env var if it fails
+
+# Run a single agent manually (dry-run to avoid live sends)
+python lead_engine/<agent_file>.py --dry-run   # confirm --dry-run flag exists before use
 ```
 
 ## Safety Rules

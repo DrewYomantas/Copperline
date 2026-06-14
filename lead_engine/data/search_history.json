@@ -1,5 +1,3965 @@
 [
   {
+    "ts": "2026-04-07 04:20 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "pressure_washing",
+    "limit": 20,
+    "found": 1,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.2079,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:40 UTC",
+    "city": "42.1936,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1936,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1792,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1648,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 01:39 UTC",
+    "city": "42.1504,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 01:38 UTC",
+    "city": "42.1504,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 7,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.0497",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.0691",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.0885",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.1079",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.1273",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.1467",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.1662",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.2079,-89.1856",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-88.9526",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-88.9720",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-88.9914",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.0108",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.0303",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.0497",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.0691",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.0885",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.1079",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.1273",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.1467",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.1662",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1936,-89.1856",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-88.9526",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-88.9720",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-88.9914",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.0108",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.0303",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.0497",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.0691",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.0885",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.1079",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.1273",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.1467",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:25 UTC",
+    "city": "42.1792,-89.1662",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1792,-89.1856",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-88.9526",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-88.9720",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-88.9914",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.0108",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.0303",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.0497",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.0691",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.0885",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.1079",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.1273",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.1467",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.1662",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1648,-89.1856",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-88.9526",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-88.9720",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-88.9914",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.0108",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.0303",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.0497",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.0691",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.0885",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.1079",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.1273",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.1467",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.1662",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1504,-89.1856",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-88.9507",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-88.9701",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-88.9895",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.0089",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.0283",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.0477",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.0672",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.0866",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.1060",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.1254",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.1448",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2148,-89.1642",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-88.9507",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-88.9701",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-88.9895",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.0089",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.0283",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.0477",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.0672",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.0866",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.1060",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.1254",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.1448",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.2004,-89.1642",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-88.9507",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-88.9701",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-88.9895",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.0089",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.0283",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.0477",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.0672",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.0866",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.1060",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.1254",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.1448",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1861,-89.1642",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1717,-88.9507",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1717,-88.9701",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:24 UTC",
+    "city": "42.1717,-88.9895",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.0089",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.0283",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.0477",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.0672",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.0866",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.1060",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.1254",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.1448",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1717,-89.1642",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-88.9507",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-88.9701",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-88.9895",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.0089",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.0283",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.0477",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.0672",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.0866",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.1060",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.1254",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.1448",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:23 UTC",
+    "city": "42.1573,-89.1642",
+    "state": "area",
+    "industry": "welding",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:22 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "drywall",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:22 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "construction",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:22 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "cleaning",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:22 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "appliance_repair",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:21 UTC",
+    "city": "Rockford",
+    "state": "IL",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.2079,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1936,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1792,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1648,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-88.9526",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-88.9720",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-88.9914",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.0108",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.0303",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.0497",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.0691",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.0885",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.1079",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.1273",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.1467",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.1662",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-06 00:20 UTC",
+    "city": "42.1504,-89.1856",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.0497",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.0691",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.0885",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.1079",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.1273",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.1467",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.1662",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.2079,-89.1856",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-88.9526",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-88.9720",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-88.9914",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.0108",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.0303",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.0497",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.0691",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.0885",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.1079",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.1273",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.1467",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.1662",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1936,-89.1856",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-88.9526",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-88.9720",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-88.9914",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.0108",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.0303",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.0497",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.0691",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.0885",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.1079",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.1273",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.1467",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.1662",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1792,-89.1856",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-88.9526",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-88.9720",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-88.9914",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.0108",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.0303",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.0497",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.0691",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.0885",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.1079",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.1273",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.1467",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.1662",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1648,-89.1856",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-88.9526",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-88.9720",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-88.9914",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.0108",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.0303",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.0497",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.0691",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.0885",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.1079",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.1273",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.1467",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.1662",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-05 18:40 UTC",
+    "city": "42.1504,-89.1856",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4883,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:15 UTC",
+    "city": "42.4739,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4739,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4596,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:14 UTC",
+    "city": "42.4452,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4452,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4308,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.6389",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.6584",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 2,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.6778",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.6973",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.7168",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.7363",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 2,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.7558",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.7753",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.7948",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-04 03:13 UTC",
+    "city": "42.4164,-90.8143",
+    "state": "area",
+    "industry": "plumbing",
+    "limit": 20,
+    "found": 15,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 18:04 UTC",
+    "city": "Loves Park",
+    "state": "IL",
+    "industry": "pressure_washing",
+    "limit": 20,
+    "found": 1,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:48 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "pressure_washing",
+    "limit": 20,
+    "found": 10,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:47 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "appliance_repair",
+    "limit": 20,
+    "found": 5,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:46 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 17:46 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "flooring",
+    "limit": 20,
+    "found": 16,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:42 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "auto",
+    "limit": 20,
+    "found": 1,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:42 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "cleaning",
+    "limit": 20,
+    "found": 13,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:41 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "tree_service",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 17:41 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "painting",
+    "limit": 20,
+    "found": 11,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:39 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "landscaping",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 17:39 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "construction",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 17:39 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "roofing",
+    "limit": 20,
+    "found": 14,
+    "suppressed_skipped": 0,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 17:37 UTC",
+    "city": "41.8932,-88.2230",
+    "state": "AREA",
+    "industry": "electrical",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 03:00 UTC",
+    "city": "42.7273,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 03:00 UTC",
+    "city": "42.7273,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7273,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7273,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 2,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.7129,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6986,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6842,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:59 UTC",
+    "city": "42.6698,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 2,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6554,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6411,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6267,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-88.9534",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 2,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-88.9730",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-88.9925",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-89.0121",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-89.0316",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 0,
+    "status": "all_duplicates"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-89.0512",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 1,
+    "status": "ok"
+  },
+  {
+    "ts": "2026-04-02 02:58 UTC",
+    "city": "42.6123,-89.0707",
+    "state": "area",
+    "industry": "concrete",
+    "limit": 20,
+    "found": 8,
+    "status": "ok"
+  },
+  {
     "ts": "2026-03-21 21:36 UTC",
     "city": "44.6512,-68.1351",
     "state": "area",
@@ -547,2915 +4507,6 @@
     "limit": 20,
     "found": 7,
     "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:18 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "appliance_repair",
-    "limit": 20,
-    "found": 6,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:18 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "towing",
-    "limit": 20,
-    "found": 11,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:17 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "concrete",
-    "limit": 20,
-    "found": 13,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:16 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "flooring",
-    "limit": 20,
-    "found": 18,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:14 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "auto",
-    "limit": 20,
-    "found": 11,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:12 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "cleaning",
-    "limit": 20,
-    "found": 9,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:11 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "tree_service",
-    "limit": 20,
-    "found": 18,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:09 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "painting",
-    "limit": 20,
-    "found": 13,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:08 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "landscaping",
-    "limit": 20,
-    "found": 12,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:07 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "construction",
-    "limit": 20,
-    "found": 7,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:06 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 16,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:04 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 4,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:04 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 2,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 13:04 UTC",
-    "city": "Loves Park",
-    "state": "IL",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 4,
-    "suppressed_skipped": 0,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:56 UTC",
-    "city": "42.0209,-89.3238",
-    "state": "area",
-    "industry": "appliance_repair",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 04:56 UTC",
-    "city": "42.0209,-89.3432",
-    "state": "area",
-    "industry": "appliance_repair",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 04:56 UTC",
-    "city": "42.0065,-89.3238",
-    "state": "area",
-    "industry": "appliance_repair",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 04:56 UTC",
-    "city": "42.0065,-89.3432",
-    "state": "area",
-    "industry": "appliance_repair",
-    "limit": 20,
-    "found": 6,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7223,-111.8810",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7223,-111.9000",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7223,-111.9189",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7079,-111.8810",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7079,-111.9000",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.7079,-111.9189",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.6935,-111.8810",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.6935,-111.9000",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 04:08 UTC",
-    "city": "40.6935,-111.9189",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 20,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-88.9507",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-88.9701",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-88.9895",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.0089",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.0283",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.0477",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.0672",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.0866",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.1060",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.1254",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.1448",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2148,-89.1642",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-88.9507",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-88.9701",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-88.9895",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.0089",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.0283",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.0477",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.0672",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.0866",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.1060",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.1254",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.1448",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:49 UTC",
-    "city": "42.2004,-89.1642",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-88.9507",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-88.9701",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-88.9895",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.0089",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.0283",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.0477",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.0672",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.0866",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.1060",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.1254",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.1448",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1861,-89.1642",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-88.9507",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-88.9701",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-88.9895",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.0089",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.0283",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.0477",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.0672",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.0866",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.1060",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.1254",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.1448",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1717,-89.1642",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-88.9507",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-88.9701",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-88.9895",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-89.0089",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-89.0283",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:48 UTC",
-    "city": "42.1573,-89.0477",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.0672",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.0866",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.1060",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.1254",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.1448",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:47 UTC",
-    "city": "42.1573,-89.1642",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 9,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-21 03:10 UTC",
-    "city": "39.7393,-89.2665",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 18,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-20 20:30 UTC",
-    "city": "42.2773,-89.0396",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 11,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-19 05:40 UTC",
-    "city": "42.2769,-89.0340",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:40 UTC",
-    "city": "42.2769,-89.0340",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:40 UTC",
-    "city": "42.2769,-89.0583",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:40 UTC",
-    "city": "42.2769,-89.0583",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:40 UTC",
-    "city": "42.2769,-89.0826",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2769,-89.0826",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2769,-89.1068",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2769,-89.1068",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2589,-89.0340",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2589,-89.0340",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2589,-89.0583",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:39 UTC",
-    "city": "42.2589,-89.0583",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2589,-89.0826",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2589,-89.0826",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2589,-89.1068",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2589,-89.1068",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2589,-89.1068",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2409,-89.0340",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2409,-89.0340",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2409,-89.0583",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:38 UTC",
-    "city": "42.2409,-89.0583",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:37 UTC",
-    "city": "42.2409,-89.0826",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-19 05:37 UTC",
-    "city": "42.2409,-89.0826",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-18 19:26 UTC",
-    "city": "41.8873,-87.7912",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-18 19:26 UTC",
-    "city": "42.2690,-89.0924",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 22:46 UTC",
-    "city": "41.9867,-91.6563",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 20,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 22:45 UTC",
-    "city": "41.9867,-91.6563",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 18,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 22:45 UTC",
-    "city": "41.9867,-91.6563",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 19,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0751",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0751",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0751",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0751",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0751",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0993",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0993",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0993",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0993",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.0993",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.1236",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.1236",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.1236",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.1236",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.3102,-89.1236",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0508",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0508",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0508",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0508",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0508",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0751",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0751",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0751",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0751",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:14 UTC",
-    "city": "42.2923,-89.0751",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 3,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.0993",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.0993",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.0993",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.0993",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.0993",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1236",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1236",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1236",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1236",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1236",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1479",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1479",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1479",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:13 UTC",
-    "city": "42.2923,-89.1479",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 4,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2923,-89.1479",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0508",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0508",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0508",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0508",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0508",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0751",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0751",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0751",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0751",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0751",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0993",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0993",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:12 UTC",
-    "city": "42.2743,-89.0993",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.0993",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.0993",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1236",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1236",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1236",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1236",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1236",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1479",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1479",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1479",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1479",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2743,-89.1479",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2563,-89.0508",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2563,-89.0508",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2563,-89.0508",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2563,-89.0508",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:11 UTC",
-    "city": "42.2563,-89.0508",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 4,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0751",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0751",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0751",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0751",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0751",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0993",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0993",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0993",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0993",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.0993",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1236",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1236",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1236",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1236",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1236",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1479",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1479",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:10 UTC",
-    "city": "42.2563,-89.1479",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2563,-89.1479",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2563,-89.1479",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 4,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0751",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0751",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0751",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0751",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0751",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 3,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0993",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0993",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0993",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0993",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.0993",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:09 UTC",
-    "city": "42.2384,-89.1236",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 10,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:08 UTC",
-    "city": "42.2384,-89.1236",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 8,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:07 UTC",
-    "city": "42.2384,-89.1236",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 15,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:07 UTC",
-    "city": "42.2384,-89.1236",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 20,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 18:06 UTC",
-    "city": "42.2384,-89.1236",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 17,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:43 UTC",
-    "city": "42.8046,-87.9401",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 4,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:43 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:43 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:43 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:42 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:42 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:41 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 15:41 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 1,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:41 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:40 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:40 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "roofing",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:37 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:37 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 9,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:36 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:36 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 16,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:35 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "locksmith",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:35 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "locksmith",
-    "limit": 20,
-    "found": 14,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:34 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:33 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:33 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 7,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:32 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:32 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 11,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:32 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:32 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 8,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:31 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:31 UTC",
-    "city": "42.8268,-88.0829",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 13,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:30 UTC",
-    "city": "42.8630,-88.0568",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:30 UTC",
-    "city": "42.8630,-88.0568",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:30 UTC",
-    "city": "42.8630,-88.0568",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 15,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:29 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:29 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:29 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 20,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:28 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:28 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:28 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.7001,-88.0870",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 3,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:27 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "garage_door",
-    "limit": 20,
-    "found": 12,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:26 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:26 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "electrical",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:23 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 15:23 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "construction",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:21 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 15:09 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 14:50 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 14:50 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 14:49 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 14:48 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 14:48 UTC",
-    "city": "42.6789,-88.1035",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 6,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 14:45 UTC",
-    "city": "42.6759,-88.2875",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 14:45 UTC",
-    "city": "42.6759,-88.2875",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 14,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 14:44 UTC",
-    "city": "42.8741,-88.2367",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 14:44 UTC",
-    "city": "42.8741,-88.2367",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 17,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:48 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 05:47 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 1,
-    "status": "ok",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 05:47 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "hvac",
-    "limit": 20,
-    "found": 13,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:46 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "locksmith",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:46 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:43 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "locksmith",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 05:43 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "locksmith",
-    "limit": 20,
-    "found": 11,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:43 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:43 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 05:43 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:33 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 05:33 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "pest_control",
-    "limit": 20,
-    "found": 16,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:28 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 05:28 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "plumbing",
-    "limit": 20,
-    "found": 19,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:27 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 05:12 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates",
-    "batch_iteration": 2
-  },
-  {
-    "ts": "2026-03-17 05:12 UTC",
-    "city": "41.8932,-88.2230",
-    "state": "area",
-    "industry": "towing",
-    "limit": 20,
-    "found": 20,
-    "status": "ok",
-    "batch_iteration": 1
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-88.9632",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-88.9875",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-89.0119",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-89.0362",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-89.0605",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4437,-89.0849",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-88.9632",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-88.9875",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-89.0119",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-89.0362",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-89.0605",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4257,-89.0849",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:23 UTC",
-    "city": "42.4077,-88.9632",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:22 UTC",
-    "city": "42.4077,-88.9875",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 0,
-    "status": "all_duplicates"
-  },
-  {
-    "ts": "2026-03-17 04:22 UTC",
-    "city": "42.4077,-89.0119",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 1,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:22 UTC",
-    "city": "42.4077,-89.0362",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:22 UTC",
-    "city": "42.4077,-89.0605",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 2,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:22 UTC",
-    "city": "42.4077,-89.0849",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 13,
-    "status": "ok"
-  },
-  {
-    "ts": "2026-03-17 04:21 UTC",
-    "city": "42.5097,-89.0799",
-    "state": "area",
-    "industry": "auto",
-    "limit": 20,
-    "found": 20,
     "status": "ok"
   }
 ]

@@ -27,9 +27,12 @@ from typing import Dict, List
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from discovery.prospect_discovery_agent import dedupe_key_for_prospect
+from stranded_drafted import scan_stranded_drafted
 
 BASE_DIR    = Path(__file__).resolve().parent.parent
 PENDING_CSV = BASE_DIR / "queue" / "pending_emails.csv"
+PROSPECTS_CSV = BASE_DIR / "data" / "prospects.csv"
+GMAIL_SENT_CSV = BASE_DIR / "scripts" / "gmail_sent_preserve_set_for_reset.csv"
 
 _EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")
 
@@ -127,11 +130,27 @@ def scan_queue_integrity(csv_path: Path = PENDING_CSV) -> Dict:
     ]
     duplicate_count = sum(v - 1 for v in key_counts.values() if v > 1)
 
+    stranded_drafted = 0
+    stranded_examples: List[Dict[str, str]] = []
+    if PROSPECTS_CSV.exists():
+        try:
+            stranded_report = scan_stranded_drafted(
+                PROSPECTS_CSV,
+                csv_path,
+                GMAIL_SENT_CSV if GMAIL_SENT_CSV.exists() else None,
+                sample_limit=20,
+            )
+            stranded_drafted = stranded_report["recoverable_count"]
+            stranded_examples = stranded_report["recoverable_details"]
+        except Exception:
+            stranded_drafted = -1
+
     queue_ok = (
         duplicate_count == 0
         and len(invalid_email_rows) == 0
         and approved_no_email == 0
         and missing_required == 0
+        and stranded_drafted in (0, -1)
     )
 
     return {
@@ -144,6 +163,8 @@ def scan_queue_integrity(csv_path: Path = PENDING_CSV) -> Dict:
         "invalid_email_details": invalid_email_rows[:20],
         "approved_no_email":    approved_no_email,
         "missing_required":     missing_required,
+        "stranded_drafted":     stranded_drafted,
+        "stranded_drafted_examples": stranded_examples,
         "queue_ok":             queue_ok,
     }
 
@@ -157,6 +178,7 @@ if __name__ == "__main__":
     print(f"Invalid emails:       {report['invalid_emails']}")
     print(f"Approved/no email:    {report['approved_no_email']}")
     print(f"Missing required:     {report['missing_required']}")
+    print(f"Stranded drafted:     {report['stranded_drafted']}")
     print(f"Queue OK:             {report['queue_ok']}")
     if report["duplicate_details"]:
         print("\nDuplicates:")
@@ -165,4 +187,4 @@ if __name__ == "__main__":
     if report["invalid_email_details"]:
         print("\nInvalid emails:")
         for e in report["invalid_email_details"]:
-            print(f"  {e['business_name']} → {e['email']}")
+            print(f"  {e['business_name']} -> {e['email']}")

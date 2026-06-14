@@ -3,9 +3,9 @@
     "city": "41.8932,-88.2230",
     "state": "AREA",
     "tier": "mid",
-    "last_checked_at": "2026-03-17T05:47:34.760989+00:00",
-    "next_check_at": "2026-03-24T05:47:34.760998+00:00",
-    "leads_found": 80,
+    "last_checked_at": "2026-04-02T17:48:16.077201+00:00",
+    "next_check_at": "2026-04-09T17:48:16.077214+00:00",
+    "leads_found": 150,
     "industries": {
       "towing": {
         "leads_found": 20,
@@ -35,6 +35,78 @@
         "leads_found": 14,
         "last_checked_at": "2026-03-17T05:47:34.760989+00:00",
         "new_leads_last_run": 14,
+        "status": "checked"
+      },
+      "electrical": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-02T17:37:35.443016+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "roofing": {
+        "leads_found": 14,
+        "last_checked_at": "2026-04-02T17:39:57.739767+00:00",
+        "new_leads_last_run": 14,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-02T17:39:58.566843+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "landscaping": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-02T17:39:59.019129+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "painting": {
+        "leads_found": 11,
+        "last_checked_at": "2026-04-02T17:41:23.409337+00:00",
+        "new_leads_last_run": 11,
+        "status": "checked"
+      },
+      "tree_service": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-02T17:41:24.261802+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "cleaning": {
+        "leads_found": 13,
+        "last_checked_at": "2026-04-02T17:42:51.570460+00:00",
+        "new_leads_last_run": 13,
+        "status": "checked"
+      },
+      "auto": {
+        "leads_found": 1,
+        "last_checked_at": "2026-04-02T17:42:53.213958+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      },
+      "flooring": {
+        "leads_found": 16,
+        "last_checked_at": "2026-04-02T17:46:13.906170+00:00",
+        "new_leads_last_run": 16,
+        "status": "checked"
+      },
+      "concrete": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-02T17:46:14.741498+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "appliance_repair": {
+        "leads_found": 5,
+        "last_checked_at": "2026-04-02T17:47:02.844878+00:00",
+        "new_leads_last_run": 5,
+        "status": "checked"
+      },
+      "pressure_washing": {
+        "leads_found": 10,
+        "last_checked_at": "2026-04-02T17:48:16.077201+00:00",
+        "new_leads_last_run": 10,
         "status": "checked"
       }
     },
@@ -292,9 +364,9 @@
     "city": "Loves Park",
     "state": "IL",
     "tier": "mid",
-    "last_checked_at": "2026-03-21T13:19:15.741622+00:00",
-    "next_check_at": "2026-03-28T13:19:15.741632+00:00",
-    "leads_found": 151,
+    "last_checked_at": "2026-04-02T18:04:08.564574+00:00",
+    "next_check_at": "2026-04-09T18:04:08.564585+00:00",
+    "leads_found": 152,
     "industries": {
       "plumbing": {
         "leads_found": 4,
@@ -381,9 +453,9 @@
         "status": "checked"
       },
       "pressure_washing": {
-        "leads_found": 7,
-        "last_checked_at": "2026-03-21T13:19:15.741622+00:00",
-        "new_leads_last_run": 7,
+        "leads_found": 8,
+        "last_checked_at": "2026-04-02T18:04:08.564574+00:00",
+        "new_leads_last_run": 1,
         "status": "checked"
       }
     }
@@ -392,9 +464,46 @@
     "city": "Rockford",
     "state": "IL",
     "tier": "mid",
-    "last_checked_at": null,
-    "next_check_at": null,
-    "leads_found": 0,
-    "industries": {}
+    "last_checked_at": "2026-04-07T04:20:13.694372+00:00",
+    "next_check_at": "2026-04-14T04:20:13.694385+00:00",
+    "leads_found": 1,
+    "industries": {
+      "concrete": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-06T00:21:11.907598+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "appliance_repair": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-06T00:22:26.749550+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "cleaning": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-06T00:22:31.013781+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "construction": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-06T00:22:34.510143+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "drywall": {
+        "leads_found": 0,
+        "last_checked_at": "2026-04-06T00:22:36.895447+00:00",
+        "new_leads_last_run": 0,
+        "status": "checked"
+      },
+      "pressure_washing": {
+        "leads_found": 1,
+        "last_checked_at": "2026-04-07T04:20:13.694372+00:00",
+        "new_leads_last_run": 1,
+        "status": "checked"
+      }
+    }
   }
 ]
