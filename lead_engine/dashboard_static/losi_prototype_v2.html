@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Copperline — LOSI Theater v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+:root {
+  --c-bg:    #12100c;
+  --c-hud:   rgba(14, 11, 8, 0.96);
+  --c-hud-b: rgba(60, 48, 24, 0.55);
+  --c-panel: rgba(12, 10, 7, 0.97);
+  --c-pnl-b: rgba(60, 48, 24, 0.45);
+  --c-amber: #c07020;
+  --c-amberb:rgba(192,112,32,0.22);
+  --c-blue:  #3a88b8;
+  --c-green: #4a9a5a;
+  --c-text:  #7a8870;
+  --c-bright:#d0c090;
+  --c-muted: #4a4030;
+  --c-dim:   #28220e;
+  --f-disp:  'Cinzel','Palatino Linotype',serif;
+  --f-ui:    'Rajdhani','Arial Narrow',sans-serif;
+  --f-mono:  'IBM Plex Mono','Courier New',monospace;
+  --hud-h:   42px;
+  --band-h:  50px;
+  --panel-w: 318px;
+  --ease:    cubic-bezier(0.2,0,0.38,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--c-bg);}
+
+#map{position:fixed;inset:0;z-index:0;}
+/*
+  Voyager base → aged strategic board:
+  sepia shifts to warm ink; brightness darkens to command-room;
+  sat keeps terrain tonal variation alive.
+*/
+.maplibregl-canvas{filter:sepia(0.22) saturate(0.78) brightness(0.68) contrast(1.08);}
+.maplibregl-control-container{display:none!important;}
+
+/* ── PAPER TEXTURE ───────────────────────────────────────────── */
+/* Subtle crosshatch over map surface — printed-map tactility    */
+#tex-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,  transparent, transparent 5px, rgba(18,12,4,0.012) 5px, rgba(18,12,4,0.012) 6px),
+    repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(18,12,4,0.008) 7px, rgba(18,12,4,0.008) 8px);
+  mix-blend-mode:multiply;
+}
+
+/* ── GRAIN ───────────────────────────────────────────────────── */
+#grain{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  mix-blend-mode:soft-light;opacity:0.12;
+}
+
+/* ── SCANLINES ───────────────────────────────────────────────── */
+#scanlines{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 3px,rgba(0,0,0,0.022) 3px,rgba(0,0,0,0.022) 4px
+  );
+}
+
+/* ── OVERLAYS ────────────────────────────────────────────────── */
+#terr-labels-html,#water-labels-html{position:fixed;inset:0;z-index:5;pointer-events:none;}
+
+/* Territory labels — Paradox/HoI4 scale, painted onto geography */
+.tlabel{
+  position:absolute;pointer-events:none;
+  font-family:var(--f-disp);font-weight:700;
+  text-transform:uppercase;transition:opacity 0.35s;white-space:nowrap;
+  /* transform includes rotation — set per-label in JS via data-rot */
+}
+.tlabel.active{
+  font-size:30px;letter-spacing:0.46em;
+  color:rgba(232,208,148,0.82);
+  text-shadow:0 2px 14px rgba(8,6,2,0.95),0 0 50px rgba(8,6,2,0.88),0 0 90px rgba(8,6,2,0.78);
+}
+.tlabel.inactive{
+  font-size:18px;letter-spacing:0.30em;
+  color:rgba(180,156,96,0.34);
+  text-shadow:0 1px 8px rgba(4,3,1,0.92);
+}
+
+/* Water labels */
+.wlabel{
+  position:absolute;font-style:italic;
+  font-family:var(--f-disp);font-weight:600;
+  text-transform:uppercase;pointer-events:none;transition:opacity 0.25s;
+}
+.wlabel.lake{font-size:11px;letter-spacing:0.28em;color:rgba(55,85,140,0.72);text-shadow:0 1px 4px rgba(4,6,12,0.90);}
+.wlabel.ocean{font-size:13px;letter-spacing:0.38em;color:rgba(44,68,124,0.52);text-shadow:0 1px 4px rgba(2,4,10,0.88);}
+
+/* ── HUB CROSSHAIR MARKERS ───────────────────────────────────── */
+/* Strategic position markers — game-like, systematized           */
+#hub-layer{position:fixed;inset:0;z-index:4;pointer-events:none;}
+.hub-xhair{
+  position:absolute;transform:translate(-50%,-50%);
+  pointer-events:none;transition:opacity 0.4s;
+}
+.hub-xhair .xh,.hub-xhair .xv{
+  position:absolute;background:rgba(158,116,28,0.48);
+}
+/* Tier-1 anchor (Chicago) — long prominent cross */
+.hub-xhair.t1 .xh{width:26px;height:1px;top:0;left:-13px;}
+.hub-xhair.t1 .xv{height:26px;width:1px;left:0;top:-13px;}
+/* Tier-2 major hubs */
+.hub-xhair.t2 .xh{width:16px;height:1px;top:0;left:-8px;}
+.hub-xhair.t2 .xv{height:16px;width:1px;left:0;top:-8px;}
+/* Tier-3 supporting hubs */
+.hub-xhair.t3 .xh{width:10px;height:1px;top:0;left:-5px;}
+.hub-xhair.t3 .xv{height:10px;width:1px;left:0;top:-5px;}
+
+/* ── BEACON LAYER ────────────────────────────────────────────── */
+#beacon-layer{position:fixed;inset:0;z-index:3;pointer-events:none;}
+.beacon-anchor{
+  position:absolute;transform:translate(-50%,-50%);
+  pointer-events:none;transition:opacity 0.4s;
+}
+.beacon-ring{
+  position:absolute;border-radius:50%;border-style:solid;
+  transform:translate(-50%,-50%);left:0;top:0;
+}
+.bcr-outer{width:32px;height:32px;border:1px solid rgba(192,112,32,0.20);animation:beaconWide 4.2s ease-out 0.8s infinite;}
+.bcr-mid  {width:20px;height:20px;border:1.3px solid rgba(192,112,32,0.55);animation:beaconMid 3.0s ease-out infinite;}
+.bcr-inner{width:20px;height:20px;border:1.3px solid rgba(192,112,32,0.38);animation:beaconMid 3.0s ease-out 1.5s infinite;}
+.bnode-ring{width:16px;height:16px;border:1px solid rgba(192,112,32,0.55);animation:beaconNode 3.8s ease-out infinite;}
+@keyframes beaconWide{0%{width:8px;height:8px;opacity:0.55;}100%{width:68px;height:68px;opacity:0;}}
+@keyframes beaconMid {0%{width:6px;height:6px;opacity:0.80;}100%{width:40px;height:40px;opacity:0;}}
+@keyframes beaconNode{0%{width:5px;height:5px;opacity:0.72;}100%{width:30px;height:30px;opacity:0;}}
+
+/* ── CORNER BRACKETS ─────────────────────────────────────────── */
+.cb{position:fixed;width:28px;height:28px;z-index:15;pointer-events:none;border-color:rgba(160,120,40,0.28);border-style:solid;}
+#cb-tl{top:calc(var(--hud-h)+10px);left:12px;border-width:1px 0 0 1px;}
+#cb-tr{top:calc(var(--hud-h)+10px);right:12px;border-width:1px 1px 0 0;}
+#cb-bl{bottom:calc(var(--band-h)+10px);left:12px;border-width:0 0 1px 1px;}
+#cb-br{bottom:calc(var(--band-h)+10px);right:12px;border-width:0 1px 1px 0;}
+
+/* ── TOP HUD ─────────────────────────────────────────────────── */
+#hud-top{
+  position:fixed;top:0;left:0;right:0;height:var(--hud-h);z-index:10;
+  display:flex;align-items:center;padding:0 20px;gap:0;
+  background:var(--c-hud);border-bottom:1px solid var(--c-hud-b);backdrop-filter:blur(14px);
+}
+.hud-mark{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-right:10px;background:var(--c-amber);box-shadow:0 0 10px var(--c-amber),0 0 22px rgba(192,112,32,0.28);}
+.hud-name   {font-family:var(--f-disp);font-size:11px;font-weight:700;letter-spacing:0.26em;color:var(--c-amber);flex-shrink:0;}
+.hud-sep    {width:1px;height:16px;background:var(--c-hud-b);margin:0 16px;flex-shrink:0;}
+.hud-theater{font-family:var(--f-mono);font-size:9.5px;letter-spacing:0.16em;color:var(--c-muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hud-stats  {display:flex;align-items:center;gap:18px;flex-shrink:0;}
+.hstat-v    {font-family:var(--f-mono);font-size:14px;font-weight:600;color:var(--c-bright);}
+.hstat-l    {font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.14em;color:var(--c-muted);margin-left:5px;}
+
+/* ── INSPECTOR ───────────────────────────────────────────────── */
+#inspector{
+  position:fixed;top:var(--hud-h);right:0;bottom:var(--band-h);
+  width:var(--panel-w);z-index:8;
+  background:var(--c-panel);border-left:1px solid var(--c-pnl-b);
+  transform:translateX(100%);transition:transform 0.32s var(--ease);
+  overflow-y:auto;overscroll-behavior:contain;
+}
+#inspector.open{transform:translateX(0);}
+.insp-head {padding:18px 18px 13px;border-bottom:1px solid rgba(60,48,24,0.35);}
+.insp-kicker{font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.22em;color:var(--c-amber);text-transform:uppercase;margin-bottom:7px;}
+.insp-title {font-family:var(--f-disp);font-size:17px;font-weight:700;letter-spacing:0.03em;color:var(--c-bright);line-height:1.15;margin-bottom:4px;}
+.insp-sub   {font-family:var(--f-mono);font-size:9px;letter-spacing:0.10em;color:var(--c-muted);}
+.insp-close {float:right;margin-top:-2px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:rgba(60,48,24,0.18);border:1px solid rgba(60,48,24,0.40);border-radius:50%;cursor:pointer;font-family:var(--f-mono);font-size:13px;color:var(--c-muted);transition:background 0.2s;}
+.insp-close:hover{background:rgba(60,48,24,0.40);color:var(--c-text);}
+.insp-grid  {display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(60,48,24,0.20);border-bottom:1px solid rgba(60,48,24,0.30);}
+.insp-cell  {padding:13px 15px;background:var(--c-panel);}
+.icell-l    {font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.16em;color:var(--c-muted);text-transform:uppercase;margin-bottom:5px;}
+.icell-v    {font-family:var(--f-mono);font-size:21px;font-weight:600;color:var(--c-bright);}
+.insp-section{padding:12px 16px;border-bottom:1px solid rgba(60,48,24,0.18);}
+.isec-title {font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.18em;color:var(--c-muted);text-transform:uppercase;margin-bottom:8px;}
+.ind-row    {display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(60,48,24,0.14);}
+.ind-row:last-child{border-bottom:none;}
+.ind-name   {font-family:var(--f-ui);font-size:12px;font-weight:500;letter-spacing:0.06em;color:var(--c-text);text-transform:uppercase;}
+.ind-count  {font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--c-bright);}
+.ind-bar    {height:2px;background:rgba(60,48,24,0.35);border-radius:1px;margin-top:2px;overflow:hidden;}
+.ind-fill   {height:100%;border-radius:1px;background:var(--c-amber);}
+.node-row   {display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(60,48,24,0.14);font-family:var(--f-mono);font-size:10px;}
+.node-row:last-child{border-bottom:none;}
+.node-name  {color:var(--c-text);} .node-leads{color:var(--c-amber);font-weight:600;}
+.insp-actions{padding:12px 15px;}
+.insp-btn   {display:block;width:100%;padding:10px 14px;margin-bottom:7px;border-radius:2px;cursor:pointer;text-align:center;font-family:var(--f-mono);font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;transition:background 0.2s,border-color 0.2s;text-decoration:none;}
+.insp-btn.primary  {background:var(--c-amberb);border:1px solid rgba(192,112,32,0.30);color:var(--c-amber);}
+.insp-btn.primary:hover{background:rgba(192,112,32,0.18);}
+.insp-btn.secondary{background:rgba(60,48,24,0.12);border:1px solid rgba(60,48,24,0.32);color:var(--c-text);}
+.insp-btn.secondary:hover{background:rgba(60,48,24,0.24);}
+.district-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:2px;margin-bottom:6px;font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.14em;background:rgba(40,80,110,0.18);border:1px solid rgba(40,80,110,0.34);color:var(--c-blue);text-transform:uppercase;}
+.district-dot{width:5px;height:5px;border-radius:50%;background:var(--c-blue);flex-shrink:0;}
+.potential-bar{display:flex;gap:3px;margin-top:10px;}
+.pot-seg   {height:4px;border-radius:1px;flex:1;background:rgba(60,48,24,0.30);transition:background 0.2s;}
+.pot-seg.active{background:var(--c-amber);}
+
+/* ── TOOLTIP ─────────────────────────────────────────────────── */
+#map-tip{position:fixed;z-index:12;pointer-events:none;padding:7px 11px;background:rgba(10,8,4,0.94);border:1px solid rgba(60,48,24,0.50);border-radius:2px;font-family:var(--f-mono);font-size:9px;letter-spacing:0.08em;color:var(--c-text);opacity:0;transition:opacity 0.10s;}
+#map-tip.vis{opacity:1;}
+.tip-name{font-family:var(--f-disp);font-size:11px;font-weight:700;color:var(--c-bright);margin-bottom:3px;}
+.tip-stat{color:var(--c-muted);}
+
+/* ── LEGEND ──────────────────────────────────────────────────── */
+#map-legend{position:fixed;bottom:calc(var(--band-h)+14px);left:16px;z-index:5;padding:9px 12px;background:rgba(10,8,4,0.82);border:1px solid rgba(50,38,16,0.45);border-radius:2px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:5px;}
+.leg-row{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.12em;color:var(--c-muted);}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.leg-dot.a{background:#c07020;} .leg-dot.b{background:#3a88b8;} .leg-dot.g{background:#4a9a5a;} .leg-dot.d{background:#404030;}
+
+/* ── BOTTOM BAND ─────────────────────────────────────────────── */
+#hud-band{position:fixed;bottom:0;left:0;right:0;height:var(--band-h);z-index:10;display:flex;align-items:center;padding:0 20px;gap:0;background:var(--c-hud);border-top:1px solid var(--c-hud-b);backdrop-filter:blur(14px);}
+.band-pulse{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-right:9px;background:var(--c-green);box-shadow:0 0 8px var(--c-green);animation:bpulse 2.5s ease-in-out infinite;}
+@keyframes bpulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--c-green);}50%{opacity:.35;box-shadow:0 0 3px var(--c-green);}}
+.band-label  {font-family:var(--f-mono);font-size:9px;letter-spacing:0.16em;color:var(--c-muted);}
+.band-name   {font-family:var(--f-disp);font-size:11px;font-weight:700;letter-spacing:0.14em;color:var(--c-bright);}
+.band-posture{font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.20em;color:var(--c-amber);text-transform:uppercase;margin-left:10px;padding:2px 6px;border:1px solid rgba(192,112,32,0.22);border-radius:2px;}
+.band-metrics{display:flex;align-items:center;gap:18px;flex:1;min-width:0;margin-left:0;}
+.bmet{display:flex;align-items:center;gap:5px;}
+.bmet-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.bmet-dot.a{background:var(--c-amber);} .bmet-dot.b{background:var(--c-blue);} .bmet-dot.g{background:var(--c-green);}
+.bmet-v{font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--c-bright);}
+.bmet-l{font-family:var(--f-mono);font-size:8.5px;letter-spacing:0.10em;color:var(--c-muted);}
+.band-actions{display:flex;gap:7px;flex-shrink:0;}
+.band-btn{padding:7px 13px;border-radius:2px;cursor:pointer;font-family:var(--f-mono);font-size:9.5px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border:1px solid var(--c-hud-b);background:transparent;color:var(--c-text);transition:border-color 0.2s,color 0.2s;}
+.band-btn:hover{border-color:rgba(58,136,184,0.40);color:var(--c-blue);}
+.band-btn.primary{background:var(--c-amberb);border-color:rgba(192,112,32,0.28);color:var(--c-amber);}
+.band-btn.primary:hover{background:rgba(192,112,32,0.16);}
+
+.fi{animation:fadein 0.7s cubic-bezier(0.2,0,0.38,1) both;}
+.fi.d1{animation-delay:.20s;} .fi.d2{animation-delay:.38s;} .fi.d3{animation-delay:.55s;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="tex-overlay"></div>
+<canvas id="grain"></canvas>
+<div id="scanlines"></div>
+<div id="beacon-layer"></div>
+<!-- hub-layer created by initHubs() -->
+<div id="terr-labels-html"></div>
+<div id="water-labels-html"></div>
+
+<div class="cb" id="cb-tl"></div>
+<div class="cb" id="cb-tr"></div>
+<div class="cb" id="cb-bl"></div>
+<div class="cb" id="cb-br"></div>
+
+<!-- TOP HUD -->
+<div id="hud-top" class="fi">
+  <div class="hud-mark"></div>
+  <div class="hud-name">Copperline</div>
+  <div class="hud-sep"></div>
+  <div class="hud-theater" id="hud-theater">LOSI Theater — National Operations Board</div>
+  <div class="hud-stats">
+    <span class="hstat-v">1,055</span><span class="hstat-l">LEADS</span>
+    <div class="hud-sep"></div>
+    <span class="hstat-v">172</span><span class="hstat-l">SENT</span>
+    <div class="hud-sep"></div>
+    <span class="hstat-v">824</span><span class="hstat-l">STAGED</span>
+  </div>
+</div>
+
+<!-- INSPECTOR -->
+<aside id="inspector">
+  <div class="insp-head">
+    <button class="insp-close" id="insp-close-btn">✕</button>
+    <div class="insp-kicker" id="insp-kicker">Territory Intel</div>
+    <div class="insp-title" id="insp-title">—</div>
+    <div class="insp-sub" id="insp-sub">—</div>
+  </div>
+  <div class="insp-grid">
+    <div class="insp-cell"><div class="icell-l">Leads</div><div class="icell-v" id="ic-leads">—</div></div>
+    <div class="insp-cell"><div class="icell-l">Sent</div><div class="icell-v" id="ic-sent">—</div></div>
+    <div class="insp-cell"><div class="icell-l">Staged</div><div class="icell-v" id="ic-staged">—</div></div>
+    <div class="insp-cell"><div class="icell-l">Replied</div><div class="icell-v" id="ic-replied">—</div></div>
+  </div>
+  <div class="insp-section" id="insp-body">
+    <div class="isec-title">Industry Breakdown</div>
+    <div id="insp-industries"></div>
+  </div>
+  <div class="insp-section">
+    <div class="isec-title">Operation Nodes</div>
+    <div id="insp-nodes"></div>
+  </div>
+  <div class="insp-actions">
+    <a class="insp-btn primary" href="/">→ Open Operations Hub</a>
+    <button class="insp-btn secondary" id="insp-close-btn2">Dismiss</button>
+  </div>
+</aside>
+
+<div id="map-tip"><div class="tip-name" id="tip-name"></div><div class="tip-stat" id="tip-stat"></div></div>
+
+<div id="map-legend" class="fi d3">
+  <div class="leg-row"><div class="leg-dot a"></div>High pressure · 100+ leads</div>
+  <div class="leg-row"><div class="leg-dot b"></div>Active · 10–99 leads</div>
+  <div class="leg-row"><div class="leg-dot g"></div>Ready · &lt;10 leads</div>
+  <div class="leg-row"><div class="leg-dot d"></div>Dormant / no data</div>
+</div>
+
+<!-- BOTTOM BAND -->
+<div id="hud-band" class="fi d2">
+  <div class="band-pulse"></div>
+  <div style="margin-right:14px">
+    <div class="band-label">Active Front</div>
+    <div class="band-name" id="band-name">Midwest Operations</div>
+  </div>
+  <div class="hud-sep"></div>
+  <div class="band-posture" id="band-posture">National Theater</div>
+  <div class="hud-sep"></div>
+  <div class="band-metrics">
+    <div class="bmet"><div class="bmet-dot a"></div><span class="bmet-v">824</span><span class="bmet-l">staged</span></div>
+    <div class="bmet"><div class="bmet-dot b"></div><span class="bmet-v">172</span><span class="bmet-l">sent</span></div>
+    <div class="bmet"><div class="bmet-dot g"></div><span class="bmet-v">1</span><span class="bmet-l">replied</span></div>
+  </div>
+  <div class="band-actions">
+    <button class="band-btn" id="focus-mw-btn">Focus Midwest</button>
+    <button class="band-btn" id="focus-chi-btn">Drill Chicago</button>
+    <button class="band-btn primary" onclick="window.location.href='/'">Open Hub →</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+const FIPS={
+  '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT',
+  '10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL',
+  '18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD',
+  '25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE',
+  '32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND',
+  '39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD',
+  '47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV',
+  '55':'WI','56':'WY'
+};
+const TERR={
+  IL:'MW',IN:'MW',MI:'MW',OH:'MW',WI:'MW',MN:'MW',IA:'MW',MO:'MW',ND:'MW',SD:'MW',NE:'MW',KS:'MW',
+  ME:'NE',NH:'NE',VT:'NE',MA:'NE',RI:'NE',CT:'NE',NY:'NE',NJ:'NE',PA:'NE',DE:'NE',MD:'NE',DC:'NE',VA:'NE',WV:'NE',
+  NC:'SO',SC:'SO',GA:'SO',FL:'SO',AL:'SO',MS:'SO',TN:'SO',KY:'SO',AR:'SO',LA:'SO',TX:'SO',OK:'SO',
+  MT:'MTN',ID:'MTN',WY:'MTN',CO:'MTN',NM:'MTN',UT:'MTN',AZ:'MTN',NV:'MTN',
+  WA:'PC',OR:'PC',CA:'PC',HI:'PC',AK:'PC'
+};
+const META={
+  MW:{ label:'MIDWEST FRONT',sub:'Active operations zone',active:true,
+       leads:1055,sent:172,staged:824,replied:1,
+       industries:[{name:'Plumbing',count:236},{name:'Auto',count:154},
+                   {name:'Construction',count:120},{name:'HVAC',count:87},
+                   {name:'Electrical',count:60},{name:'Towing',count:56}] },
+  NE:{ label:'NORTHEAST CORRIDOR',sub:'Unexplored territory',active:false },
+  SO:{ label:'SOUTH TERRITORY',   sub:'Unexplored territory',active:false },
+  MTN:{label:'MOUNTAIN WEST',     sub:'Unexplored territory',active:false },
+  PC:{ label:'PACIFIC COAST',     sub:'Unexplored territory',active:false }
+};
+
+const NODES=[
+  {lat:41.8932,lng:-88.2230,leads:150,label:'West DuPage'},
+  {lat:42.8741,lng:-88.2367,leads:17, label:'SE Wisconsin'},
+  {lat:42.6759,lng:-88.2875,leads:14, label:'Burlington Area'},
+  {lat:42.6789,lng:-88.1035,leads:79, label:'Lake Geneva'},
+  {lat:42.8268,lng:-88.0829,leads:120,label:'New Berlin'},
+  {lat:42.8046,lng:-87.9401,leads:4,  label:'Greenfield'},
+  {lat:42.3234,lng:-88.9848,leads:152,label:'Loves Park'},
+  {lat:42.2711,lng:-89.0940,leads:1,  label:'Rockford'}
+];
+
+const METROS=[
+  {name:'CHICAGO',     lat:41.8781,lng:-87.6298,tier:1,state:'IL',chi:true},
+  {name:'NEW YORK',    lat:40.7128,lng:-74.0060,tier:1,state:'NY'},
+  {name:'LOS ANGELES', lat:34.0522,lng:-118.2437,tier:1,state:'CA'},
+  {name:'HOUSTON',     lat:29.7604,lng:-95.3698, tier:1,state:'TX'},
+  {name:'PHOENIX',     lat:33.4484,lng:-112.0740,tier:1,state:'AZ'},
+  {name:'DALLAS',      lat:32.7767,lng:-96.7970, tier:2,state:'TX'},
+  {name:'MIAMI',       lat:25.7617,lng:-80.1918, tier:2,state:'FL'},
+  {name:'DETROIT',     lat:42.3314,lng:-83.0458, tier:2,state:'MI'},
+  {name:'MINNEAPOLIS', lat:44.9778,lng:-93.2650, tier:2,state:'MN'},
+  {name:'DENVER',      lat:39.7392,lng:-104.9903,tier:2,state:'CO'},
+  {name:'SEATTLE',     lat:47.6062,lng:-122.3321,tier:2,state:'WA'},
+  {name:'BOSTON',      lat:42.3601,lng:-71.0589, tier:2,state:'MA'},
+  {name:'ATLANTA',     lat:33.7490,lng:-84.3880, tier:2,state:'GA'},
+  {name:'PHILADELPHIA',lat:39.9526,lng:-75.1652, tier:2,state:'PA'},
+  {name:'KANSAS CITY', lat:39.0997,lng:-94.5786, tier:3,state:'MO'},
+  {name:'INDIANAPOLIS',lat:39.7684,lng:-86.1581, tier:3,state:'IN'},
+  {name:'COLUMBUS',    lat:39.9612,lng:-82.9988, tier:3,state:'OH'},
+  {name:'MILWAUKEE',   lat:43.0389,lng:-87.9065, tier:3,state:'WI'},
+  {name:'ST. LOUIS',   lat:38.6270,lng:-90.1994, tier:3,state:'MO'},
+  {name:'CINCINNATI',  lat:39.1031,lng:-84.5120, tier:3,state:'OH'},
+  {name:'OMAHA',       lat:41.2565,lng:-95.9345, tier:3,state:'NE'},
+  {name:'DES MOINES',  lat:41.5868,lng:-93.6250, tier:3,state:'IA'},
+  {name:'WICHITA',     lat:37.6872,lng:-97.3301, tier:3,state:'KS'},
+  {name:'MEMPHIS',     lat:35.1495,lng:-90.0490, tier:3,state:'TN'},
+  {name:'LOUISVILLE',  lat:38.2527,lng:-85.7585, tier:3,state:'KY'},
+  {name:'NASHVILLE',   lat:36.1627,lng:-86.7816, tier:3,state:'TN'},
+  {name:'ROCKFORD',    lat:42.2711,lng:-89.0940, tier:4,state:'IL'},
+  {name:'MADISON',     lat:43.0731,lng:-89.4012, tier:4,state:'WI'},
+  {name:'PEORIA',      lat:40.6936,lng:-89.5890, tier:4,state:'IL'},
+  {name:'FORT WAYNE',  lat:41.0793,lng:-85.1394, tier:4,state:'IN'},
+  {name:'GREEN BAY',   lat:44.5192,lng:-88.0198, tier:4,state:'WI'},
+  {name:'GRAND RAPIDS',lat:42.9634,lng:-85.6681, tier:4,state:'MI'},
+  {name:'LANSING',     lat:42.7325,lng:-84.5555, tier:4,state:'MI'},
+  {name:'TOLEDO',      lat:41.6639,lng:-83.5552, tier:4,state:'OH'},
+  {name:'DAYTON',      lat:39.7589,lng:-84.1916, tier:4,state:'OH'},
+  {name:'SPRINGFIELD', lat:39.8017,lng:-89.6440, tier:4,state:'IL'},
+  {name:'AURORA',      lat:41.7606,lng:-88.3201, tier:4,state:'IL'},
+  {name:'JOLIET',      lat:41.5250,lng:-88.0817, tier:4,state:'IL'}
+];
+
+const CHI_POTENTIAL={
+  'LOOP':3,'NEAR NORTH SIDE':3,'NEAR WEST SIDE':2,'LINCOLN PARK':3,'LAKE VIEW':3,
+  'UPTOWN':2,'WICKER PARK':3,'PILSEN':2,'BRIDGEPORT':2,'BACK OF THE YARDS':2,
+  'GARFIELD PARK':1,'AUSTIN':1,'CHATHAM':2,'BEVERLY':2,'NORWOOD PARK':2,
+  'HUMBOLDT PARK':1,'SOUTH SHORE':2,'WOODLAWN':1,'ENGLEWOOD':1,'AUBURN GRESHAM':1,
+  'SOUTH LAWNDALE':1,'WEST TOWN':3,'AVONDALE':2,'LOGAN SQUARE':3,'IRVING PARK':2,
+  'PORTAGE PARK':2,'JEFFERSON PARK':2,'EDGEWATER':2,'ROGERS PARK':2,'WEST RIDGE':2
+};
+
+// Territory labels — HoI4 scale, painted into geography
+// rot: slight rotation per territory for natural embedded-map feel
+const TERR_LABELS=[
+  {id:'MW', label:'MIDWEST FRONT', coords:[-92.0,43.2],rot:-2},
+  {id:'NE', label:'NORTHEAST',     coords:[-74.5,42.0],rot:-8},
+  {id:'SO', label:'SOUTH',         coords:[-88.5,31.5],rot:3 },
+  {id:'MTN',label:'MOUNTAIN WEST', coords:[-108.5,43.0],rot:-5},
+  {id:'PC', label:'PACIFIC COAST', coords:[-122.0,43.5],rot:-18}
+];
+
+const WATER_LABELS=[
+  {id:'lm', label:'LAKE MICHIGAN',coords:[-86.8,43.6],cls:'lake',minz:3.5,maxz:8.5},
+  {id:'ls', label:'LAKE SUPERIOR',coords:[-88.0,47.7],cls:'lake',minz:3.5,maxz:8.5},
+  {id:'lh', label:'LAKE HURON',   coords:[-83.0,44.8],cls:'lake',minz:4.5,maxz:8.5},
+  {id:'le', label:'LAKE ERIE',    coords:[-81.2,42.3],cls:'lake',minz:5.0,maxz:8.5},
+  {id:'lo', label:'LAKE ONTARIO', coords:[-77.5,43.7],cls:'lake',minz:5.0,maxz:8.5},
+  {id:'gm', label:'GULF OF MEXICO',coords:[-92.0,25.5],cls:'ocean',minz:3.5,maxz:6.5},
+  {id:'atl',label:'ATLANTIC',     coords:[-70.0,35.0],cls:'ocean',minz:3.5,maxz:6.0},
+  {id:'pac',label:'PACIFIC',      coords:[-130.0,41.0],cls:'ocean',minz:3.5,maxz:6.0}
+];
+
+const BOUNDS={
+  MW:[[-104,36],[-80,50]],NE:[[-82,37],[-66,48]],
+  SO:[[-107,24],[-75,38]],MTN:[[-116,31],[-94,50]],PC:[[-170,20],[-113,50]]
+};
+
+const FILL_NORMAL={MW:'#8a9e52',NE:'#5a6e8c',SO:'#8c6a38',MTN:'#7a6888',PC:'#4a7e5e',OTHER:'#545850'};
+const FILL_SEL   ={MW:'#a0b85e',NE:'#6e84a4',SO:'#a48048',MTN:'#9480a4',PC:'#5c9870',OTHER:'#666e60'};
+
+// Hub crosshair data — strategic position markers for major operational centers
+const HUBS_DATA=[
+  {lat:41.8781,lng:-87.6298,t:'t1',minz:3.5},  // Chicago — anchor
+  {lat:42.3314,lng:-83.0458,t:'t2',minz:4.5},  // Detroit
+  {lat:43.0389,lng:-87.9065,t:'t2',minz:4.5},  // Milwaukee
+  {lat:44.9778,lng:-93.2650,t:'t2',minz:4.5},  // Minneapolis
+  {lat:39.0997,lng:-94.5786,t:'t2',minz:5.0},  // Kansas City
+  {lat:39.9612,lng:-82.9988,t:'t2',minz:5.0},  // Columbus
+  {lat:39.7684,lng:-86.1581,t:'t2',minz:5.0},  // Indianapolis
+  {lat:38.6270,lng:-90.1994,t:'t2',minz:5.0},  // St. Louis
+  {lat:39.1031,lng:-84.5120,t:'t3',minz:5.5},  // Cincinnati
+  {lat:41.2565,lng:-95.9345,t:'t3',minz:5.5},  // Omaha
+  {lat:41.5868,lng:-93.6250,t:'t3',minz:5.8},  // Des Moines
+  {lat:37.6872,lng:-97.3301,t:'t3',minz:5.8},  // Wichita
+];
+
+// Chicago lakefront — approximate shore coords for the authored edge treatment.
+// These trace the western edge of Lake Michigan through the metro.
+const CHI_LAKEFRONT=[
+  [-87.527,42.028],[-87.533,42.014],[-87.544,41.998],
+  [-87.556,41.982],[-87.568,41.966],[-87.577,41.950],
+  [-87.584,41.933],[-87.589,41.916],[-87.595,41.897],
+  [-87.604,41.879],[-87.614,41.862],[-87.618,41.845],
+  [-87.614,41.826],[-87.607,41.806],[-87.598,41.784],
+  [-87.586,41.760],[-87.572,41.736],[-87.558,41.710],
+  [-87.545,41.688]
+];
+
+// ── MAP ───────────────────────────────────────────────────────────
+const CARTO_STYLE='https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+
+const map=new maplibregl.Map({
+  container:'map',style:CARTO_STYLE,
+  center:[-92,39.5],zoom:4.0,pitch:4,bearing:0,
+  minZoom:2,maxZoom:14,maxPitch:30,
+  attributionControl:false
+});
+
+let selTerr=null,selDistrict=null,hoveredId=null,allFeatures=[];
+
+// ── BUILD ─────────────────────────────────────────────────────────
+async function build() {
+  const style=map.getStyle();
+
+  // ── 1. BASE LAYER SURGERY ──────────────────────────────────────
+  // Suppress Voyager's default labels entirely — we author our own hierarchy.
+  // For roads: expose a strategic corridor hierarchy instead of blanket hiding.
+  // For water: don't touch — Voyager's blue water + CSS filter = right tone.
+  // For landcover: let it breathe — Voyager's forests/parks add land variation.
+  style.layers.forEach(l=>{
+    const id=l.id.toLowerCase();
+
+    // ── All symbol layers: suppress default labels/icons ──────────
+    if (l.type==='symbol') {
+      try { map.setLayoutProperty(l.id,'visibility','none'); } catch(e){} return;
+    }
+
+    if (l.type==='line') {
+      // ── Strategic corridors: major highways visible at all zooms ──
+      // These are the operational arteries — amber-olive "route ink"
+      if (id.includes('motorway')||id.includes('trunk')||id.includes('highway')) {
+        try {
+          map.setPaintProperty(l.id,'line-color','#3a2c18');
+          map.setPaintProperty(l.id,'line-opacity',0.60);
+        } catch(e){} return;
+      }
+      // ── Primary routes: main connective corridors ──────────────
+      if (id.includes('primary')) {
+        try {
+          map.setPaintProperty(l.id,'line-color','#2e2414');
+          map.setPaintProperty(l.id,'line-opacity',0.48);
+        } catch(e){} return;
+      }
+      // ── Secondary/tertiary: suppressed until zoom 6 ────────────
+      if (id.includes('secondary')||id.includes('tertiary')||id.includes('link')) {
+        try {
+          map.setPaintProperty(l.id,'line-color','#241e0e');
+          map.setPaintProperty(l.id,'line-opacity',0.38);
+          map.setLayoutProperty(l.id,'visibility','none'); // gated by zoom handler
+        } catch(e){} return;
+      }
+      // ── Minor streets: suppressed until 8.5 (district zoom) ───
+      if (id.includes('minor')||id.includes('street')||id.includes('service')||id.includes('path')||id.includes('track')||id.includes('footway')) {
+        try { map.setLayoutProperty(l.id,'visibility','none'); } catch(e){} return;
+      }
+      // ── Rail: subtle grid infrastructure ──────────────────────
+      if (id.includes('rail')||id.includes('transit')) {
+        try {
+          map.setPaintProperty(l.id,'line-color','#1e1a0e');
+          map.setPaintProperty(l.id,'line-opacity',0.20);
+        } catch(e){} return;
+      }
+      // ── Water lines: keep Voyager's edge — don't suppress ─────
+      if (id.includes('water')||id.includes('ocean')||id.includes('lake')||id.includes('river')) {
+        try {
+          map.setPaintProperty(l.id,'line-color','#2a4a8a');
+          map.setPaintProperty(l.id,'line-opacity',0.55);
+        } catch(e){} return;
+      }
+      // ── All other lines (tunnels, bridges, etc.) ───────────────
+      try {
+        map.setPaintProperty(l.id,'line-color','#2a2418');
+        map.setPaintProperty(l.id,'line-opacity',0.35);
+      } catch(e){}
+    }
+
+    if (l.type==='fill') {
+      // ── Water fill: deepen toward strategic navy ──────────────
+      // Don't set to black — the blue is what makes this work.
+      if (id.includes('water')||id.includes('ocean')||id.includes('lake')) {
+        try {
+          map.setPaintProperty(l.id,'fill-color','#1a3a6a');
+          map.setPaintProperty(l.id,'fill-opacity',0.70);
+        } catch(e){} return;
+      }
+      // ── Landcover: let it breathe ─────────────────────────────
+      // Voyager's forest/park/farmland variation adds land variation.
+      // Do NOT suppress these — they are the land character we want.
+      // Just modulate opacity slightly so territory fills can layer over.
+      if (id.includes('park')||id.includes('grass')||id.includes('wood')||id.includes('forest')||id.includes('farmland')||id.includes('landcover')) {
+        try { map.setPaintProperty(l.id,'fill-opacity',0.65); } catch(e){} return;
+      }
+    }
+  });
+
+  // ── 2. TERRAIN HILLSHADE ─────────────────────────────────────
+  // Warm lighting — parchment highlight, not cold blue.
+  // 'map' anchor: light direction fixed to north, not viewport.
+  map.addSource('terrain',{
+    type:'raster-dem',
+    tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+    encoding:'terrarium',tileSize:256,maxzoom:14
+  });
+  const firstFill=style.layers.find(l=>l.type==='fill');
+  map.addLayer({
+    id:'hillshade',type:'hillshade',source:'terrain',
+    paint:{
+      'hillshade-shadow-color':    '#160e04',
+      'hillshade-highlight-color': '#d0bc88',  // warm parchment lit face
+      'hillshade-accent-color':    '#1a1206',
+      'hillshade-illumination-direction':320,
+      'hillshade-exaggeration':0.42,
+      'hillshade-illumination-anchor':'map'
+    }
+  }, firstFill?firstFill.id:undefined);
+
+  try { map.setTerrain({source:'terrain',exaggeration:0.22}); } catch(e){}
+
+  // ── 3. STATE GEOJSON ─────────────────────────────────────────
+  let usStates;
+  try {
+    const r=await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
+    usStates=await r.json();
+  } catch(e){ console.error('State GeoJSON failed',e); return; }
+
+  usStates.features.forEach((f,i)=>{
+    f.id=i;
+    const fips=String(f.properties.STATE||'').padStart(2,'0');
+    const abbr=FIPS[fips]||'XX';
+    const terr=TERR[abbr]||'OTHER';
+    f.properties.ABBR=abbr; f.properties.TERR=terr;
+    f.properties.ACTIVE=(META[terr]||{}).active?1:0;
+  });
+  allFeatures=usStates.features;
+  map.addSource('states',{type:'geojson',data:usStates,generateId:false});
+
+  // ── 4. TERRITORY FILLS ───────────────────────────────────────
+  // MW gets more conviction (0.40) — active front.
+  // Dormant territories recede (0.24) — clearly inactive.
+  // Both let the terrain show through.
+  map.addLayer({
+    id:'state-fill',type:'fill',source:'states',
+    paint:{
+      'fill-color':['case',
+        ['boolean',['feature-state','selected'],false],
+        ['match',['get','TERR'],'MW',FILL_SEL.MW,'NE',FILL_SEL.NE,'SO',FILL_SEL.SO,'MTN',FILL_SEL.MTN,'PC',FILL_SEL.PC,FILL_SEL.OTHER],
+        ['match',['get','TERR'],'MW',FILL_NORMAL.MW,'NE',FILL_NORMAL.NE,'SO',FILL_NORMAL.SO,'MTN',FILL_NORMAL.MTN,'PC',FILL_NORMAL.PC,FILL_NORMAL.OTHER]
+      ],
+      'fill-opacity':['case',
+        ['boolean',['feature-state','selected'],false],0.58,
+        ['boolean',['feature-state','hovered'],false], 0.48,
+        ['==',['get','TERR'],'MW'], 0.40,    // MW: more conviction
+        0.24                                 // dormant: recede
+      ]
+    }
+  });
+
+  // ── 5. STATE BORDERS ─────────────────────────────────────────
+  // MW: dark olive weight; others: quiet thin lines
+  map.addLayer({
+    id:'state-line',type:'line',source:'states',
+    paint:{
+      'line-color':'#1a1408',
+      'line-width':['case',['==',['get','TERR'],'MW'],1.8,0.8],
+      'line-opacity':['case',['==',['get','TERR'],'MW'],0.78,0.42]
+    }
+  });
+
+  // ── 6. MW FRONT LINE ─────────────────────────────────────────
+  // Dedicated brighter line on the active territory boundary
+  map.addLayer({
+    id:'mw-front-line',type:'line',source:'states',
+    filter:['==',['get','TERR'],'MW'],
+    paint:{
+      'line-color':'#3a3018',
+      'line-width':['interpolate',['linear'],['zoom'],3,1.2,7,2.4],
+      'line-opacity':['interpolate',['linear'],['zoom'],3,0.55,7,0.82],
+      'line-blur':0.3
+    }
+  });
+
+  // ── 7. MW AMBIENT GLOW ───────────────────────────────────────
+  map.addLayer({
+    id:'mw-glow',type:'fill',source:'states',
+    filter:['==',['get','TERR'],'MW'],
+    paint:{'fill-color':'#a09040','fill-opacity':['case',['boolean',['feature-state','selected'],false],0.10,0.06]}
+  });
+
+  // ── 8. ZOOM-GATED ROAD HANDLER ───────────────────────────────
+  // Reveals secondary roads at zoom 6, minor streets at 8.5.
+  // These thresholds make the route mesh emerge as you drill in.
+  map.on('zoom',()=>{
+    const z=map.getZoom();
+    map.getStyle().layers.forEach(l=>{
+      const id=l.id.toLowerCase();
+      if (l.type!=='line') return;
+      if (id.includes('secondary')||id.includes('tertiary')||id.includes('link')) {
+        try { map.setLayoutProperty(l.id,'visibility',z>=6.0?'visible':'none'); } catch(e){}
+      }
+      if (id.includes('minor')||id.includes('service')||id.includes('path')||id.includes('track')||id.includes('footway')) {
+        try { map.setLayoutProperty(l.id,'visibility',z>=8.5?'visible':'none'); } catch(e){}
+      }
+    });
+  });
+
+  // ── 9. METROS SOURCE ─────────────────────────────────────────
+  map.addSource('metros',{
+    type:'geojson',
+    data:{type:'FeatureCollection',features:METROS.map((m,i)=>({
+      type:'Feature',id:i,
+      geometry:{type:'Point',coordinates:[m.lng,m.lat]},
+      properties:{name:m.name,tier:m.tier,state:m.state,chi:m.chi||false}
+    }))}
+  });
+
+  // Chicago protagonist — layered amber glow
+  map.addLayer({id:'chi-glow-outer',type:'circle',source:'metros',filter:['==',['get','chi'],true],minzoom:3.0,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],3,44,7,88,10,120],'circle-color':'#c07020','circle-opacity':0.05,'circle-blur':2.2}});
+  map.addLayer({id:'chi-glow-inner',type:'circle',source:'metros',filter:['==',['get','chi'],true],minzoom:3.0,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],3,18,7,36,10,58],'circle-color':'#c07020','circle-opacity':0.12,'circle-blur':1.0}});
+
+  // Chicago operational ring — shows metro influence zone at medium zoom
+  // Fades as community areas load at 8.5
+  map.addLayer({id:'chi-metro-ring',type:'circle',source:'metros',filter:['==',['get','chi'],true],minzoom:5.0,maxzoom:8.8,
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],5.0,32,8.5,180],
+      'circle-color':'rgba(0,0,0,0)',
+      'circle-stroke-color':'#9a8028',
+      'circle-stroke-width':1.2,
+      'circle-stroke-opacity':['interpolate',['linear'],['zoom'],5.0,0.28,8.5,0.08]
+    }
+  });
+
+  // Tier-1 non-Chicago glow
+  map.addLayer({id:'metro-glow',type:'circle',source:'metros',filter:['all',['==',['get','tier'],1],['==',['get','chi'],false]],minzoom:3.0,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],3,14,6,28],'circle-color':'#6a5a30','circle-opacity':0.06,'circle-blur':1.2}});
+
+  // Metro dots — tiered, warm brown-olive palette
+  map.addLayer({id:'metro-dot-t1',type:'circle',source:'metros',filter:['==',['get','tier'],1],minzoom:3.0,
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],3,5,7,9],
+      'circle-color':['case',['==',['get','chi'],true],'#c07020','#8a7040'],
+      'circle-stroke-width':1.5,
+      'circle-stroke-color':['case',['==',['get','chi'],true],'#4a2a04','#2a2010'],
+      'circle-opacity':0.95
+    }
+  });
+  map.addLayer({id:'metro-dot-t2',type:'circle',source:'metros',filter:['==',['get','tier'],2],minzoom:4.2,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],4.2,3.5,8,6],'circle-color':'#6a5c38','circle-stroke-width':1,'circle-stroke-color':'#1a1408','circle-opacity':0.88}});
+  map.addLayer({id:'metro-dot-t3',type:'circle',source:'metros',filter:['==',['get','tier'],3],minzoom:5.0,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],5,2.5,9,4.5],'circle-color':'#504a30','circle-stroke-width':0.8,'circle-stroke-color':'#100e06','circle-opacity':0.80}});
+  map.addLayer({id:'metro-dot-t4',type:'circle',source:'metros',filter:['==',['get','tier'],4],minzoom:6.5,
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],6.5,2,10,3.5],'circle-color':'#3a3820','circle-stroke-width':0.6,'circle-stroke-color':'#0e0c04','circle-opacity':0.72}});
+
+  // ── 10. OPERATIONAL NODES ────────────────────────────────────
+  map.addSource('nodes',{
+    type:'geojson',
+    data:{type:'FeatureCollection',features:NODES.map((n,i)=>({
+      type:'Feature',id:i,
+      geometry:{type:'Point',coordinates:[n.lng,n.lat]},
+      properties:{leads:n.leads,label:n.label}
+    }))}
+  });
+  map.addLayer({id:'node-halo',type:'circle',source:'nodes',filter:['>',['get','leads'],0],
+    paint:{'circle-radius':['interpolate',['linear'],['get','leads'],10,18,50,28,152,46],'circle-color':['case',['>=',['get','leads'],100],'#c07020',['>=',['get','leads'],30],'#3a88b8','#4a9a5a'],'circle-opacity':0.09,'circle-blur':1.8}});
+  map.addLayer({id:'node-fill',type:'circle',source:'nodes',
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','leads'],0,3.5,20,6.5,50,10,152,15],
+      'circle-color':['case',['>=',['get','leads'],100],'#c07020',['>=',['get','leads'],30],'#3a88b8',['>',['get','leads'],0],'#4a9a5a','#3a3820'],
+      'circle-stroke-width':1.5,'circle-stroke-color':'#0e0c04',
+      'circle-opacity':['case',['>',['get','leads'],0],0.92,0.18]
+    }
+  });
+  // Outer ring for major nodes — adds physical presence
+  map.addLayer({id:'node-ring',type:'circle',source:'nodes',filter:['>=',['get','leads'],50],
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','leads'],50,15,152,22],
+      'circle-color':'rgba(0,0,0,0)',
+      'circle-stroke-width':1.2,
+      'circle-stroke-color':['case',['>=',['get','leads'],100],'rgba(192,112,32,0.60)','rgba(58,136,184,0.50)']
+    }
+  });
+
+  // ── 11. CHICAGO LAKEFRONT ────────────────────────────────────
+  // Authored shoreline — gives the Chicago waterfront actual presence.
+  // Two layers: outer glow (warmth) + crisp edge line.
+  map.addSource('chi-lakefront',{
+    type:'geojson',
+    data:{type:'Feature',geometry:{type:'LineString',coordinates:CHI_LAKEFRONT},properties:{}}
+  });
+  map.addLayer({
+    id:'chi-lakefront-glow',type:'line',source:'chi-lakefront',minzoom:6.5,
+    paint:{
+      'line-color':'#284a8a',
+      'line-width':['interpolate',['linear'],['zoom'],6.5,4,12,10],
+      'line-opacity':['interpolate',['linear'],['zoom'],6.5,0.18,11,0.38],
+      'line-blur':3.5
+    }
+  });
+  map.addLayer({
+    id:'chi-lakefront-edge',type:'line',source:'chi-lakefront',minzoom:7.5,
+    paint:{
+      'line-color':'#4870b8',
+      'line-width':['interpolate',['linear'],['zoom'],7.5,1,12,2.5],
+      'line-opacity':['interpolate',['linear'],['zoom'],7.5,0.38,12,0.65]
+    }
+  });
+
+  // ── 12. CHICAGO COMMUNITY AREAS ──────────────────────────────
+  const chicago=await loadChicago();
+  if (chicago) {
+    map.addSource('chicago',{type:'geojson',data:chicago});
+    map.addLayer({
+      id:'chi-fill',type:'fill',source:'chicago',minzoom:8.5,
+      paint:{
+        'fill-color':['case',
+          ['boolean',['feature-state','hovered'],false],'#a08020',
+          ['==',['get','potential'],3],'#8a7018',
+          ['==',['get','potential'],2],'#6a5a14',
+          '#504810'
+        ],
+        'fill-opacity':['case',
+          ['boolean',['feature-state','selected'],false],0.55,
+          ['boolean',['feature-state','hovered'],false],0.40,
+          0.24
+        ]
+      }
+    });
+    map.addLayer({
+      id:'chi-line',type:'line',source:'chicago',minzoom:8.5,
+      paint:{
+        'line-color':['case',
+          ['boolean',['feature-state','selected'],false],'#d4a030',
+          ['boolean',['feature-state','hovered'],false],'#a07828','#6a5018'],
+        'line-width':['case',['boolean',['feature-state','selected'],false],1.8,0.9],
+        'line-opacity':0.80
+      }
+    });
+    map.addLayer({
+      id:'chi-label',type:'symbol',source:'chicago',minzoom:9.5,
+      layout:{'text-field':['get','community'],'text-font':['Open Sans Bold'],'text-size':9,'text-anchor':'center','text-allow-overlap':false,'text-letter-spacing':0.07},
+      paint:{'text-color':'#b09030','text-opacity':0.78,'text-halo-color':'#0a0800','text-halo-width':1.8}
+    });
+
+    let hovChi=null;
+    map.on('mousemove','chi-fill',e=>{
+      if (!e.features.length) return;
+      map.getCanvas().style.cursor='pointer';
+      const f=e.features[0];
+      if (hovChi!==null&&hovChi!==f.id) map.setFeatureState({source:'chicago',id:hovChi},{hovered:false});
+      hovChi=f.id; map.setFeatureState({source:'chicago',id:hovChi},{hovered:true});
+      const name=f.properties.community||'District';
+      const pot=CHI_POTENTIAL[name]||f.properties.potential||1;
+      showTip(e.point.x,e.point.y,name,`Chicago district · potential ${pot}/3`);
+    });
+    map.on('mouseleave','chi-fill',()=>{
+      map.getCanvas().style.cursor='';
+      if (hovChi!==null) map.setFeatureState({source:'chicago',id:hovChi},{hovered:false});
+      hovChi=null; hideTip();
+    });
+    map.on('click','chi-fill',e=>{
+      if (!e.features.length) return;
+      e.originalEvent.stopPropagation(); selectDistrict(e.features[0]);
+    });
+  }
+
+  // ── 13. METRO LABELS ─────────────────────────────────────────
+  map.addLayer({
+    id:'metro-label-t1',type:'symbol',source:'metros',filter:['==',['get','tier'],1],minzoom:3.0,
+    layout:{'text-field':['get','name'],'text-font':['Open Sans Bold'],'text-size':['interpolate',['linear'],['zoom'],3.0,11,5,15,8,18],'text-anchor':'top','text-offset':[0,0.7],'text-allow-overlap':false,'text-letter-spacing':0.14},
+    paint:{'text-color':['case',['==',['get','chi'],true],'#d08020','#a09060'],'text-halo-color':'#080600','text-halo-width':2.5,'text-opacity':0.92}
+  });
+  map.addLayer({
+    id:'metro-label-t2',type:'symbol',source:'metros',filter:['==',['get','tier'],2],minzoom:4.2,
+    layout:{'text-field':['get','name'],'text-font':['Open Sans Bold'],'text-size':['interpolate',['linear'],['zoom'],4.2,9,7,13],'text-anchor':'top','text-offset':[0,0.55],'text-allow-overlap':false,'text-letter-spacing':0.09},
+    paint:{'text-color':'#8a7a48','text-halo-color':'#060400','text-halo-width':2.0,'text-opacity':0.84}
+  });
+  map.addLayer({
+    id:'metro-label-t3',type:'symbol',source:'metros',filter:['==',['get','tier'],3],minzoom:5.0,
+    layout:{'text-field':['get','name'],'text-font':['Open Sans Bold'],'text-size':['interpolate',['linear'],['zoom'],5,8,8,11],'text-anchor':'top','text-offset':[0,0.45],'text-allow-overlap':false,'text-letter-spacing':0.07},
+    paint:{'text-color':'#6a5e38','text-halo-color':'#040200','text-halo-width':1.8,'text-opacity':0.76}
+  });
+  map.addLayer({
+    id:'metro-label-t4',type:'symbol',source:'metros',filter:['==',['get','tier'],4],minzoom:6.5,
+    layout:{'text-field':['get','name'],'text-font':['Open Sans Bold'],'text-size':9,'text-anchor':'top','text-offset':[0,0.42],'text-allow-overlap':false,'text-letter-spacing':0.05},
+    paint:{'text-color':'#504828','text-halo-color':'#020100','text-halo-width':1.5,'text-opacity':0.68}
+  });
+
+  // ── 14. NODE LABELS ──────────────────────────────────────────
+  map.addLayer({
+    id:'node-label',type:'symbol',source:'nodes',filter:['>',['get','leads'],10],minzoom:5.5,
+    layout:{'text-field':['get','label'],'text-font':['Open Sans Bold'],'text-size':9.5,'text-anchor':'top','text-offset':[0,0.9],'text-allow-overlap':false,'text-letter-spacing':0.05},
+    paint:{'text-color':['case',['>=',['get','leads'],100],'#c07020','#7a6830'],'text-halo-color':'#060400','text-halo-width':1.8,'text-opacity':0.90}
+  });
+
+  // ── 15. STATE INTERACTIONS ───────────────────────────────────
+  map.on('mousemove','state-fill',e=>{
+    if (!e.features.length) return;
+    map.getCanvas().style.cursor='pointer';
+    const f=e.features[0];
+    if (hoveredId!==null&&hoveredId!==f.id) map.setFeatureState({source:'states',id:hoveredId},{hovered:false});
+    hoveredId=f.id; map.setFeatureState({source:'states',id:hoveredId},{hovered:true});
+    const t=f.properties.TERR,m=META[t]||{};
+    showTip(e.point.x,e.point.y,m.label||t,m.active?`${m.leads} leads · ${m.sent} sent`:'No active operations');
+  });
+  map.on('mouseleave','state-fill',()=>{
+    map.getCanvas().style.cursor='';
+    if (hoveredId!==null) map.setFeatureState({source:'states',id:hoveredId},{hovered:false});
+    hoveredId=null; hideTip();
+  });
+  map.on('click','state-fill',e=>{if (!e.features.length) return; selectTerritory(e.features[0].properties.TERR);});
+  map.on('click',e=>{
+    const hits=map.queryRenderedFeatures(e.point,{layers:['state-fill']});
+    if (!hits.length) clearSel();
+  });
+}
+
+// ── CHICAGO ───────────────────────────────────────────────────────
+async function loadChicago() {
+  try {
+    const r=await fetch('https://data.cityofchicago.org/api/geospatial/cauq-8yn6?method=export&type=GeoJSON');
+    const data=await r.json();
+    data.features.forEach((f,i)=>{f.id=i;const name=(f.properties.community||'').toUpperCase();f.properties.potential=CHI_POTENTIAL[name]||1;});
+    return data;
+  } catch(e){ console.warn('Chicago districts unavailable',e.message); return null; }
+}
+
+// ── SELECTION ─────────────────────────────────────────────────────
+function statesForTerr(t){ return allFeatures.filter(f=>f.properties.TERR===t); }
+
+function selectTerritory(tid) {
+  if (selTerr===tid){clearSel();return;}
+  if (selTerr) statesForTerr(selTerr).forEach(f=>map.setFeatureState({source:'states',id:f.id},{selected:false}));
+  selTerr=tid;
+  statesForTerr(tid).forEach(f=>map.setFeatureState({source:'states',id:f.id},{selected:true}));
+  const m=META[tid]||{};
+  document.getElementById('insp-kicker').textContent=m.active?'Territory Intel · Active':'Territory Intel · Dormant';
+  document.getElementById('insp-title').textContent=m.label||tid;
+  document.getElementById('insp-sub').textContent=m.sub||'No data';
+  document.getElementById('ic-leads').textContent=m.leads!==undefined?m.leads:'—';
+  document.getElementById('ic-sent').textContent=m.sent!==undefined?m.sent:'—';
+  document.getElementById('ic-staged').textContent=m.staged!==undefined?m.staged:'—';
+  document.getElementById('ic-replied').textContent=m.replied!==undefined?m.replied:'—';
+  const indEl=document.getElementById('insp-industries');
+  if (m.industries) {
+    const max=m.industries[0].count;
+    indEl.innerHTML=m.industries.map(ind=>`
+      <div class="ind-row"><span class="ind-name">${ind.name}</span><span class="ind-count">${ind.count}</span></div>
+      <div class="ind-bar"><div class="ind-fill" style="width:${Math.round(ind.count/max*100)}%"></div></div>
+    `).join('');
+  } else {
+    indEl.innerHTML='<div style="color:var(--c-muted);font-size:10px;padding:6px 0;font-family:var(--f-mono)">No industry data</div>';
+  }
+  const nodeEl=document.getElementById('insp-nodes');
+  if (tid==='MW') {
+    nodeEl.innerHTML=NODES.filter(n=>n.leads>0).map(n=>`<div class="node-row"><span class="node-name">${n.label}</span><span class="node-leads">${n.leads}</span></div>`).join('');
+  } else {
+    nodeEl.innerHTML='<div style="color:var(--c-muted);font-size:10px;padding:6px 0;font-family:var(--f-mono)">No operation nodes for this territory</div>';
+  }
+  document.getElementById('band-name').textContent=m.label||tid;
+  document.getElementById('insp-body').style.display='';
+  document.getElementById('inspector').classList.add('open');
+  const b=BOUNDS[tid];
+  if (b) map.fitBounds(b,{padding:{top:58,bottom:66,left:60,right:344},pitch:4,bearing:0,duration:1100});
+}
+
+let hovDistrict=null;
+function selectDistrict(feature) {
+  if (hovDistrict!==null) map.setFeatureState({source:'chicago',id:hovDistrict},{selected:false});
+  hovDistrict=feature.id;
+  map.setFeatureState({source:'chicago',id:feature.id},{selected:true});
+  const name=(feature.properties.community||'Unknown District').toUpperCase();
+  const pot=CHI_POTENTIAL[name]||feature.properties.potential||1;
+  const types=['Commercial','Mixed Use','Industrial','Residential'];
+  document.getElementById('insp-kicker').textContent='Chicago District · Urban Drill-Down';
+  document.getElementById('insp-title').textContent=name;
+  document.getElementById('insp-sub').textContent='Chicago Community Area';
+  ['ic-leads','ic-sent','ic-staged','ic-replied'].forEach(id=>document.getElementById(id).textContent='—');
+  const bodyEl=document.getElementById('insp-body');
+  bodyEl.style.display='';
+  bodyEl.innerHTML=`
+    <div class="isec-title">District Profile</div>
+    <div class="district-badge"><div class="district-dot"></div>${types[pot>=3?0:pot>=2?1:2]} · Chicago Metro</div>
+    <div class="ind-row"><span class="ind-name">Operational Potential</span><span class="ind-count">${pot}/3</span></div>
+    <div class="potential-bar">${[1,2,3].map(i=>`<div class="pot-seg${i<=pot?' active':''}"></div>`).join('')}</div>
+    <div style="margin-top:12px;font-family:var(--f-mono);font-size:9px;color:var(--c-muted);line-height:1.6">
+      Zoom into this district to surface local businesses and discover leads not visible at city level.
+    </div>
+  `;
+  document.getElementById('insp-nodes').innerHTML='<div style="color:var(--c-muted);font-size:10px;padding:4px 0;font-family:var(--f-mono)">Local businesses discoverable at district zoom level.</div>';
+  document.getElementById('band-name').textContent=`CHICAGO · ${name}`;
+  document.getElementById('inspector').classList.add('open');
+}
+
+function clearSel() {
+  if (selTerr) statesForTerr(selTerr).forEach(f=>map.setFeatureState({source:'states',id:f.id},{selected:false}));
+  if (hovDistrict!==null) {
+    try { map.setFeatureState({source:'chicago',id:hovDistrict},{selected:false}); } catch(e){}
+    hovDistrict=null;
+  }
+  selTerr=null;
+  document.getElementById('inspector').classList.remove('open');
+  document.getElementById('band-name').textContent='Midwest Operations';
+}
+
+// ── TOOLTIP ───────────────────────────────────────────────────────
+function showTip(x,y,name,stat){
+  const t=document.getElementById('map-tip');
+  document.getElementById('tip-name').textContent=name;
+  document.getElementById('tip-stat').textContent=stat;
+  t.style.left=(x+14)+'px';t.style.top=(y-10)+'px';t.classList.add('vis');
+}
+function hideTip(){document.getElementById('map-tip').classList.remove('vis');}
+
+// ── TERRITORY LABELS ─────────────────────────────────────────────
+function initTerrLabels() {
+  const wrap=document.getElementById('terr-labels-html'),els={};
+  TERR_LABELS.forEach(t=>{
+    const m=META[t.id]||{},el=document.createElement('div');
+    el.className='tlabel '+(m.active?'active':'inactive');
+    el.textContent=t.label; el.dataset.id=t.id;
+    wrap.appendChild(el); els[t.id]=el;
+  });
+  function repos(){
+    TERR_LABELS.forEach(t=>{
+      const pt=map.project(t.coords),el=els[t.id];
+      el.style.left=pt.x+'px'; el.style.top=pt.y+'px';
+      // Rotation baked into transform — translate(-50%,-50%) anchors the center
+      el.style.transform=`translate(-50%,-50%) rotate(${t.rot||0}deg)`;
+    });
+  }
+  ['move','zoom','pitch','rotate'].forEach(e=>map.on(e,repos)); repos();
+}
+
+// ── WATER LABELS ─────────────────────────────────────────────────
+function initWaterLabels() {
+  const wrap=document.getElementById('water-labels-html'),els={};
+  WATER_LABELS.forEach(w=>{
+    const el=document.createElement('div');
+    el.className='wlabel '+w.cls; el.textContent=w.label; el.dataset.id=w.id;
+    wrap.appendChild(el); els[w.id]=el;
+  });
+  function repos(){
+    const z=map.getZoom();
+    WATER_LABELS.forEach(w=>{
+      const pt=map.project(w.coords),el=els[w.id];
+      el.style.left=pt.x+'px'; el.style.top=pt.y+'px';
+      el.style.opacity=(z>=w.minz&&z<=w.maxz)?'1':'0';
+    });
+  }
+  ['move','zoom','pitch','rotate'].forEach(e=>map.on(e,repos)); repos();
+}
+
+// ── HUB CROSSHAIR SYSTEM ─────────────────────────────────────────
+// Positions HTML crosshair markers over strategic city hubs.
+// These read as "strategic position indicators" — game vocabulary.
+function initHubs() {
+  const layer=document.createElement('div');
+  layer.id='hub-layer';
+  layer.style.cssText='position:fixed;inset:0;z-index:4;pointer-events:none;';
+  document.body.appendChild(layer);
+
+  const els=HUBS_DATA.map(h=>{
+    const el=document.createElement('div');
+    el.className=`hub-xhair ${h.t}`;
+    el.innerHTML='<div class="xh"></div><div class="xv"></div>';
+    layer.appendChild(el);
+    return {el,hub:h};
+  });
+
+  function reposHubs(){
+    const z=map.getZoom();
+    els.forEach(({el,hub})=>{
+      const pt=map.project([hub.lng,hub.lat]);
+      el.style.left=pt.x+'px'; el.style.top=pt.y+'px';
+      el.style.opacity=z>=hub.minz?'1':'0';
+    });
+  }
+  ['move','zoom','pitch','rotate'].forEach(e=>map.on(e,reposHubs)); reposHubs();
+}
+
+// ── BEACON SYSTEM ─────────────────────────────────────────────────
+function initBeacons() {
+  const layer=document.getElementById('beacon-layer');
+  const chi=METROS.find(m=>m.chi);
+  const chiEl=document.createElement('div');
+  chiEl.id='beacon-chi'; chiEl.className='beacon-anchor';
+  chiEl.innerHTML='<div class="beacon-ring bcr-outer"></div><div class="beacon-ring bcr-mid"></div><div class="beacon-ring bcr-inner"></div>';
+  layer.appendChild(chiEl);
+  const hpNodes=NODES.filter(n=>n.leads>=100);
+  hpNodes.forEach((n,i)=>{
+    const el=document.createElement('div');
+    el.id=`beacon-node-${i}`; el.className='beacon-anchor';
+    const ring=document.createElement('div');
+    ring.className='beacon-ring bnode-ring'; ring.style.animationDelay=`${i*1.3}s`;
+    el.appendChild(ring); layer.appendChild(el);
+  });
+  function reposBeacons(){
+    const z=map.getZoom();
+    if (chi){
+      const pt=map.project([chi.lng,chi.lat]);
+      chiEl.style.left=pt.x+'px'; chiEl.style.top=pt.y+'px'; chiEl.style.opacity=z>=3.5?'1':'0';
+    }
+    hpNodes.forEach((n,i)=>{
+      const el=document.getElementById(`beacon-node-${i}`);
+      if (!el) return;
+      const pt=map.project([n.lng,n.lat]);
+      el.style.left=pt.x+'px'; el.style.top=pt.y+'px'; el.style.opacity=z>=5.5?'1':'0';
+    });
+  }
+  ['move','zoom','pitch','rotate'].forEach(e=>map.on(e,reposBeacons)); reposBeacons();
+}
+
+// ── ZOOM POSTURE ──────────────────────────────────────────────────
+const POSTURES=[
+  {maxz:4.2,label:'NATIONAL THEATER'},{maxz:5.8,label:'REGIONAL COMMAND'},
+  {maxz:7.8,label:'OPERATIONAL GRID'},{maxz:10.0,label:'LOCAL THEATER'},
+  {maxz:99, label:'DISTRICT COMMAND'}
+];
+function updatePosture(){
+  const z=map.getZoom();
+  const p=POSTURES.find(p=>z<p.maxz)||POSTURES[POSTURES.length-1];
+  document.getElementById('band-posture').textContent=p.label;
+}
+
+// ── GRAIN + TEXTURE ───────────────────────────────────────────────
+// Animated film grain (soft-light blend) + linen crosshatch texture.
+// Together they give the printed-map / paper-board surface feel.
+function initGrain(){
+  const c=document.getElementById('grain'),ctx=c.getContext('2d');
+  function resize(){c.width=innerWidth;c.height=innerHeight;}
+  function draw(){
+    const{width:w,height:h}=c;
+    // Film grain
+    const img=ctx.createImageData(w,h),d=img.data;
+    for(let i=0;i<d.length;i+=4){const n=Math.random()*255;d[i]=d[i+1]=d[i+2]=n;d[i+3]=3+Math.random()*9;}
+    ctx.putImageData(img,0,0);
+    // Linen texture — faint crosshatch at 6px pitch (printed-map surface)
+    ctx.save();
+    ctx.globalAlpha=0.015;
+    ctx.strokeStyle='#604020';ctx.lineWidth=0.5;
+    for(let x=0;x<w;x+=6){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+    for(let y=0;y<h;y+=6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+    ctx.restore();
+    // Edge vignette
+    const vg=ctx.createRadialGradient(w/2,h/2,h*.20,w/2,h/2,h*.80);
+    vg.addColorStop(0,'rgba(0,0,0,0)');
+    vg.addColorStop(0.55,'rgba(0,0,0,0.06)');
+    vg.addColorStop(1,'rgba(0,0,0,.50)');
+    ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
+  }
+  resize();draw();
+  window.addEventListener('resize',()=>{resize();draw();});
+  setInterval(draw,150);
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────
+document.getElementById('insp-close-btn').onclick=clearSel;
+document.getElementById('insp-close-btn2').onclick=clearSel;
+document.getElementById('focus-mw-btn').onclick=()=>{
+  map.flyTo({center:[-89.5,42.5],zoom:5.8,pitch:4,bearing:0,duration:1100});
+};
+document.getElementById('focus-chi-btn').onclick=()=>{
+  map.flyTo({center:[-87.65,41.86],zoom:10.8,pitch:6,bearing:0,duration:1400});
+};
+
+// ── BOOT ──────────────────────────────────────────────────────────
+map.on('load',async()=>{
+  await build();
+  initGrain();
+  initTerrLabels();
+  initWaterLabels();
+  initHubs();
+  initBeacons();
+  map.on('zoom',updatePosture);
+  updatePosture();
+});
+new ResizeObserver(()=>map.resize()).observe(document.getElementById('map'));
+</script>
+</body>
+</html>

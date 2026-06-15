@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Copperline LOSI Prototype</title>
+<link rel="icon" type="image/svg+xml" href="/static/copperline-favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+:root{--bg:#05070c;--panel:rgba(10,14,22,.74);--line:rgba(131,155,201,.16);--text:#e9edf7;--muted:#89a0c7;--dim:#4f5d7d;--blue:#7fb0ff;--green:#4ae38a;--amber:#efb14c;--copper:#d68a46;--shadow:0 24px 80px rgba(0,0,0,.46);--radius:18px;--mono:'IBM Plex Mono',ui-monospace,monospace;--sans:'Space Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+body{background:radial-gradient(circle at 18% 16%, rgba(127,176,255,.09), transparent 24%),radial-gradient(circle at 82% 18%, rgba(214,138,70,.08), transparent 20%),linear-gradient(180deg,#04060b 0%, #050913 48%, #03050a 100%)}
+#app{height:100%;display:flex;flex-direction:column}
+.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 22px;border-bottom:1px solid rgba(131,155,201,.14);background:linear-gradient(180deg,rgba(7,10,16,.92),rgba(7,10,16,.78));backdrop-filter:blur(16px)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.mark{width:10px;height:10px;border-radius:50%;background:var(--copper);box-shadow:0 0 18px rgba(214,138,70,.7)}.brand h1{margin:0;font-size:14px;letter-spacing:.12em;text-transform:uppercase}.brand .sub{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.head-right{display:flex;align-items:center;gap:10px}.pill,.btn,.modechip,.chip{font-family:var(--sans)}.pill{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:rgba(14,19,30,.88);border:1px solid rgba(131,155,201,.15);color:var(--text);font-size:11px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(74,227,138,.6)}.btn{appearance:none;border:1px solid rgba(131,155,201,.18);background:rgba(14,19,30,.84);color:var(--text);border-radius:999px;padding:8px 12px;font:600 11px/1 var(--sans);letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.stage{position:relative;flex:1;min-height:0}#map{position:absolute;inset:0;background:radial-gradient(circle at 16% 18%, rgba(119,153,202,.08), transparent 18%),linear-gradient(180deg,#06111b 0%, #050c14 56%, #03070c 100%)}#map::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(115deg, rgba(255,255,255,.03), transparent 20%, transparent 82%, rgba(255,255,255,.03)),repeating-linear-gradient(0deg, rgba(143,167,212,.025) 0 1px, transparent 1px 90px),repeating-linear-gradient(90deg, rgba(143,167,212,.018) 0 1px, transparent 1px 90px),radial-gradient(circle at 50% 52%, transparent 54%, rgba(0,0,0,.5) 100%);mix-blend-mode:screen;opacity:.58}#map::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(circle at 50% 46%, transparent 35%, rgba(0,0,0,.36) 100%)}
+.maplibregl-canvas{filter:saturate(.84) contrast(1.08) brightness(.95)}.maplibregl-control-container{display:none}
+.frame{position:absolute;inset:16px;pointer-events:none;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);grid-template-rows:auto 1fr auto;gap:14px}
+.spine,.inspect,.band,.corner,.legend{pointer-events:auto;background:rgba(8,12,19,.62);border:1px solid rgba(131,155,201,.16);border-radius:18px;box-shadow:var(--shadow);backdrop-filter:blur(16px)}
+.spine{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;border-radius:16px;background:rgba(8,12,19,.58)}
+.spine .title{display:flex;align-items:baseline;gap:12px;min-width:0}.spine h2{margin:0;font-size:18px;letter-spacing:.02em}.spine .meta{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.spine .modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.modechip{display:inline-flex;align-items:center;justify-content:center;min-width:92px;padding:8px 12px;border-radius:999px;border:1px solid rgba(131,155,201,.18);background:rgba(12,16,24,.8);color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.modechip.active{color:var(--text);border-color:rgba(127,176,255,.4);background:rgba(37,57,102,.4)}
+.inspect{grid-column:2;grid-row:2;align-self:start;overflow:hidden}.inspect .head{padding:16px 16px 12px;border-bottom:1px solid rgba(131,155,201,.12);background:linear-gradient(180deg,rgba(17,24,37,.82),rgba(12,16,25,.46))}.kicker{font-size:11px;color:var(--copper);font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase}.inspect h3{margin:4px 0 6px;font-size:20px;line-height:1.1}.inspect .desc{font-size:12px;line-height:1.55;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 16px}.stat{min-height:76px;padding:12px;border-radius:16px;background:rgba(11,15,23,.68);border:1px solid rgba(131,155,201,.14)}.stat .l{font-size:10px;color:var(--dim);font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase}.stat .v{margin-top:8px;font-size:22px;font-weight:700}.stat .n{margin-top:4px;font-size:11px;color:var(--muted);line-height:1.45}
+.rail{position:absolute;left:0;right:0;bottom:0;z-index:6;pointer-events:none;display:flex;justify-content:center;padding:0 16px 16px}.band{width:min(1180px,100%);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px}.band .scope{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.tag{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(16,22,32,.85);border:1px solid rgba(131,155,201,.14);font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.tag strong{color:var(--text)}.badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:10px;font-family:var(--mono);color:var(--text)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(15,20,30,.84);border:1px solid rgba(131,155,201,.14);color:var(--text);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.chip.active.ready{border-color:rgba(74,227,138,.45);color:#d7ffe6}.chip.active.block{border-color:rgba(239,177,76,.5);color:#ffe6bf}.chip.active.follow{border-color:rgba(127,176,255,.45);color:#dbe8ff}.chip.active.sent{border-color:rgba(214,138,70,.45);color:#ffe1c5}
+.corner{position:absolute;left:18px;bottom:86px;z-index:6;max-width:360px;padding:12px 14px}.corner .label{font-size:10px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.corner .big{margin-top:6px;font-size:18px;font-weight:700}.corner .small{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.5}
+.legend{position:absolute;left:18px;top:96px;z-index:6;display:flex;flex-direction:column;gap:8px;padding:12px 14px}.legend .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}.swatch{width:10px;height:10px;border-radius:50%}.swatch.ready{background:var(--green)}.swatch.block{background:var(--amber)}.swatch.follow{background:var(--blue)}.swatch.sent{background:var(--copper)}
+@media (max-width:1100px){.frame{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}.inspect{grid-column:1;grid-row:2;max-width:420px;justify-self:end}}@media (max-width:760px){.topbar{height:auto;min-height:68px;padding:12px 14px;gap:10px;flex-wrap:wrap}.frame{inset:10px;grid-template-columns:1fr}.inspect{justify-self:stretch;max-width:none}.legend,.corner{display:none}.band{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><div class="mark"></div><div><h1>Copperline LOSI Prototype</h1><div class="sub">MapLibre command surface</div></div></div>
+    <div class="head-right"><div class="pill"><span class="dot"></span><span id="net-pill">Live data pending</span></div><button class="btn" id="reset-btn">Reset view</button></div>
+  </div>
+  <div class="stage">
+    <div id="map"></div>
+    <div class="legend fade-in"><div class="row"><span class="swatch ready"></span><span>ready pressure</span></div><div class="row"><span class="swatch block"></span><span>blocked pressure</span></div><div class="row"><span class="swatch follow"></span><span>follow-up pressure</span></div><div class="row"><span class="swatch sent"></span><span>sent / live</span></div></div>
+    <div class="corner fade-in" id="corner"><div class="label">Survey posture</div><div class="big">National command board</div><div class="small">Select a territory shape or pressure chip to move the board into territory, front, or business posture.</div></div>
+    <div class="frame">
+      <div class="spine fade-in"><div class="title"><h2 id="board-title">Survey</h2><div class="meta" id="board-meta">Dark atlas / read pressure / select territory</div></div><div class="modes"><button class="modechip active" data-mode="survey">Survey</button><button class="modechip" data-mode="territory">Territory</button><button class="modechip" data-mode="front">Front</button><button class="modechip" data-mode="business">Business</button></div></div>
+      <aside class="inspect fade-in"><div class="head"><div class="kicker">Command Frame</div><h3 id="inspect-title">National survey</h3><div class="desc" id="inspect-desc">The map board is the product surface. Territory shapes, pressure readouts, and business nodes live directly in the world.</div></div><div class="stats"><div class="stat"><div class="l">Territory</div><div class="v" id="stat-territory">50</div><div class="n" id="stat-territory-note">Real state shapes loaded from topojson.</div></div><div class="stat"><div class="l">Pressure</div><div class="v" id="stat-pressure">--</div><div class="n" id="stat-pressure-note">Live queue rows aggregated into the board.</div></div><div class="stat"><div class="l">Front</div><div class="v" id="stat-front">--</div><div class="n" id="stat-front-note">Ready / blocked / follow / sent.</div></div><div class="stat"><div class="l">Business</div><div class="v" id="stat-business">--</div><div class="n" id="stat-business-note">Click a node to promote one business.</div></div></div></aside>
+      <div class="rail"><div class="band fade-in"><div class="scope"><div class="tag"><strong id="scope-territory">Global board</strong><span class="badge" id="scope-count">survey</span></div><div class="tag"><strong id="scope-front">No front</strong><span id="scope-meta">choose a territory or a pressure chip</span></div></div><div class="chips"><button class="chip active ready" data-front="ready">Ready</button><button class="chip block" data-front="block">Blocked</button><button class="chip follow" data-front="follow">Follow-up</button><button class="chip sent" data-front="sent">Sent</button><button class="chip" id="focus-business-btn">Focus business</button></div></div></div>
+    </div>
+  </div>
+</div>
+<script>
+const META = `01|AL|Alabama|South;02|AK|Alaska|West;04|AZ|Arizona|West;05|AR|Arkansas|South;06|CA|California|Pacific;08|CO|Colorado|Mountain;09|CT|Connecticut|Northeast;10|DE|Delaware|Northeast;11|DC|District of Columbia|Northeast;12|FL|Florida|South;13|GA|Georgia|South;15|HI|Hawaii|Pacific;16|ID|Idaho|Mountain;17|IL|Illinois|Midwest;18|IN|Indiana|Midwest;19|IA|Iowa|Midwest;20|KS|Kansas|Midwest;21|KY|Kentucky|South;22|LA|Louisiana|South;23|ME|Maine|Northeast;24|MD|Maryland|Northeast;25|MA|Massachusetts|Northeast;26|MI|Michigan|Midwest;27|MN|Minnesota|Midwest;28|MS|Mississippi|South;29|MO|Missouri|Midwest;30|MT|Montana|Mountain;31|NE|Nebraska|Midwest;32|NV|Nevada|West;33|NH|New Hampshire|Northeast;34|NJ|New Jersey|Northeast;35|NM|New Mexico|Mountain;36|NY|New York|Northeast;37|NC|North Carolina|South;38|ND|North Dakota|Midwest;39|OH|Ohio|Midwest;40|OK|Oklahoma|South;41|OR|Oregon|Pacific;42|PA|Pennsylvania|Northeast;44|RI|Rhode Island|Northeast;45|SC|South Carolina|South;46|SD|South Dakota|Midwest;47|TN|Tennessee|South;48|TX|Texas|South;49|UT|Utah|Mountain;50|VT|Vermont|Northeast;51|VA|Virginia|South;53|WA|Washington|Pacific;54|WV|West Virginia|South;55|WI|Wisconsin|Midwest;56|WY|Wyoming|Mountain`.split(';').map(s=>{const[a,b,c,d]=s.split('|');return{fips:a,abbr:b,name:c,region:d}}), REGIONS = { Pacific:['WA','OR','CA','HI'], West:['NV','AZ','UT'], Mountain:['MT','ID','WY','CO','NM'], Midwest:['ND','SD','NE','KS','MN','IA','MO','WI','IL','IN','MI','OH'], South:['TX','OK','AR','LA','MS','AL','GA','FL','SC','NC','TN','KY','VA','WV'], Northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD','DC'] }, SAMPLE_ROWS = [{business_name:'Copperline Test HVAC',city:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,send_ready:true,sent_at:'',replied:'',approved:'true',subject:'quick question'},{business_name:'Copperline Test Plumbing',city:'Dallas',state:'TX',lat:32.7767,lng:-96.7970,send_ready:false,sent_at:'',replied:'',approved:'false',subject:'follow up'},{business_name:'Copperline Test Roofing',city:'Phoenix',state:'AZ',lat:33.4484,lng:-112.0740,send_ready:false,sent_at:'2026-04-01',replied:'false',approved:'true',subject:'re: estimate'}], SAMPLE_PRESSURE = { ready:18, blocked:7, follow:9, sent:22 };
+const APP = { mode:'survey', front:'ready', state:null, business:null, states:null, rows:[], pressure:new Map(), points:[], stateIndex:new Map(), map:null };
+const qs = s => document.querySelector(s), qsa = s => [...document.querySelectorAll(s)];
+const norm = v => String(v || '').trim().toUpperCase();
+const label = m => ({survey:'Survey posture',territory:'Territory posture',front:'Front posture',business:'Business posture'}[m] || 'Survey posture');
+const frontLabel = f => ({ready:'Ready pressure',block:'Blocked pressure',follow:'Follow-up pressure',sent:'Sent pressure'}[f] || 'Ready pressure');
+const frontClass = f => ({ready:'ready',block:'block',follow:'follow',sent:'sent'}[f] || 'ready');
+const pressureColor = n => n >= 26 ? '#d68a46' : n >= 18 ? '#efb14c' : n >= 10 ? '#7fb0ff' : n > 0 ? '#4ae38a' : '#34445f';
+const centroid = coords => { let flat=[]; (function walk(a){a.forEach(v=>Array.isArray(v[0])?walk(v):flat.push(v))})(coords); const s=flat.reduce((a,p)=>[a[0]+p[0],a[1]+p[1]],[0,0]); return flat.length ? [s[0]/flat.length, s[1]/flat.length] : [0,0]; };
+const bbox = f => { let minX=180,minY=90,maxX=-180,maxY=-90; (function walk(a){a.forEach(v=>Array.isArray(v[0])?walk(v):(minX=Math.min(minX,v[0]),minY=Math.min(minY,v[1]),maxX=Math.max(maxX,v[0]),maxY=Math.max(maxY,v[1])))})(f.geometry.coordinates); return [[minX,minY],[maxX,maxY]]; };
+const updateText = (sel, txt) => { const el = typeof sel === 'string' ? qs(sel) : sel; if (el) el.textContent = txt; };
+function aggregate(rows){
+  const m=new Map();
+  rows.forEach(r=>{
+    const k=norm(r.state); if(!k) return;
+    const b=m.get(k) || {count:0,ready:0,blocked:0,follow:0,sent:0,businesses:[]};
+    b.count++; if (r.send_ready) b.ready++; if (String(r.sent_at || '').trim()) b.sent++; if (String(r.replied || '').toLowerCase()==='true' || (r.sent_at && String(r.replied || '').toLowerCase()!=='true')) b.follow++; if (!r.send_ready && !String(r.sent_at || '').trim()) b.blocked++; b.businesses.push(r); m.set(k,b);
+  });
+  return m;
+}
+function businessPoints(rows){
+  return rows.map((r,i)=>{
+    let lat=parseFloat(r.lat || 0), lng=parseFloat(r.lng || 0);
+    if(!lat && !lng){
+      const s=APP.stateIndex.get(norm(r.state));
+      const c=s ? centroid(s.geometry.coordinates) : [-98,39];
+      lng=c[0] + (i % 3) * 0.15; lat=c[1] + (i % 2) * 0.1;
+    }
+    return { type:'Feature', geometry:{type:'Point',coordinates:[lng,lat]}, properties:{ id:String(i), name:r.business_name || 'Business', state:norm(r.state), city:r.city || '', row:r, pressure:r.send_ready ? 2 : String(r.sent_at || '').trim() ? 1 : 3 } };
+  });
+}
+function regionPoints(states){
+  return Object.entries(REGIONS).map(([region,codes]) => {
+    const feats=states.filter(f=>codes.includes(f.properties.abbr));
+    if(!feats.length) return null;
+    const pts=feats.map(f=>centroid(f.geometry.coordinates)); const avg=pts.reduce((a,p)=>[a[0]+p[0],a[1]+p[1]],[0,0]).map(v=>v/pts.length);
+    return { type:'Feature', geometry:{ type:'Point', coordinates:avg }, properties:{ region, count: feats.length } };
+  }).filter(Boolean);
+}
+function selectedState(){ return APP.state ? APP.stateIndex.get(APP.state) : null; }
+function selectedBiz(){ return APP.business; }
+function selectState(abbr){ APP.state = abbr; APP.mode = 'territory'; APP.business = null; render(); }
+function selectFront(front){ APP.front = front; render(); }
+function selectBusiness(feature){ APP.business = feature; APP.mode = 'business'; APP.state = feature?.properties?.state || APP.state; render(); }
+function render(){
+  const s = selectedState(), b = selectedBiz(), p = APP.pressure.get(APP.state || '') || {count:0,ready:0,blocked:0,follow:0,sent:0,businesses:[]};
+  qsa('.modechip').forEach(btn=>btn.classList.toggle('active', btn.dataset.mode === APP.mode));
+  qsa('.chip[data-front]').forEach(btn=>btn.classList.toggle('active', btn.dataset.front === APP.front));
+  updateText('#board-title', APP.mode === 'survey' ? 'Survey' : APP.mode === 'territory' ? 'Territory lock' : APP.mode === 'front' ? 'Front focus' : 'Business review');
+  updateText('#board-meta', s ? `${s.properties.name} / ${frontLabel(APP.front)}` : 'Dark atlas / read pressure / select territory');
+  updateText('#inspect-title', b ? b.properties.name : s ? s.properties.name : 'National survey');
+  updateText('#inspect-desc', b ? `${b.properties.city || ''}${b.properties.state ? ', ' + b.properties.state : ''} is pinned as the active business node.` : s ? `${s.properties.name} is the active territory. The world surface shifts with the selected front.` : 'The map board is the product surface. Territory shapes, pressure readouts, and business nodes live directly in the world.');
+  updateText('#stat-territory', APP.states?.features?.length || 50);
+  updateText('#stat-pressure', String((p.ready + p.blocked + p.follow + p.sent) || SAMPLE_PRESSURE[APP.front]));
+  updateText('#stat-front', frontLabel(APP.front).replace(' pressure',''));
+  updateText('#stat-business', String(b ? 1 : (s ? p.businesses.length : 0)));
+  updateText('#scope-territory', s ? s.properties.name : 'Global board');
+  updateText('#scope-front', frontLabel(APP.front));
+  updateText('#scope-count', APP.mode);
+  updateText('#scope-meta', s ? `${p.count} live rows` : 'choose a territory or a pressure chip');
+  updateText('#net-pill', APP.rows.length ? `${APP.rows.length} live rows` : 'Using sample data');
+  updateText('#corner .label', label(APP.mode));
+  updateText('#corner .big', b ? 'Business lock' : s ? `${s.properties.name} selected` : 'National command board');
+  updateText('#corner .small', b ? 'The board is locked to a single business node and its surrounding pressure surface.' : s ? 'The selected territory reshapes the board. Use pressure chips to move the front.' : 'Select a territory shape or pressure chip to move the board into territory, front, or business posture.');
+  if (!APP.map || !APP.states) return;
+  APP.map.getSource('states').setData(APP.states);
+  APP.map.getSource('labels').setData({ type:'FeatureCollection', features: APP.states.features.map(f => ({ type:'Feature', geometry:{ type:'Point', coordinates: centroid(f.geometry.coordinates) }, properties:{ name:f.properties.name, abbr:f.properties.abbr } })) });
+  APP.map.getSource('regions').setData({ type:'FeatureCollection', features: regionPoints(APP.states.features) });
+  APP.map.getSource('pressure-points').setData({ type:'FeatureCollection', features: APP.states.features.map(f => { const a = APP.pressure.get(f.properties.abbr) || {count:0,ready:0,blocked:0,follow:0,sent:0}; return { type:'Feature', geometry:{ type:'Point', coordinates: centroid(f.geometry.coordinates) }, properties:{ ...a, abbr:f.properties.abbr, name:f.properties.name, pressure:a.ready*2 + a.blocked*1.5 + a.follow*1.2 + a.sent*.4 } }; }) });
+  APP.map.getSource('business-points').setData({ type:'FeatureCollection', features: APP.points });
+  APP.map.getSource('selected-state').setData({ type:'FeatureCollection', features: s ? [s] : [] });
+  APP.map.getSource('selected-business').setData({ type:'FeatureCollection', features: b ? [b] : [] });
+  if (s) APP.map.fitBounds(bbox(s), { padding: 120, duration: 900, pitch: 42, bearing: -12 }); else APP.map.easeTo({ center:[-98.35,39.5], zoom:3.5, pitch:42, bearing:-12, duration:700 });
+}
+async function boot(){
+  try{
+    const topo = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(r=>r.json());
+    const geo = topojson.feature(topo, topo.objects.states);
+    geo.features = geo.features.filter(f => META.some(m => m.fips === f.id && m.abbr !== 'DC'));
+    geo.features.forEach(f => {
+      const meta = META.find(m => m.fips === f.id);
+      f.properties = { fips:f.id, abbr:meta.abbr, name:meta.name, region:meta.region };
+      APP.stateIndex.set(meta.abbr, f);
+    });
+    APP.states = geo;
+    APP.map = new maplibregl.Map({
+      container:'map',
+      style:{ version:8, glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf', sources:{}, layers:[{id:'bg',type:'background',paint:{'background-color':'#050a12'}}] },
+      center:[-98.35,39.5], zoom:3.5, bearing:-12, pitch:42, interactive:true, attributionControl:false, fadeDuration:0
+    });
+    APP.map.on('load', async () => {
+      ['states','labels','regions','pressure-points','business-points','selected-state','selected-business'].forEach(id => APP.map.addSource(id, { type:'geojson', data:{ type:'FeatureCollection', features:[] } }));
+      APP.map.addLayer({ id:'states-fill', type:'fill-extrusion', source:'states', paint:{ 'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,'#0d1622',8,'#10263c',20,'#17375b',40,'#284f7e'], 'fill-extrusion-height':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,3800,10,5200,24,7600,50,9200], 'fill-extrusion-base':0, 'fill-extrusion-opacity':0.8 } });
+      APP.map.addLayer({ id:'states-outline', type:'line', source:'states', paint:{ 'line-color':'#355075', 'line-width':1.05, 'line-opacity':0.72 }});
+      APP.map.addLayer({ id:'states-glow', type:'fill', source:'states', paint:{ 'fill-color':'#7fb0ff', 'fill-opacity':0.035 }});
+      APP.map.addLayer({ id:'pressure-halo', type:'circle', source:'pressure-points', paint:{ 'circle-color':['match',['get','abbr'],'IL','#4ae38a','TX','#efb14c','AZ','#7fb0ff','#7fb0ff'], 'circle-radius':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,5,5,14,15,26,40,36], 'circle-blur':0.78, 'circle-opacity':0.16 }});
+      APP.map.addLayer({ id:'pressure-core', type:'circle', source:'pressure-points', paint:{ 'circle-color':['match',['get','abbr'],'IL','#4ae38a','TX','#efb14c','AZ','#7fb0ff','#7fb0ff'], 'circle-radius':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,2,5,7,15,12,40,18], 'circle-stroke-color':'#f4f7ff', 'circle-stroke-width':1.1, 'circle-stroke-opacity':0.33, 'circle-opacity':0.82 }});
+      APP.map.addLayer({ id:'business-halo', type:'circle', source:'business-points', paint:{ 'circle-color':'#d68a46', 'circle-radius':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,8,2,12,3,15], 'circle-blur':0.7, 'circle-opacity':0.18 }});
+      APP.map.addLayer({ id:'business-core', type:'circle', source:'business-points', paint:{ 'circle-color':['case',['boolean',['feature-state','selected'],false],'#ffe6bd','#d68a46'], 'circle-radius':['interpolate',['linear'],['coalesce',['get','pressure'],0],0,3,2,5,3,6], 'circle-stroke-color':'#1c2535', 'circle-stroke-width':1.4, 'circle-opacity':0.96 }});
+      APP.map.addLayer({ id:'labels', type:'symbol', source:'labels', layout:{ 'text-field':['get','name'], 'text-font':['Space Grotesk SemiBold','Arial Unicode MS Regular'], 'text-size':['interpolate',['linear'],['zoom'],2,16,4,18,5,22], 'text-letter-spacing':0.12, 'text-transform':'uppercase' }, paint:{ 'text-color':'#c6d4ef', 'text-halo-color':'#060a10', 'text-halo-width':1.8, 'text-opacity':0.62 }});
+      APP.map.addLayer({ id:'regions', type:'symbol', source:'regions', layout:{ 'text-field':['upcase',['get','region']], 'text-font':['Space Grotesk SemiBold','Arial Unicode MS Regular'], 'text-size':['interpolate',['linear'],['zoom'],2,22,4,28], 'text-letter-spacing':0.28 }, paint:{ 'text-color':'#9eb7df', 'text-halo-color':'#05090f', 'text-halo-width':2.2, 'text-opacity':0.4 }});
+      APP.map.addLayer({ id:'selected-state', type:'fill-extrusion', source:'selected-state', paint:{ 'fill-extrusion-color':'#73a5ff', 'fill-extrusion-height':9800, 'fill-extrusion-base':0, 'fill-extrusion-opacity':0.94 }});
+      APP.map.addLayer({ id:'selected-state-outline', type:'line', source:'selected-state', paint:{ 'line-color':'#dce8ff', 'line-width':3.4, 'line-opacity':0.95 }});
+      APP.map.addLayer({ id:'selected-business', type:'circle', source:'selected-business', paint:{ 'circle-color':'#ffe2b7', 'circle-radius':16, 'circle-blur':0.72, 'circle-opacity':0.22 }});
+      APP.map.addLayer({ id:'selected-business-core', type:'circle', source:'selected-business', paint:{ 'circle-color':'#ffe2b7', 'circle-radius':7, 'circle-stroke-color':'#d68a46', 'circle-stroke-width':2, 'circle-opacity':0.98 }});
+      APP.map.on('click','states-outline',e=>selectState(e.features?.[0]?.properties?.abbr));
+      APP.map.on('click','business-core',e=>selectBusiness(e.features?.[0]));
+      APP.map.on('mouseenter','states-outline',()=>APP.map.getCanvas().style.cursor='pointer');
+      APP.map.on('mouseleave','states-outline',()=>APP.map.getCanvas().style.cursor='');
+      APP.map.on('mouseenter','business-core',()=>APP.map.getCanvas().style.cursor='pointer');
+      APP.map.on('mouseleave','business-core',()=>APP.map.getCanvas().style.cursor='');
+      try{
+        const [queueResp] = await Promise.all([fetch('/api/queue').then(r=>r.ok?r.json():[]).catch(()=>[])]);
+        APP.rows = Array.isArray(queueResp) ? queueResp : (queueResp.rows || queueResp.items || []);
+        if (!APP.rows.length) APP.rows = SAMPLE_ROWS.slice();
+      }catch{ APP.rows = SAMPLE_ROWS.slice(); }
+      APP.pressure = aggregate(APP.rows);
+      APP.points = businessPoints(APP.rows);
+      if (!APP.points.length) APP.points = businessPoints(SAMPLE_ROWS);
+      const hot = [...APP.pressure.entries()].sort((a,b)=>(b[1].ready+b[1].blocked+b[1].follow+b[1].sent)-(a[1].ready+a[1].blocked+a[1].follow+a[1].sent))[0];
+      if (hot) { APP.state = hot[0]; APP.mode = 'territory'; }
+      updateText('#net-pill', APP.rows.length ? `${APP.rows.length} live rows` : 'Using sample data');
+      render();
+    });
+  }catch(e){
+    updateText('#inspect-desc','Failed to load topojson for the prototype surface.');
+    updateText('#net-pill','Topojson failed');
+    console.error(e);
+  }
+}
+qsa('.modechip').forEach(btn=>btn.addEventListener('click',()=>{ APP.mode = btn.dataset.mode; if (APP.mode === 'survey') { APP.state = null; APP.business = null; } render(); }));
+qsa('.chip[data-front]').forEach(btn=>btn.addEventListener('click',()=>{ APP.front = btn.dataset.front; render(); }));
+qs('#focus-business-btn').addEventListener('click',()=>{ if (APP.points[0]) selectBusiness(APP.points[0]); });
+qs('#reset-btn').addEventListener('click',()=>{ APP.mode='survey'; APP.front='ready'; APP.state=null; APP.business=null; render(); });
+boot();
+</script>
+</body>
+</html>
